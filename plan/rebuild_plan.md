@@ -1,6 +1,6 @@
 # GMC Rebuild Plan
 
-**Status:** v0.3 — no-patches-later clause added to Section 1; new Section 3 (Engineering Standards) inserted; downstream sections renumbered
+**Status:** v0.4 — Section 3 (Engineering Standards) filled with all five confirmed specifications
 **Created:** 2026-05-08
 **Last Updated:** 2026-05-08
 **Location:** `~/gmc-rebuild/plan/rebuild_plan.md`
@@ -36,7 +36,92 @@ The continuous baseline discipline that applies to every artifact produced by th
 
 The no-patches-later principle from Section 1 binds here: when a defect surfaces, work returns to the appropriate step and is rebuilt to standard. Tests catch the bugs we know how to test for; review gates catch the design errors and reasoning failures we don't know to test for; the audit standard is the explicit pass/fail bar. All three layers operate together.
 
-[Section will define: test-driven development as default practice (failing test first, code to pass, refactor); no-untested-code rule with coverage thresholds; pre-commit hooks enforcing linting, type checking, formatting; reproducibility tests required for every numerical claim; migration and rollback tests required for every schema change; specific tooling choices (test framework, coverage tool, hook framework); the explicit "what good looks like" examples to prevent drift.]
+### 3.1 Test-Driven Development
+
+Strict TDD is the default discipline. Every piece of production code begins as a failing test that specifies the behavior the code must exhibit. Code is then written to make the test pass. Refactoring follows, with the test as the safety net. No production code is written without a failing test in front of it.
+
+Exploratory work — checking whether a signal has alpha, whether a data source has the structure expected, whether a hypothesis is worth pursuing — is permitted under different rules. Such work lives in `~/gmc-rebuild/scratch/`, a gitignored directory not subject to TDD or the engineering standards in this section. Code in scratch is never executed against production data, never imported by production code, never counted toward coverage.
+
+Promotion of work from scratch to the main rebuild is a deliberate operation. A scratch script that explores a signal does not become a production scanner by being moved; it becomes a specification, and the production scanner is then written test-first against that specification. The scratch artifact may be referenced in the production module's docstring as historical context, but the production code is written fresh under TDD discipline.
+
+### 3.2 Test Framework and Coverage
+
+The test framework is **pytest**, with **coverage.py** (via the `pytest-cov` plugin) measuring coverage. Both are pinned in the project's dependency manifest with specific versions; updates require a deliberate version bump committed with rationale.
+
+Coverage thresholds are enforced as pre-commit blockers and as CI checks (when CI is added):
+
+- **Signal logic and runtime enforcement code: 100% line + branch coverage.** Includes signal scanners, the autotrader's signal-handling code, runtime safety checks, schema validation, and any code path whose failure could result in incorrect trading behavior.
+- **Glue and utility code: 80% line coverage minimum.** Includes data loading helpers, logging, configuration parsing, and similar non-signal infrastructure.
+- **Every module containing executable logic must have at least one corresponding test module.** Empty `__init__.py` and pure-data constants modules are exempt because they contain no executable paths.
+
+Coverage thresholds and directory-to-category mapping are stored in `pyproject.toml` (`[tool.coverage.run]` and `[tool.coverage.report]` sections). Threshold changes require a commit with rationale.
+
+### 3.3 Pre-commit Hooks
+
+Pre-commit hooks are blocking, not advisory. A failing hook prevents the commit from being created. The `--no-verify` bypass workflow is treated as a violation of engineering standards; if a hook is wrong, the hook is fixed via a deliberate change, not bypassed.
+
+The required hook stack:
+
+- **ruff (lint + format).** Replaces flake8, isort, black, and pyupgrade with one fast tool. Runs as both linter (catching errors and style violations) and formatter (auto-fixing).
+- **mypy (strict mode).** All new code is type-annotated and passes `mypy --strict`. Existing code carried forward from the prior project must add type annotations to clear the audit standard before being designated rebuilt.
+- **pytest (all tests pass).** The full test suite must pass before a commit is created. Slow tests can be marked with `@pytest.mark.slow` and excluded from pre-commit but must run in CI.
+- **coverage check.** Coverage thresholds in 3.2 must be met. If coverage drops below threshold, the commit is rejected.
+
+Hook configuration lives in `.pre-commit-config.yaml`, committed to the repository, and version-pinned. Hook installation is a setup step documented in the project README and verified by an installation test.
+
+### 3.4 Reproducibility Tests
+
+Every numerical claim made in this rebuild — every backtest result, every benchmark number, every reported alpha — is required to have a reproducibility test that re-runs the producing code and verifies the same number is produced.
+
+The format:
+
+- The producing code (e.g., a backtest script) writes its output to a JSON file alongside the script: `{script_name}_expected_output.json`.
+- The JSON file is committed to git.
+- A reproducibility test imports the script's main entry point, runs it on the fixed inputs documented in the script, and asserts deep equality between the actual output and the JSON file.
+- The test runs on every commit via pre-commit.
+- If the producing code or its inputs change in a way that legitimately changes the output, the JSON is regenerated via an explicit `python -m {script_name} --regenerate-expected` workflow. The regeneration commit must include a rationale message explaining why the expected output changed, and the reproducibility test must re-pass against the new expected.
+
+This pattern prevents the CEL_BEAR class of failure: benchmark says one number, backtest output says another, no test catches the gap. With reproducibility tests, the gap is structurally impossible — the test fails and the commit is rejected.
+
+### 3.5 Schema and Migration Discipline
+
+All schema changes — to `signal_benchmarks`, `signal_log`, `positions`, or any other database table this rebuild creates — are managed via **Alembic**.
+
+For every schema change, the same commit must contain:
+
+- **The up migration** (`upgrade()` function in the Alembic revision file).
+- **The down migration** (`downgrade()` function in the same file).
+- **A test for the up migration** that verifies the schema is in the correct post-upgrade state.
+- **A test for the down migration** that verifies the schema is in the correct pre-upgrade state after rollback.
+
+All four artifacts must be in the same commit. A commit containing only some of them is rejected by pre-commit. This prevents the prior project's pattern of one-way schema changes that cannot be rolled back.
+
+Migration test files live under `~/gmc-rebuild/data/migrations/tests/` and follow the naming convention `test_{revision_id}_{up|down}.py`.
+
+### 3.6 Tooling Choices
+
+| Concern | Tool | Notes |
+|---|---|---|
+| Python | 3.12 | Pinned in `pyproject.toml`. Default choice for current stability and performance; later upgrade is a deliberate operation. |
+| Test framework | pytest | Pinned to latest stable. |
+| Coverage | coverage.py via pytest-cov | Pinned to latest stable. |
+| Linter + formatter | ruff | Replaces flake8 + isort + black + pyupgrade. |
+| Type checker | mypy (strict mode) | Required on all new code. |
+| Pre-commit framework | pre-commit (https://pre-commit.com) | Hooks defined in `.pre-commit-config.yaml`. |
+| Schema migrations | Alembic | Up/down/tests in same commit per 3.5. |
+| SQL toolkit | SQLAlchemy 2.x | For typed query construction. |
+| Dependency manager | TBD | Open question — Section 10. |
+
+### 3.7 What Good Looks Like
+
+This subsection is filled progressively as the rebuild produces concrete examples that exemplify the standards in 3.1–3.6. It will contain reference examples for:
+
+- A signal scanner with proper test coverage, type annotations, and reproducibility test
+- A schema migration with up/down/tests
+- A backtest with JSON expected-output and reproducibility test
+- A runtime safety check with associated tests
+
+Until those examples exist, this subsection is a placeholder. The first concrete example added here marks the first artifact that has cleared the engineering standards in full.
 
 ---
 
@@ -104,8 +189,8 @@ Explicit list of items this rebuild is NOT doing, to prevent scope creep. Items 
 
 Items not yet known that need to be resolved before specific phases can begin. Each open question has an owner (Kevin or Claude) and a target resolution point in the sequence.
 
-[Filled progressively.]
+- **Dependency manager choice (Section 3.6).** Options: Poetry, pip + requirements.txt, uv. Owner: Kevin. Resolution: before Step 1 implementation begins.
 
 ---
 
-*v0.3 — Section 1 amended with no-patches-later clause; Section 3 (Engineering Standards) inserted; downstream sections renumbered. Sections 3, 4, 5 are next priority for filling, in that order, before Section 6.*
+*v0.4 — Section 3 (Engineering Standards) filled with subsections 3.1 through 3.7. Sections 4 (External Review Gates) and 5 (Audit Standard) are next priority for filling, in that order, before Section 6.*
