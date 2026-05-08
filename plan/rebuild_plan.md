@@ -1,6 +1,6 @@
 # GMC Rebuild Plan
 
-**Status:** v0.4 — Section 3 (Engineering Standards) filled with all five confirmed specifications
+**Status:** v0.5 — Section 4 (External Review Gates) filled with subsections 4.1 through 4.7
 **Created:** 2026-05-08
 **Last Updated:** 2026-05-08
 **Location:** `~/gmc-rebuild/plan/rebuild_plan.md`
@@ -129,7 +129,140 @@ Until those examples exist, this subsection is a placeholder. The first concrete
 
 Independent AI review is required for designated artifacts before they can be merged or acted on. Reviews are git-tracked artifacts under `~/gmc-rebuild/reviews/`, not conversations.
 
-[Section will define: which artifacts require review, at which points in the sequence, the format of the review request, the format of the review response, how disagreements are adjudicated. To be drafted before Step 1 begins.]
+External review catches the class of failures that engineering standards and tests cannot: design errors, reasoning mistakes, sequencing failures across paraphrase, and conclusions that don't follow from evidence. Tests prove code does what it says; review evaluates whether what it says is right. The two layers operate together — neither is sufficient alone.
+
+### 4.1 Scope: What Requires Review
+
+Review is required for the following artifact classes:
+
+- **Backtest results.** Every backtest produces a numerical claim that becomes a row in `signal_benchmarks`. Review evaluates whether the claim follows from the data, whether the methodology is sound, and whether the conclusion is appropriate given the evidence. Required before the row is added to `signal_benchmarks`.
+- **Schema changes.** Every Alembic migration (up + down + tests) is reviewed before merge. Review evaluates whether the change is reversible, whether tests adequately cover the migration, and whether downstream code handles the new schema correctly.
+- **Plan section drafts (Sections 1–5).** Sections 1, 2, 3, 4, 5 are load-bearing — they govern everything downstream. Drafts and major revisions to these sections are reviewed before commit. Sections 6–10 are populated progressively and don't require per-edit review.
+- **Audit standard test designs.** When Section 5 (Audit Standard) defines specific tests that gate components, the test designs themselves are reviewed before being adopted as the standard.
+- **Runtime enforcement code.** Startup checks, schema validators, safety gates — code whose failure would result in incorrect trading behavior. Reviewed before merge.
+- **Major architectural decisions.** Dependency manager choice, broker migration, deployment strategy. Reviewed at decision point, before implementation begins.
+- **Live trading changes.** Any change that affects live capital — removing `--dry-run`, raising the position cap, modifying loss breakers. Reviewed before commit AND independently signed off by Kevin at execution time. Two-key requirement.
+
+Review is NOT required for:
+
+- Routine refactoring with full test coverage and no behavior change
+- Glue and utility code with engineering-standards coverage
+- Exploratory scratch work in `~/gmc-rebuild/scratch/`
+- Documentation cleanup that does not affect Sections 1–5
+
+### 4.2 Timing: When Review Happens
+
+Review is per-artifact-class, not per-merge or per-step. Specific gates per class:
+
+| Artifact Class | Review Point |
+|---|---|
+| Backtest results | Before adding the row to `signal_benchmarks` |
+| Schema changes | Before merge to main |
+| Plan section drafts (1–5) | Before merge to main |
+| Audit standard tests | Before adoption |
+| Runtime enforcement code | Before merge to main |
+| Architectural decisions | At decision point, before implementation |
+| Live trading changes | Before commit; second sign-off at execution |
+
+Review gates are independent of the seven-step sequence boundaries. An artifact in any step is gated by its class, not its step.
+
+### 4.3 Reviewer Selection: Which Independent AI
+
+Reviews are conducted by AI models from at least two different providers, with no shared conversation context with the work being reviewed.
+
+Default reviewer pool:
+
+- **OpenAI ChatGPT** (current GPT-5 or latest GPT-4 model)
+- **Google Gemini** (latest Pro model)
+- **Claude in a separate conversation with no shared context** (used as third opinion for high-stakes reviews)
+
+For each review, at least two reviewers from different providers are required. For high-stakes reviews (live trading changes, migrations affecting production data, major architectural decisions), all three are required.
+
+Different model families have different blind spots; a single reviewer can have systematic failure modes that match Claude's. Independent providers reduce the probability of a shared blind spot. The third Claude review is for triangulation on the highest-stakes decisions.
+
+### 4.4 Mechanics: How a Review Happens
+
+For v1, the mechanism is paste-and-record:
+
+1. Claude writes the review request file at `~/gmc-rebuild/reviews/pending/{date}_{artifact_id}_request.md` using the format in 4.5.
+2. Kevin opens the request file, copies its contents into the relevant AI provider's chat interface (e.g., chatgpt.com, gemini.google.com).
+3. Kevin pastes the AI response into a review file at `~/gmc-rebuild/reviews/{date}_{artifact_id}_{reviewer}.md` using the format in 4.6.
+4. The review file is committed to git with a message identifying the artifact and reviewer.
+5. The artifact's merge or action is gated on the review file existing and indicating PASS or CONCERNS-resolved per Section 4.7.
+
+API integration to automate steps 2–3 is a future enhancement, deferred to a later phase. The paste-and-record workflow is the v1 baseline because it ships immediately, requires no infrastructure build, and forces a structured artifact (the review file) regardless of whether automation is added later.
+
+### 4.5 Review Request Format
+
+Every review request follows this template:
+
+```
+# Review Request: {artifact_id}
+
+## Project Context
+[Stable paragraph describing GMC's rebuild and the role of external review.]
+
+## Artifact Under Review
+[Type of artifact: backtest result, schema migration, plan section, etc.]
+[Path to the artifact in the repo]
+[Inline copy of the artifact's content]
+
+## Specific Questions
+[Numbered questions the reviewer must answer. Varies by artifact class. Examples:
+  - Backtest: "Does the claimed return follow from the trade-level data?"
+  - Schema: "Is the down migration a true inverse of the up migration?"
+  - Plan section: "Are there load-bearing assumptions that aren't stated?"]
+
+## Required Response Format
+[Reference to 4.6 — verdict, concerns with reasoning, optional re-derivations.]
+
+## What Is Out of Scope
+[Things the reviewer should NOT comment on, e.g., Claude's framing in surrounding documents, decisions made elsewhere in the project.]
+```
+
+The request must NOT include Claude's conclusions on the artifact. The reviewer evaluates the artifact independently, not Claude's framing of it.
+
+### 4.6 Review Response Format
+
+Every review response is structured:
+
+```
+# Review Response: {artifact_id} by {reviewer}
+**Date:** {YYYY-MM-DD}
+**Reviewer:** {ChatGPT 5 / Gemini Pro / Claude separate session}
+
+## Verdict
+PASS | CONCERNS | FAIL
+
+## Concerns (if any)
+For each concern:
+- **Concern:** [What the issue is]
+- **Reasoning:** [Why it's a concern]
+- **Recommendation:** [What to do about it]
+
+## Re-derivations (if applicable)
+[For backtest reviews: explicit recomputation of any specific numerical claim, with the reviewer's calculation.]
+
+## Overall Reasoning
+[One-paragraph summary of the reviewer's evaluation.]
+```
+
+If the reviewer's response doesn't fit this format (e.g., free-form prose), the request is re-issued with explicit format requirements until a structured response is produced. Free-form responses are not accepted as final reviews.
+
+### 4.7 Disagreement Adjudication
+
+The review system surfaces disagreements; it does not replace Kevin's judgment. Final adjudication authority is always Kevin's.
+
+Workflow for non-PASS reviews:
+
+1. **Review verdict is FAIL or CONCERNS.** Claude responds to each concern with one of:
+   - **Fix:** Modify the artifact to address the concern, request a re-review.
+   - **Counterargument:** Argue the concern is wrong, with reasoning. Kevin adjudicates.
+   - **Defer:** Acknowledge the concern is valid but should be deferred to a later phase. Kevin adjudicates.
+2. **Reviewer disagrees with Claude's response (re-review still raises the concern).** A third reviewer is solicited. Kevin reads all responses and decides.
+3. **High-stakes artifact (live trading change, production schema):** Kevin reviews independently and signs off, even if all reviewers PASS. The two-key requirement from 4.1 binds here.
+
+Disagreements are recorded in the artifact's review file under a "Disagreement Resolution" section so the rationale is preserved across sessions.
 
 ---
 
@@ -161,7 +294,7 @@ For each of the seven steps in Section 2:
 - Audit standard requirements (linked to Section 5)
 - Estimated scope (rough order of magnitude only — not a deadline)
 
-[Filled step by step, in order, after Sections 1-6 are complete.]
+[Filled step by step, in order, after Sections 1–6 are complete.]
 
 ---
 
@@ -193,4 +326,4 @@ Items not yet known that need to be resolved before specific phases can begin. E
 
 ---
 
-*v0.4 — Section 3 (Engineering Standards) filled with subsections 3.1 through 3.7. Sections 4 (External Review Gates) and 5 (Audit Standard) are next priority for filling, in that order, before Section 6.*
+*v0.5 — Section 4 (External Review Gates) filled with subsections 4.1 through 4.7. Section 5 (Audit Standard) is next priority for filling, before Section 6.*
