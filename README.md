@@ -25,7 +25,7 @@ P2-03..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and may n
 | `.pre-commit-config.yaml` | Local quality gate configuration |
 | `pyproject.toml` | Python metadata and tool settings |
 | `src/gmc_rebuild/` | Phase 2 infrastructure package skeleton (authorized by PR P2-01; no runtime trading behavior) |
-| `src/gmc_rebuild/config/` | Minimal safe config schema (authorized by PR P2-02; frozen dataclass with safe local-only defaults; no runtime behavior) |
+| `src/gmc_rebuild/config/` | Minimal safe config schema (authorized by PR P2-02; frozen `ProjectConfig` dataclass + `default_config()` helper; metadata fields only; no runtime-behavior toggles, no env-var loading, no filesystem materialisation) |
 | `governance/authorizations/` | Durable in-tree copies of Kevin's phase-opening / phase-expanding authorizations (per `AI_WORKFLOW.md` §7) |
 | `tests/` | Phase 1 governance placeholder tests and P2-01 skeleton tests |
 

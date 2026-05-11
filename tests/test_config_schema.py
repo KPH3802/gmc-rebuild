@@ -47,19 +47,54 @@ def test_default_config_is_frozen_dataclass_instance() -> None:
     assert raised, "ProjectConfig is not frozen as expected"
 
 
-def test_defaults_are_safe_disabled_and_local_only() -> None:
+def test_defaults_are_safe_and_local_only() -> None:
     cfg = default_config()
     assert cfg.project_name == "gmc-rebuild"
     assert cfg.package_name == "gmc_rebuild"
     assert cfg.phase == "phase-2"
-    assert cfg.phase_task == "P2-02"
     assert cfg.environment == "local"
-    assert cfg.runtime_enabled is False
     assert isinstance(cfg.local_data_dir, PurePosixPath)
     assert isinstance(cfg.local_logs_dir, PurePosixPath)
     # Local-only paths only; no absolute paths, no external URLs.
     assert not cfg.local_data_dir.is_absolute()
     assert not cfg.local_logs_dir.is_absolute()
+    # The data-dir default must not be the §8 step 4 always-forbidden
+    # top-level path ``data``. Using ``gmc_data`` (already gitignored
+    # at the repo root) avoids tripping the startup gate if any
+    # future authorized caller were to materialise the path.
+    data_parts = cfg.local_data_dir.parts
+    assert "data" not in data_parts, (
+        f"local_data_dir collides with MASTER_STATUS.md §8 step 4 "
+        f"always-forbidden top-level 'data': {cfg.local_data_dir}"
+    )
+
+
+def test_defaults_have_no_runtime_behavior_toggle() -> None:
+    """No boolean field gates future runtime behavior.
+
+    Even a disabled flag (``runtime_enabled=False``) is excluded: a
+    future PR could wire a consumer and flip the default without
+    revisiting the §8 step 4c token scan (which tokenises path
+    components, not field names). Keeping the schema free of any
+    runtime-behavior boolean closes that drift path.
+    """
+    field_names = {f.name for f in dataclasses.fields(ProjectConfig)}
+    behavior_suspects = {
+        "runtime_enabled",
+        "live_enabled",
+        "paper_enabled",
+        "broker_enabled",
+        "execution_enabled",
+        "trading_enabled",
+        "enabled",
+    }
+    overlap = field_names & behavior_suspects
+    assert not overlap, f"ProjectConfig must not define runtime-behavior toggles; found: {overlap}"
+    for f in dataclasses.fields(ProjectConfig):
+        assert f.type is not bool and f.type != "bool", (
+            f"ProjectConfig field {f.name!r} is a bool; P2-02 does not "
+            "authorize any boolean runtime-behavior toggle"
+        )
 
 
 def test_replace_returns_new_instance_and_does_not_mutate() -> None:
@@ -68,7 +103,9 @@ def test_replace_returns_new_instance_and_does_not_mutate() -> None:
     assert other is not cfg
     assert cfg.environment == "local"
     assert other.environment == "ci"
-    assert other.runtime_enabled is False  # still safe-default
+    # Untouched fields are preserved on the new instance.
+    assert other.project_name == cfg.project_name
+    assert other.local_data_dir == cfg.local_data_dir
 
 
 def test_config_fields_are_minimal_and_named_safely() -> None:
@@ -81,9 +118,7 @@ def test_config_fields_are_minimal_and_named_safely() -> None:
         "project_name",
         "package_name",
         "phase",
-        "phase_task",
         "environment",
-        "runtime_enabled",
         "local_data_dir",
         "local_logs_dir",
     }
@@ -93,12 +128,26 @@ def test_config_fields_are_minimal_and_named_safely() -> None:
         "see governance/authorizations/2026-05-11_p2-02.md"
     )
 
-    # Whole-word match on field-name tokens against the MASTER_STATUS
-    # §8 step 4c forbidden token set. Substring matches like "data"
-    # inside "local_data_dir" are acceptable: step 4c tokenizes path
-    # components, not field names, and the field name itself is a
-    # compound that does not match a forbidden token under whole-token
-    # comparison.
+    # Whole-word match on field-name tokens against the
+    # ``MASTER_STATUS.md`` §8 step 4c forbidden token set, plus a small
+    # set of singular forms that are sensible to forbid at the
+    # field-name layer.
+    #
+    # Intentional divergence from §8 step 4c, documented so a future
+    # contributor does not have to reconstruct the reasoning:
+    #
+    # - ``data`` is NOT in this set. §8 step 4 forbids it only at the
+    #   top level; §8 step 4c also omits it from the recursive token
+    #   scan to avoid false positives on benign nested names. Field
+    #   names like ``local_data_dir`` are therefore intentionally
+    #   allowed by both layers. Top-level ``data/`` is still caught
+    #   by §8 step 4 and by
+    #   ``test_phase_boundary_forbidden_categories_absent_from_tree``.
+    # - The singular forms ``secret``, ``daemon``, and ``order`` are
+    #   added here to catch a field named ``order`` or ``daemon``
+    #   even if §8 step 4c would only catch the plural at a path
+    #   level. The two layers are not symmetric because they guard
+    #   different surfaces (path components vs field identifiers).
     forbidden_tokens = {
         "strategy",
         "strategies",
