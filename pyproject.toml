@@ -52,7 +52,7 @@ no_implicit_optional = true
 show_error_codes = true
 
 [tool.pytest.ini_options]
-minversion = "9.0"
+minversion = "9.0.3"
 addopts = "-ra --strict-config --strict-markers"
 testpaths = ["tests"]
 markers = [

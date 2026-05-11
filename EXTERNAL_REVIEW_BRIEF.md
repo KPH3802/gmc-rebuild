@@ -4,12 +4,18 @@
 **Date**: 2026-05-11 UTC
 **Status**: Ready for verification after governance cleanup
 **Repository**: https://github.com/KPH3802/gmc-rebuild
+**Candidate baseline**: `b39d036` (see `MASTER_STATUS.md` §3)
 
 ## Scope
 
 This repository is in Phase 1 governance. It contains no trading strategy implementation, no broker execution implementation, and no live trading workflow.
 
 ## Artifacts for Review
+
+Source-of-truth governance documents:
+
+- `MASTER_STATUS.md`
+- `AI_WORKFLOW.md`
 
 Core config:
 
@@ -42,6 +48,8 @@ Supporting plan:
 
 ## Verification Checklist
 
+- `MASTER_STATUS.md` names the candidate baseline commit, describes the Phase 1 boundary, and lists the startup verification commands.
+- `AI_WORKFLOW.md` defines the four roles (Codex, Perplexity Computer, Kevin, optional backup AI) and the required proof bundle in §3.
 - All seven ADRs use the same required headings.
 - ADR-003 is complete and no longer truncated.
 - ADR-004 enforces timezone-aware UTC.
