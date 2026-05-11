@@ -72,6 +72,8 @@ git rev-parse HEAD               # exact commit hash under review
 git diff <baseline>..HEAD        # full diff against the baseline being verified
 ```
 
+`<baseline>` is the commit named in `MASTER_STATUS.md` §3 (the candidate or verified Phase 1 baseline). Verifiers may not silently substitute a different baseline; if a different baseline is appropriate for the task at hand, that must be agreed with Kevin and recorded before verification begins.
+
 The reported commit hash must match the commit referenced in the PR.
 
 ### 3.2 Tests and pre-commit
@@ -137,7 +139,7 @@ Rules that exist specifically to prevent multiple AIs from creating contradictor
 2. **One status keeper.** Only Perplexity Computer updates `MASTER_STATUS.md`. Codex may propose updates in a PR but does not land them without Perplexity Computer's verification.
 3. **One approver.** Only Kevin accepts, merges, or authorizes phase transitions. No AI may infer approval from silence.
 4. **One branch per task.** Codex works on a feature branch named for the task. No direct commits to the default branch.
-5. **No cross-AI chatter in the repo.** AIs do not commit "notes to each other" into the codebase. Discussion belongs in PR comments or session logs, not in files under version control.
+5. **No cross-AI chatter in the repo.** AIs do not commit "notes to each other" into the codebase. Discussion belongs in PR comments or session logs, not in files under version control. Tool attribution in commit messages and PR descriptions (e.g., a trailer line indicating which assistant produced a change) is allowed and is not considered "chatter"; this rule covers content that lands under version control. Any AI-authored claim that does land in a file — including commit trailers, PR-description boilerplate, and inline notes — must be factually verifiable, must not assert verification that has not actually been performed, and must not impersonate a human reviewer or claim authority the AI does not have. If an AI cannot back a claim with the proof bundle in §3, the claim must be removed before merge.
 6. **No retroactive scope changes.** If verification reveals the task as stated is wrong, stop and ask Kevin. Do not silently broaden the scope to fix it.
 7. **No phase drift.** If a change starts to require Phase 2 capability to be useful, stop. Either narrow the change or wait for Phase 2 authorization. Phase 1 stays Phase 1.
 8. **No tooling relaxation under pressure.** If pre-commit, mypy strict, or detect-secrets fails, fix the underlying issue. Do not weaken the hook to make the failure go away.

@@ -13,9 +13,9 @@
 
 Phase 1 covers planning, architecture decisions, templates, project configuration, verification tooling, and the governance workflow itself. Phase 1 is documentation and tooling only. No runtime trading behavior exists in this repository.
 
-Phase 2 has **not** started. Phase 2 may begin only after:
+Phase 2 has **not** started, and Phase 1 has **not** yet been externally verified. Phase 2 may begin only after:
 
-1. Phase 1 passes external verification.
+1. Phase 1 is externally verified against the candidate baseline (see §3) and Kevin accepts the verification report in writing.
 2. Kevin explicitly authorizes Phase 2 in writing (commit message, PR comment, or governance entry).
 3. The first Phase 2 task is infrastructure-only unless Kevin approves a narrower implementation plan.
 
@@ -30,28 +30,38 @@ The authoritative artifacts, in priority order:
 3. `plan/rebuild_plan.md` — the canonical rebuild plan and the 12 governance invariants.
 4. `README.md` — operating overview, setup, phase gates, safety rules.
 5. `docs/decisions/ADR-*.md` — accepted architecture decision records.
-6. `EXTERNAL_REVIEW_BRIEF.md` — scope and checklist for independent Phase 1 verification.
+6. `EXTERNAL_REVIEW_BRIEF.md` — scope and checklist for independent Phase 1 verification (the request side of the gate).
+7. `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md` — Phase 1 cleanup summary listing the artifacts presented for review (the submission side of the gate).
 
 Anything not in this list is supporting material, not source of truth. If a conflict appears, escalate to Kevin before changing behavior.
 
 ---
 
-## 3. Verified Baseline
+## 3. Candidate Baseline
 
-**Verified baseline commit:** `ee3457f` (`docs: normalize governance template whitespace`).
+**Candidate Phase 1 baseline:** `ee3457f` (`docs: normalize governance template whitespace`).
 
-This is the last commit verified to satisfy Phase 1 exit criteria as documented in `README.md` and `EXTERNAL_REVIEW_BRIEF.md`. Any work session should start from this commit or a descendant of it on the default branch. If `HEAD` is not a descendant of `ee3457f`, stop and reconcile before doing further work.
+This is the commit currently proposed for external verification per `EXTERNAL_REVIEW_BRIEF.md` and summarized in `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md`. It has passed local quality gates (`pre-commit run --all-files` and `pytest`) and is the basis for the verification request, but it is **not** yet externally verified and has not yet been accepted by Kevin against an external verification report.
+
+The Phase 1 status today is "Ready for external verification," not "verified." `ee3457f` becomes the **verified baseline** only after:
+
+1. An external verification report is produced against this exact commit hash, and
+2. Kevin records acceptance of that report in writing (commit message, PR comment, or governance entry).
+
+Until those two conditions are met, `ee3457f` is a *candidate* / *locally verified candidate* baseline only.
+
+Any work session should still start from `ee3457f` or a descendant of it on the default branch. If `HEAD` is not a descendant of `ee3457f`, stop and reconcile before doing further work.
 
 ---
 
 ## 4. Machine Setup
 
-The repository is worked on from two machines. Both must point at the same remote and the same default branch.
+The repository is worked on from two machines. These are the current known checkout paths; the canonical reference is "the home-directory checkout on each machine," and the literal paths below are recorded for convenience, not as a constraint. If a machine's path changes, update this section.
 
-| Machine | Path |
+| Machine | Current known checkout path |
 | --- | --- |
 | MacBook Pro | `~/gmc-rebuild` |
-| Mac Studio | `/Users/kevinheaney/gmc-rebuild` |
+| Mac Studio | `~/gmc-rebuild` (i.e. `/Users/<kevin's user>/gmc-rebuild`) |
 
 Rules:
 
@@ -66,7 +76,8 @@ Rules:
 
 Phase 1 is intentionally narrow. The repository contains, and only contains:
 
-- Governance documents (`MASTER_STATUS.md`, `AI_WORKFLOW.md`, `README.md`, `plan/rebuild_plan.md`, `EXTERNAL_REVIEW_BRIEF.md`).
+- Governance documents (`MASTER_STATUS.md`, `AI_WORKFLOW.md`, `README.md`, `plan/rebuild_plan.md`).
+- Verification-facing documents: `EXTERNAL_REVIEW_BRIEF.md` (the request) and `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md` (the submission).
 - Accepted architecture decision records under `docs/decisions/ADR-*.md`.
 - Templates for ADRs, deployment logs, daily monitoring reports, and review requests.
 - Project configuration: `pyproject.toml`, `.pre-commit-config.yaml`, `.gitignore`, `.secrets.baseline`.
@@ -90,9 +101,9 @@ Phase 1 contains **none** of the following. If any of these appear in a diff, th
 
 ## 7. Phase 2 Boundary
 
-The line between Phase 1 and Phase 2 is hard. Phase 2 begins only when **all** of the following are true:
+The line between Phase 1 and Phase 2 is hard. Phase 1 external verification has **not** yet occurred — the repository is in the "Ready for external verification" state per `EXTERNAL_REVIEW_BRIEF.md` and `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md`. Phase 2 begins only when **all** of the following future events have occurred:
 
-1. Phase 1 external verification is complete and accepted by Kevin.
+1. An external verification report is produced against the candidate baseline (§3) and accepted by Kevin in writing.
 2. No unresolved blocker remains in ADRs, templates, README, tooling, or repo hygiene.
 3. Kevin authorizes Phase 2 explicitly (commit message, PR comment, or governance entry, not a chat message).
 4. The first Phase 2 change is infrastructure-only — interfaces, types, configuration, scaffolding — unless Kevin pre-approves a narrower implementation plan.

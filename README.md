@@ -12,7 +12,7 @@ Phase 2 may start only after Phase 1 passes external verification and Kevin expl
 
 | Path | Purpose |
 | --- | --- |
-| `MASTER_STATUS.md` | Canonical first-read status: current phase, verified baseline, startup verification, and next allowed decisions |
+| `MASTER_STATUS.md` | Canonical first-read status: current phase, candidate baseline, startup verification, and next allowed decisions |
 | `AI_WORKFLOW.md` | Separation of duties: Codex builds, Perplexity Computer verifies, Kevin approves, backup AI reviews adversarially |
 | `README.md` | Operating overview, setup, phase gates, and safety rules |
 | `plan/rebuild_plan.md` | Canonical rebuild plan and the 12 governance invariants |
@@ -31,11 +31,11 @@ Generated data, logs, local databases, local environments, and secrets are inten
 
 1. Codex builds or edits the requested artifact.
 2. Kevin reviews intent, scope, and phase fit.
-3. Perplexity or another independent reviewer verifies the artifact against the stated requirements.
+3. Perplexity Computer (or another independent reviewer) verifies the artifact against the stated requirements.
 4. Codex fixes verification findings without expanding scope.
 5. Kevin decides whether the phase gate is passed.
 
-The AI workflow is advisory and auditable: Codex builds, Perplexity verifies, Kevin decides. See `AI_WORKFLOW.md` for the full separation of duties, required verification proof, and rules for using a backup AI. See `MASTER_STATUS.md` for the current phase, verified baseline commit, and required startup verification commands before any session.
+The AI workflow is advisory and auditable: Codex builds, Perplexity Computer verifies, Kevin decides. See `AI_WORKFLOW.md` for the full separation of duties (including the formal role definition of "Perplexity Computer" in §1.2), required verification proof, and rules for using a backup AI. See `MASTER_STATUS.md` for the current phase, candidate baseline commit, and required startup verification commands before any session.
 
 ## Phase Gates
 
