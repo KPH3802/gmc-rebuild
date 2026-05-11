@@ -134,6 +134,8 @@ Run these in order at the start of every serious work session. Do not skip steps
 
 The boundary check in step 4 distinguishes two modes. Phase 2 implementation is **partially open** at the time of writing: Kevin has authorized PR P2-01 (package skeleton and test harness) per `plan/phase2_entry_plan.md` §4, which names `src/` as the authorized Phase 2 infrastructure directory. Step 4a below therefore runs in Phase 2 implementation mode restricted to that allowlist. The Phase 2 implementation mode applies only to directories named in an accepted Phase 2 task or PR; any other Phase 2 infrastructure path is STOP. Switching modes does not silently relax controls: forbidden categories (strategy, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, secrets) remain STOP unless and until a later gate specifically authorizes them.
 
+Step 4 only inspects top-level paths. Step 4c below augments it with a recursive scan that walks every path component in the working tree and flags any forbidden category name anywhere — especially under the now-allowlisted `src/` subtree, where a forbidden concept could otherwise hide one level down (for example `src/strategy/`, `src/gmc_rebuild/broker.py`, `src/gmc_rebuild/orders/`, or `src/gmc_rebuild/signals.py`). The recursive scan is a human-run startup gate, not a substitute for code review: it matches names, not intent, and it cannot detect a forbidden concept implemented under a benign filename. Code review and the `plan/phase2_entry_plan.md` §6 proof bundle remain the authoritative checks.
+
 ```bash
 # 1. Confirm working tree state
 git status
@@ -202,6 +204,59 @@ done
 #     the comment block. Step 4 (always-forbidden categories) still applies in
 #     this mode; switching modes never relaxes those categories.
 
+# 4c. Recursive audit of forbidden category names anywhere in the tree.
+#     Step 4 only inspects top-level paths, so a forbidden concept could in
+#     principle hide one level down (e.g. src/strategy/, src/gmc_rebuild/
+#     broker.py, src/gmc_rebuild/orders/, src/gmc_rebuild/signals.py). This
+#     step walks the working tree and compares every path component
+#     (directory name or file stem, case-insensitive) against the
+#     forbidden set. Two P2-01 files and the detect-secrets baseline are
+#     explicitly allowlisted; everything else under src/ that matches a
+#     forbidden name is STOP.
+#
+#     This is a human-run startup gate intended to catch obvious phase-
+#     drift mistakes early. It is a name-based audit, not a substitute
+#     for code review: it cannot judge intent, semantics, or content,
+#     and innocuous-sounding names can still contain forbidden behavior.
+#     Code review and the proof bundle in plan/phase2_entry_plan.md §6
+#     remain the authoritative checks.
+forbidden=" strategy strategies signal signals scanner scanners model models \
+            portfolio backtest backtests broker execution live paper daemon \
+            daemons data market_data order orders secret secrets "
+matches=$(
+  find . \
+      \( -path ./.git -o -path ./.venv -o -path ./venv -o -path ./env \
+         -o -path ./.mypy_cache -o -path ./.pytest_cache \
+         -o -path ./.ruff_cache -o -name __pycache__ -o -path ./build \
+         -o -path ./dist -o -name '*.egg-info' -o -path ./node_modules \
+         -o -path ./.tox \
+      \) -prune -o \( -type f -o -type d \) -print \
+    | awk -v forb="$forbidden" '
+        {
+          rel = $0; sub(/^\.\//, "", rel)
+          if (rel == "." || rel == "") next
+          # Allowlist: P2-01 files and the detect-secrets baseline.
+          if (rel == "src/gmc_rebuild/__init__.py") next
+          if (rel == "src/gmc_rebuild/py.typed") next
+          if (rel == ".secrets.baseline") next
+          n = split(rel, parts, "/")
+          for (i = 1; i <= n; i++) {
+            comp = parts[i]
+            if (i == n) { sub(/^\./, "", comp); sub(/\.[^.]*$/, "", comp) }
+            if (comp == "") continue
+            lc = tolower(comp)
+            if (index(forb, " " lc " ") > 0) {
+              printf "STOP: forbidden category component %s in path: %s\n", \
+                     lc, rel
+            }
+          }
+        }')
+if [ -n "$matches" ]; then
+  printf '%s\n' "$matches"
+else
+  echo "OK: no forbidden category names found anywhere in tree"
+fi
+
 # 5. Confirm tooling is installed and matches committed versions
 python --version          # expect Python 3.12.x
 pre-commit --version
@@ -213,7 +268,7 @@ pre-commit run --all-files
 pytest
 ```
 
-If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), the phase boundary cannot be moved by Codex or Perplexity Computer alone, and per rule 8, tooling hooks (pre-commit, mypy strict, detect-secrets) may not be weakened to make a failure go away. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
+If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a, the `forbidden` set or per-path allowlist in step 4c, or any other startup-gate filter without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), the phase boundary cannot be moved by Codex or Perplexity Computer alone, and per rule 8, tooling hooks (pre-commit, mypy strict, detect-secrets) may not be weakened to make a failure go away. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
 
 ---
 
