@@ -1,8 +1,8 @@
 # Phase 1 External Review Brief
 
-**For**: Independent verification  
-**Date**: 2026-05-11 UTC  
-**Status**: Ready for verification after governance cleanup  
+**For**: Independent verification
+**Date**: 2026-05-11 UTC
+**Status**: Ready for verification after governance cleanup
 **Repository**: https://github.com/KPH3802/gmc-rebuild
 
 ## Scope

@@ -6,11 +6,11 @@ Draft | Sent | In Review | Passed | Concerns | Failed
 
 ## Request Metadata
 
-**Requested At (UTC)**: YYYY-MM-DDTHH:MM:SSZ  
-**Requested By**: [Name]  
-**Reviewer**: [Perplexity, ChatGPT, Gemini, other]  
-**Decision Owner**: Kevin Heaney  
-**Deadline**: YYYY-MM-DD  
+**Requested At (UTC)**: YYYY-MM-DDTHH:MM:SSZ
+**Requested By**: [Name]
+**Reviewer**: [Perplexity, ChatGPT, Gemini, other]
+**Decision Owner**: Kevin Heaney
+**Deadline**: YYYY-MM-DD
 
 ## Project Context
 
@@ -18,9 +18,9 @@ Draft | Sent | In Review | Passed | Concerns | Failed
 
 ## Artifact Under Review
 
-**Artifact Type**: ADR | README | Tooling | Template | Phase Gate | Other  
-**Path(s)**: [Repository paths]  
-**Commit(s)**: [Commit hash range]  
+**Artifact Type**: ADR | README | Tooling | Template | Phase Gate | Other
+**Path(s)**: [Repository paths]
+**Commit(s)**: [Commit hash range]
 
 ## Review Questions
 
@@ -61,6 +61,6 @@ Paste or link the artifact content, command output, and relevant diffs here.
 
 ## Kevin Decision
 
-**Decision**: Accepted | Accepted with Conditions | Rejected | Deferred  
-**Decided At (UTC)**: YYYY-MM-DDTHH:MM:SSZ  
+**Decision**: Accepted | Accepted with Conditions | Rejected | Deferred
+**Decided At (UTC)**: YYYY-MM-DDTHH:MM:SSZ
 **Notes**: [Decision notes]

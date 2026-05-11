@@ -2,10 +2,10 @@
 
 ## Report Metadata
 
-**Environment**: Local | Dry-run | Production  
-**Operator**: [Name]  
-**Report Window**: YYYY-MM-DDT00:00:00Z to YYYY-MM-DDT23:59:59Z  
-**Overall Status**: Green | Yellow | Red  
+**Environment**: Local | Dry-run | Production
+**Operator**: [Name]
+**Report Window**: YYYY-MM-DDT00:00:00Z to YYYY-MM-DDT23:59:59Z
+**Overall Status**: Green | Yellow | Red
 
 ## Phase Compliance
 
@@ -55,6 +55,6 @@ Use `N/A` until Phase 2 runtime components exist.
 
 ## Sign-off
 
-**Completed At (UTC)**: YYYY-MM-DDTHH:MM:SSZ  
-**Prepared By**: [Name]  
-**Kevin Decision**: Accepted | Needs Follow-up | Blocked  
+**Completed At (UTC)**: YYYY-MM-DDTHH:MM:SSZ
+**Prepared By**: [Name]
+**Kevin Decision**: Accepted | Needs Follow-up | Blocked

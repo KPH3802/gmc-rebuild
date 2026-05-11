@@ -6,11 +6,11 @@ Planned | In Progress | Successful | Rolled Back | Failed
 
 ## Scope
 
-**Operator**: [Name]  
-**Environment**: Local | Dry-run | Production  
-**Related ADRs**: [ADR links]  
-**Related Review**: [Review file or N/A]  
-**Commit(s)**: [Commit hash range]  
+**Operator**: [Name]
+**Environment**: Local | Dry-run | Production
+**Related ADRs**: [ADR links]
+**Related Review**: [Review file or N/A]
+**Commit(s)**: [Commit hash range]
 
 ## Change Summary
 
@@ -60,10 +60,10 @@ Live trading impact requires Kevin's explicit approval and independent review be
 
 ## Final Sign-off
 
-**Completed At (UTC)**: YYYY-MM-DDTHH:MM:SSZ  
-**Deployed By**: [Name]  
-**Verified By**: [Name or independent reviewer]  
-**Kevin Decision**: Approved | Rejected | Deferred  
+**Completed At (UTC)**: YYYY-MM-DDTHH:MM:SSZ
+**Deployed By**: [Name]
+**Verified By**: [Name or independent reviewer]
+**Kevin Decision**: Approved | Rejected | Deferred
 
 ## Notes
 
