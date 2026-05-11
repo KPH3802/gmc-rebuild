@@ -1,102 +1,64 @@
-# ADR-004: UTC/Timezone Discipline
+# ADR-004: UTC and Timezone Discipline
 
-**Status**: Accepted
+## Status
 
-**Date**: 2026-05-10 (UTC)
+Accepted
 
-**Participants**: Kevin Heaney
+## Date
 
----
+2026-05-10 UTC
 
-## Problem Statement
+## Context / Problem
 
-Timestamps in trading systems are a common source of subtle bugs: order execution timestamps off by 1 hour (DST transition), backtest timestamps in local time instead of market time, reconciliation mismatch due to timezone ambiguity. The system must eliminate the category of timezone bugs by enforcing **strict UTC everywhere**.
-
----
+Trading systems are vulnerable to timezone bugs from daylight saving changes, local machine settings, ambiguous strings, and inconsistent broker timestamp formats. The rebuild needs one timestamp discipline before runtime code exists.
 
 ## Decision
 
-**Enforce strict UTC-only timestamps throughout the system** with zero timezone conversions in trading logic.
+Use strict UTC throughout the repository, runtime design, logs, reports, tests, and examples. Timezone-naive datetimes are not acceptable. Local time may appear only as an optional display field in human-facing reports, and the UTC source timestamp must remain present.
 
----
+## Alternatives Considered
 
-## Implementation Details
+- Store local exchange time: familiar for market sessions, but fragile around daylight saving transitions.
+- Store naive timestamps and document assumptions: easy to write, unsafe to audit.
+- Store Unix timestamps only: unambiguous, but less readable in Markdown logs and review artifacts.
 
-### Core Rules
+## Consequences
 
-1. **Storage**: All timestamps stored as **UTC ISO 8601** with 'Z' suffix
+- Positive: Date comparisons and audit trails are globally consistent.
+- Positive: External reviewers can inspect timestamps without guessing local timezone context.
+- Negative: Human-facing reports may need explicit conversion for readability.
+- Risk: Future code can regress by using naive datetime helpers; tooling and review must catch this.
+
+## Implementation Notes
+
+Python examples must use timezone-aware UTC:
+
 ```python
-   # CORRECT:
-   timestamp = "2026-05-10T14:23:45.123456Z"  # ISO 8601 UTC
-   timestamp = datetime.datetime.now(datetime.timezone.utc)
-   
-   # WRONG:
-   timestamp = "2026-05-10 14:23:45"  # No timezone info (ambiguous)
-   timestamp = datetime.datetime.now()  # Naive datetime (local time)
+from datetime import datetime, timezone
+
+now_utc = datetime.now(timezone.utc)
+timestamp = now_utc.isoformat().replace("+00:00", "Z")
 ```
 
-2. **Computation**: All time operations in UTC
+Do not use:
+
 ```python
-   from datetime import datetime, timezone
-   now_utc = datetime.now(timezone.utc)
-   start_utc = datetime(2026, 5, 10, 0, 0, 0, tzinfo=timezone.utc)
-   duration = (now_utc - start_utc).total_seconds()
+from datetime import datetime
+
+datetime.now()
 ```
 
-3. **APIs**: All external APIs (IB, Coinbase, etc.) timestamps converted to UTC immediately
-```python
-   # When receiving from IB (Unix timestamp):
-   ib_timestamp_unix = ib_response.get("timestamp")
-   utc_timestamp = datetime.fromtimestamp(ib_timestamp_unix, tz=timezone.utc)
-```
+Also avoid any helper that returns a timezone-naive UTC value. Stored and documented strings should use either `2026-05-10T14:23:45Z` or a clearly documented equivalent UTC format. SQLite examples should store explicit UTC text rather than relying on local-time interpretation.
 
-4. **Backtests**: All historical data processed in UTC
-```python
-   data = yfinance.download("AAPL", start="2026-01-01", end="2026-12-31")
-   assert data.index.tz.zone == 'UTC', "Data not in UTC!"
-```
+## Follow-up Actions
 
-5. **Display**: Local time conversion only for reports/logs
-```python
-   # In daily report (only place local time appears):
-   utc_dt = datetime.fromisoformat("2026-05-10T14:23:45.000000Z")
-   local_dt = utc_dt.astimezone()  # Convert for display only
-```
+- Add tests for timestamp serialization when runtime modules exist.
+- Add review checklist items for naive datetime usage.
+- Consider a custom lint check only after actual Python modules exist.
 
-### Code Standards
+## Related ADRs
 
-- All `datetime` objects have `tzinfo=timezone.utc`
-- No `datetime.now()` (use `datetime.now(timezone.utc)`)
-- Mypy type checking enforces correct datetime usage
-- Unit tests include timezone edge cases (DST transitions)
-
----
-
-## Rationale
-
-Why strict UTC only?
-
-- **Eliminate category of bugs**: No timezone conversions = no DST bugs
-- **Simplest**: No library, no conversion logic, no edge cases
-- **Fastest**: Direct timestamp comparison, no timezone lookups
-- **Most auditable**: "All timestamps are UTC" is easy to verify
-- **Aligned with governance**: Explicit requirement
-
----
-
-## Follow-Up Actions
-
-| Action | Timeline |
-|--------|----------|
-| Add mypy `disallow_untyped_defs` | Phase 2 start |
-| Add UTC pre-commit hook | Phase 2 start |
-| Review all IB API integrations for tz | Phase 2 |
-| Document in development guide | Phase 2 |
-
----
-
-## Approval
-
-**Decision Made By**: Kevin Heaney (2026-05-10)  
-**Status**: Accepted  
-**Implementation**: Phase 2
+- ADR-002: Runtime Kill Switch Architecture
+- ADR-003: Broker Reconciliation Discipline
+- ADR-005: Operator Availability Heartbeat
+- ADR-006: Deployment and Rollback Logs

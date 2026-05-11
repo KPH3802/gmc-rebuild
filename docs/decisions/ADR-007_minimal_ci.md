@@ -1,143 +1,56 @@
 # ADR-007: Minimal CI Strategy
 
-**Status**: Accepted
+## Status
 
-**Date**: 2026-05-10 (UTC)
+Accepted
 
-**Participants**: Kevin Heaney
+## Date
 
----
+2026-05-10 UTC
 
-## Problem Statement
+## Context / Problem
 
-Code quality checks (linting, type checking, tests) must run automatically to prevent regressions. For a solo operator in Phase 2, CI infrastructure should be minimal and lightweight.
-
----
+The rebuild needs enforceable local quality gates before production code exists. Phase 1 should keep CI lightweight while ensuring claims about linting, formatting, typing, tests, and secret detection match committed configuration.
 
 ## Decision
 
-**Phase 2**: Use **local pre-commit hooks only** (MVP, zero external CI).
+Use local pre-commit hooks as the Phase 1 and Phase 2 minimum quality gate. The committed configuration must include Ruff linting, Ruff formatting, mypy strict type checking, pytest, and secret detection. GitHub Actions can be added in a later phase if external automation becomes necessary.
 
-**Phase 3**: Upgrade to GitHub Actions (if team members added or regulatory requirements).
+## Alternatives Considered
 
----
+- No automated checks until code exists: too weak for governance claims.
+- GitHub Actions immediately: useful later, but heavier than needed before Phase 2 modules exist.
+- Manual checklist only: not enforceable and easy to skip.
 
-## Implementation Details
+## Consequences
 
-### Phase 2: Local Pre-Commit Hooks
+- Positive: The repository can prove baseline quality checks are runnable before Phase 2 starts.
+- Positive: Secrets and local artifacts are less likely to enter Git.
+- Negative: First-time setup requires installing pre-commit environments.
+- Risk: Hook versions can drift; version bumps must be deliberate and committed.
 
-**Tools configured** (in `.pre-commit-config.yaml`):
+## Implementation Notes
 
-1. **Ruff (lint & format)**
-   - Auto-fix violations
-   - Checks: syntax, complexity, unused imports, style
+The Phase 1 hook stack is defined in `.pre-commit-config.yaml`:
 
-2. **Mypy (type checking)**
-   - Type check with `disallow_untyped_defs = true` (strict)
+- Ruff lint with automatic fixes.
+- Ruff format.
+- mypy with `strict = true` and `disallow_untyped_defs = true` in `pyproject.toml`.
+- pytest, with a governance placeholder test until Phase 2 production modules exist.
+- detect-secrets with a committed baseline.
+- Basic repository hygiene hooks for YAML, JSON, line endings, merge conflicts, and file size.
 
-3. **Pytest (tests)**
-   - Run unit + integration tests
-   - Coverage target: 80%+
+The Python project settings are defined in `pyproject.toml` and must stay consistent with this ADR and the README.
 
-4. **Secret Detection**
-   - Find leaked credentials (IB tokens, Coinbase keys, etc.)
+## Follow-up Actions
 
-5. **Trailing Whitespace / End-of-File**
-   - Removes trailing whitespace, ensures newline at EOF
+- Install hooks locally with `pre-commit install`.
+- Replace the governance placeholder test with real tests as Phase 2 modules are introduced.
+- Add coverage enforcement thresholds only when executable production modules exist.
+- Revisit GitHub Actions at Phase 3 or earlier if Kevin wants hosted verification.
 
-### Installation
+## Related ADRs
 
-```bash
-cd ~/gmc-rebuild
-python -m venv venv
-source venv/bin/activate
-pip install -e ".[dev]"
-pre-commit install
-```
-
-Hook is now at `.git/hooks/pre-commit`. Runs automatically before every commit.
-
-### Developer Workflow
-
-```bash
-git add .
-git commit -m "Add PEAD signal"
-
-# Pre-commit checks run automatically:
-# ✓ ruff check --fix
-# ✓ ruff format
-# ✓ mypy
-# ✓ pytest
-# ✓ detect-secrets
-
-# If checks pass → commit succeeds
-# If checks fail → commit blocked, developer fixes and tries again
-```
-
-### Phase 3: GitHub Actions (Future)
-
-When Phase 3 begins (go-live or team members added), add GitHub Actions:
-
-```yaml
-name: CI
-on: [push, pull_request]
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with: {python-version: '3.12'}
-      - run: pip install -e ".[dev]"
-      - run: ruff check .
-
-  type-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with: {python-version: '3.12'}
-      - run: pip install -e ".[dev]"
-      - run: mypy src/
-
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with: {python-version: '3.12'}
-      - run: pip install -e ".[dev]"
-      - run: pytest --cov=src
-```
-
----
-
-## Rationale
-
-Why local pre-commit MVP for Phase 2?
-
-- Setup: 5 min
-- Feedback: Instant
-- Offline: Works without network
-- Enforced: Cannot commit without passing
-- Phase 2 fit: Solo operator, no external CI needed
-- Scalable: GitHub Actions added Phase 3 if team grows
-
----
-
-## Follow-Up Actions
-
-| Action | Timeline |
-|--------|----------|
-| Install pre-commit locally | Phase 2 start |
-| Create tests/ directory structure | Phase 2 |
-| Write unit tests for core modules | Phase 2 |
-| Prepare GitHub Actions workflow (Phase 3) | Phase 3 start |
-
----
-
-## Approval
-
-**Decision Made By**: Kevin Heaney (2026-05-10)  
-**Status**: Accepted  
-**Implementation**: Phase 2 (pre-commit), Phase 3 (GitHub Actions)
+- ADR-001: Secrets Management Strategy
+- ADR-004: UTC and Timezone Discipline
+- ADR-006: Deployment and Rollback Logs

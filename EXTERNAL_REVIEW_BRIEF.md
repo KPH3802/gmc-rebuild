@@ -1,82 +1,59 @@
 # Phase 1 External Review Brief
 
-**For**: ChatGPT or independent Claude instance  
-**Date**: 2026-05-10  
-**Status**: Ready for verification  
+**For**: Independent verification  
+**Date**: 2026-05-11 UTC  
+**Status**: Ready for verification after governance cleanup  
 **Repository**: https://github.com/KPH3802/gmc-rebuild
 
----
+## Scope
 
-## What Was Delivered
+This repository is in Phase 1 governance. It contains no trading strategy implementation, no broker execution implementation, and no live trading workflow.
 
-**Phase 1: Infrastructure & Governance Setup** — COMPLETE
+## Artifacts for Review
 
-### Artifacts (15 files)
+Core config:
 
-Core Config: .gitignore, .pre-commit-config.yaml, pyproject.toml, README.md
+- `.gitignore`
+- `.pre-commit-config.yaml`
+- `pyproject.toml`
+- `.secrets.baseline`
+- `README.md`
 
-Templates: ADR_TEMPLATE.md, deploy_log_TEMPLATE.md, daily_report_TEMPLATE.md, review_request_TEMPLATE.md
+Templates:
 
-Architecture Decision Records (7 files):
-- ADR-001: Secrets Management (HashiCorp Vault)
-- ADR-002: Kill Switch (SQLite database flag)
-- ADR-003: Reconciliation (Hourly auto-daemon)
-- ADR-004: UTC/Timezone (Strict UTC only)
-- ADR-005: Heartbeat (Operator availability)
-- ADR-006: Deployment Logs (Template-based)
-- ADR-007: CI Strategy (Pre-commit MVP)
+- `docs/decisions/ADR-template.md`
+- `docs/deploys/deploy-log-template.md`
+- `monitoring/daily/daily-report-template.md`
+- `reviews/review-request-template.md`
 
-Supporting: PHASE_1_COMPLETION_SUMMARY.md
+Architecture decision records:
 
----
+- `docs/decisions/ADR-001_secrets_management.md`
+- `docs/decisions/ADR-002_kill_switch.md`
+- `docs/decisions/ADR-003_reconciliation.md`
+- `docs/decisions/ADR-004_utc_discipline.md`
+- `docs/decisions/ADR-005_heartbeat.md`
+- `docs/decisions/ADR-006_deployment_logs.md`
+- `docs/decisions/ADR-007_minimal_ci.md`
 
-## 7 Governance Decisions (All Accepted)
+Supporting plan:
 
-1. Secrets Management → HashiCorp Vault (ADR-001)
-2. Runtime Kill Switch → SQLite database flag (ADR-002)
-3. Broker Reconciliation → Hourly auto-daemon (ADR-003)
-4. UTC/Timezone → Strict UTC only (ADR-004)
-5. Operator Availability → Database heartbeat (ADR-005)
-6. Deployment Logs → Template-based (ADR-006)
-7. CI Strategy → Pre-commit MVP, GitHub Actions Phase 3 (ADR-007)
-
----
-
-## Governance Controls
-
-12 Invariants defined (A/B/C/D levels)
-4 Templates created (ADR, deployment log, daily report, review request)
-.gitignore complete (secrets, caches, data files)
-Pre-commit ready (ruff, mypy, pytest, secret detection)
-
----
+- `plan/rebuild_plan.md`
 
 ## Verification Checklist
 
-Format & Structure:
-- All 7 ADRs follow consistent template
-- Each ADR has Problem, Decision, Implementation, Rationale, Consequences, Follow-up
-- Each ADR documents Status, Date, Participants, Timeline
+- All seven ADRs use the same required headings.
+- ADR-003 is complete and no longer truncated.
+- ADR-004 enforces timezone-aware UTC.
+- ADR-005 does not use timezone-naive UTC examples.
+- The four templates are non-empty and usable.
+- `.gitignore` covers macOS files, Python caches, virtual environments, secrets, local databases, trading/data outputs, logs, build artifacts, and editor temp files.
+- JSON files are not blanket-ignored.
+- `.pre-commit-config.yaml` includes Ruff lint, Ruff format, mypy, pytest, and detect-secrets.
+- `pyproject.toml` matches ADR-007 and README claims.
+- README documents current phase, architecture, workflow, phase gates, setup, pre-commit, Phase 2 entry criteria, and safety rules.
+- The 12 governance invariants are defined in `plan/rebuild_plan.md` and summarized in `README.md`.
 
-Content Quality:
-- All 7 decisions specific and actionable
-- Each has clear rationale vs. alternatives
-- Consequences documented with risks and mitigations
+## Phase 2 Boundary
 
-Governance Alignment:
-- 12 invariants defined and mapped to ADRs
-- 4 templates created and ready for Phase 2
-- .gitignore prevents secrets
-- Pre-commit enforces code quality
-
-Git & Repository:
-- 3 governance commits with descriptive messages
-- Clean history, no uncommitted changes
-- Pushed to GitHub
-
----
-
-**Delivered By**: Kevin Heaney (2026-05-10)  
-**Repository**: https://github.com/KPH3802/gmc-rebuild  
-**Latest Commit**: 95d1c47  
-**Status**: Ready for Phase 2 planning
+Phase 2 has not started. Any request to add signal logic, broker execution, live trading behavior, or runtime daemons should be rejected until Kevin explicitly opens Phase 2.

@@ -1,101 +1,59 @@
 # ADR-002: Runtime Kill Switch Architecture
 
-**Status**: Accepted
+## Status
 
-**Date**: 2026-05-10 (UTC)
+Accepted
 
-**Participants**: Kevin Heaney
+## Date
 
----
+2026-05-10 UTC
 
-## Problem Statement
+## Context / Problem
 
-The system must have an **emergency stop mechanism** that responds in < 1 second if unsafe market conditions are detected. The kill switch must stop all trading immediately, be manually triggerable by Kevin, and persist across reboots.
-
----
+Before any trading logic is rebuilt, the project needs a documented safe-state mechanism. The kill switch must be durable, auditable, inspectable by a solo operator, and available to future monitoring code without requiring a web service or broker integration during Phase 1.
 
 ## Decision
 
-**Use SQLite database flag** stored in `gmc_data/monitor.db` as the runtime kill switch mechanism.
+Use a SQLite-backed runtime kill switch stored outside the repository under `gmc_data/monitor.db` when Phase 2 implementation begins. A future runtime component must treat any active kill-switch record as a hard stop.
 
----
+## Alternatives Considered
 
-## Implementation Details
+- In-memory flag: fast, but lost on restart and not auditable.
+- Flat file flag: simple, but harder to query and extend with structured metadata.
+- Local HTTP service: flexible, but creates more moving parts before they are justified.
 
-### Database Schema
+## Consequences
+
+- Positive: The safe state survives process restarts and machine reboots.
+- Positive: Operators and review tools can inspect trigger history with standard SQLite tooling.
+- Negative: Runtime code must handle SQLite availability and locking carefully.
+- Risk: A stale active flag can block startup; that is acceptable because the safe default is no trading.
+
+## Implementation Notes
+
+Potential Phase 2 schema, subject to review before implementation:
 
 ```sql
 CREATE TABLE IF NOT EXISTS kill_switch (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    triggered_at DATETIME NOT NULL,           -- UTC timestamp
-    triggered_by TEXT NOT NULL,               -- "kevin" or "auto_vix" or "auto_reconciliation"
-    reason TEXT NOT NULL,                     -- Human-readable reason
-    active BOOLEAN NOT NULL DEFAULT 1         -- 1=active, 0=reset by operator
+    triggered_at_utc TEXT NOT NULL,
+    triggered_by TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1
 );
 ```
 
-### Auto-Trigger Conditions
+Timestamp values must be UTC ISO 8601 strings such as `2026-05-10T14:23:45Z`. Python code must use timezone-aware UTC values, for example `datetime.now(timezone.utc)`.
 
-| Condition | Trigger | Reason |
-|-----------|---------|--------|
-| VIX > 50 | INSERT kill_switch | "Auto: VIX extreme" |
-| Daily drawdown < -2% | INSERT kill_switch | "Auto: Max daily loss" |
-| Reconciliation mismatch | INSERT kill_switch | "Auto: Position mismatch" |
-| IB Gateway unavailable | INSERT kill_switch | "Auto: IB timeout" |
-| Kevin heartbeat stale | INSERT kill_switch | "Auto: Operator offline" |
+## Follow-up Actions
 
-### Manual Trigger
+- Create the schema in Phase 2 only after tests and review are in place.
+- Define activation and reset workflows in a deployment log before first dry-run use.
+- Add reconciliation and heartbeat integration tests when those components exist.
 
-```bash
-sqlite3 ~/gmc_data/monitor.db << EOF
-INSERT INTO kill_switch (triggered_at, triggered_by, reason, active)
-VALUES (datetime('now'), 'kevin', 'Manual override', 1);
-EOF
-```
+## Related ADRs
 
-### Check Status
-
-```bash
-sqlite3 ~/gmc_data/monitor.db "SELECT * FROM kill_switch ORDER BY triggered_at DESC LIMIT 1"
-```
-
-### Reset Kill Switch (Operator Manual)
-
-```bash
-sqlite3 ~/gmc_data/monitor.db << EOF
-UPDATE kill_switch SET active=0 WHERE active=1;
-EOF
-```
-
----
-
-## Rationale
-
-Why SQLite database over alternatives?
-
-- **Response Time**: ~1ms query + action (acceptable)
-- **Audit Trail**: Tracks who triggered, when, and why
-- **Durable**: Survives reboots; safe default is "still killed"
-- **Integrated**: Same DB as daily monitoring (gmc_data/monitor.db)
-- **Queryable**: Can inspect from CLI or monitoring dashboard
-- **No extra services**: Uses existing SQLite; no Flask to manage
-
----
-
-## Follow-Up Actions
-
-| Action | Timeline |
-|--------|----------|
-| Create kill_switch table in monitor.db | Phase 2 start |
-| Implement monitoring daemon query logic | Phase 2 |
-| Add auto-trigger logic (VIX, drawdown, etc.) | Phase 2 |
-| Test < 1 sec response time | Phase 2 |
-| Daily report integration | Phase 2 |
-
----
-
-## Approval
-
-**Decision Made By**: Kevin Heaney (2026-05-10)  
-**Status**: Accepted  
-**Implementation**: Phase 2
+- ADR-003: Broker Reconciliation Discipline
+- ADR-004: UTC and Timezone Discipline
+- ADR-005: Operator Availability Heartbeat
+- ADR-006: Deployment and Rollback Logs

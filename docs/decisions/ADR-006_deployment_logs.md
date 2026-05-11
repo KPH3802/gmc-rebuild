@@ -1,79 +1,50 @@
-# ADR-006: Deployment & Rollback Logs Strategy
+# ADR-006: Deployment and Rollback Logs
 
-**Status**: Accepted
+## Status
 
-**Date**: 2026-05-10 (UTC)
+Accepted
 
-**Participants**: Kevin Heaney
+## Date
 
----
+2026-05-10 UTC
 
-## Problem Statement
+## Context / Problem
 
-Every change deployed to production must be logged with full context: what changed, when, why, how it was verified, and how to rollback.
-
----
+Every operational change needs an audit trail that records what changed, why it changed, how it was verified, and how it can be rolled back. This is required before Phase 2 creates any runtime component or local database.
 
 ## Decision
 
-**Use template-based deployment logs** with mandatory pre-deployment checklist and post-deployment verification.
+Use Markdown deployment logs under `docs/deploys/` for every material operational change. The deployment log template is the required structure for pre-deployment checks, execution notes, post-deployment verification, rollback instructions, and sign-off.
 
----
+## Alternatives Considered
 
-## Implementation Details
+- Rely on Git commits only: captures code changes, but not runtime steps or verification evidence.
+- External ticketing system: useful later, but unnecessary for Phase 1.
+- Free-form notes: flexible, but inconsistent and hard to verify externally.
 
-### Before Deploying
+## Consequences
 
-1. Create: `docs/deploys/deploy_log_2026-05-10_14_30.md`
-2. Complete pre-deployment checklist:
-   - [ ] Code passes ruff/mypy/pytest
-   - [ ] .gitignore confirmed
-   - [ ] Dry-run test passed
-   - [ ] Rollback procedure documented
+- Positive: Phase gates and rollback plans are visible in Git.
+- Positive: External reviewers can audit deployments without needing chat history.
+- Negative: Operators must maintain the log as part of the deployment, not after the fact.
+- Risk: Incomplete logs can create false confidence; reviews must reject incomplete deployment evidence.
 
-### During Deployment
+## Implementation Notes
 
-3. Execute deployment steps
-4. Update log with timestamp
+- Template path: `docs/deploys/deploy-log-template.md`.
+- Deployment timestamps must be UTC and follow ADR-004.
+- Phase 1 governance changes do not deploy runtime trading systems.
+- Future deployment logs should reference related ADRs, commits, reviews, and verification outputs.
 
-### After Deployment
+## Follow-up Actions
 
-5. Complete post-deployment verification:
-   - [ ] Processes started
-   - [ ] Logs clean
-   - [ ] Reconciliation clean
+- Create dated deployment logs for Phase 2 infrastructure setup.
+- Add deployment-log review to Phase 2 entry criteria.
+- Define archive naming for successful, failed, and rolled-back deployments.
 
-6. Archive log as `_SUCCESS.md` or `_ROLLED_BACK.md`
+## Related ADRs
 
-### What Counts as Deployment
-
-- Code changes
-- Config changes
-- Data migrations
-- Policy changes
-- Infrastructure changes
-
-### Rollback Procedure
-
-1. Stop trading (kill switch)
-2. Revert code: `git revert [commit]`
-3. Restart services
-4. Verify reconciliation clean
-5. Document incident postmortem
-
----
-
-## Rationale
-
-- Immediate: Works now without extra infrastructure
-- Simple: Spreadsheet-level discipline
-- Effective: Full audit trail with minimal overhead
-- Scalable: Can upgrade to GitHub Actions Phase 3+
-
----
-
-## Approval
-
-**Decision Made By**: Kevin Heaney (2026-05-10)  
-**Status**: Accepted  
-**Implementation**: Phase 2
+- ADR-001: Secrets Management Strategy
+- ADR-002: Runtime Kill Switch Architecture
+- ADR-004: UTC and Timezone Discipline
+- ADR-007: Minimal CI Strategy

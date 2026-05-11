@@ -28,6 +28,23 @@ The rebuild follows a strict sequence. No step proceeds until the previous step 
 
 Each step's definition and exit criteria are filled in Section 7.
 
+### 2.1 The 12 Governance Invariants
+
+These invariants are mandatory constraints for the rebuild. If an artifact conflicts with an invariant, the artifact is blocked until Kevin approves a documented governance change.
+
+1. **Phase approval controls scope.** No work may enter the next phase until Kevin explicitly approves that phase gate.
+2. **No live trading before approval.** Live capital is out of scope until the execute phase has passed all prior gates.
+3. **No broker execution before authorization.** Broker execution code and order placement workflows are blocked until Kevin authorizes the implementation phase that contains them.
+4. **No trading strategy during governance cleanup.** Phase 1 may document controls only; it may not implement signals, scanners, models, or portfolio rules.
+5. **Secrets never enter Git.** Credentials, private keys, certificates, tokens, and local environment files must stay outside version control.
+6. **Generated state stays outside Git.** Local databases, logs, raw data, processed data, model outputs, and generated reports are not committed unless a future ADR creates a narrow reproducibility exception.
+7. **UTC is mandatory.** Runtime code, docs, reports, and examples use timezone-aware UTC and unambiguous UTC strings.
+8. **Safety controls fail closed.** Missing secrets, stale operator heartbeat, reconciliation mismatch, unavailable broker state, or active kill switch must stop future runtime trading behavior.
+9. **Reconciliation precedes live use.** Automated reconciliation must exist, be tested, and be reviewed before live trading can be considered.
+10. **Operator availability is a safety input.** Future runtime monitoring must detect stale Kevin availability and route stale state to the kill switch policy.
+11. **Deployments are auditable and reversible.** Material operational changes require a deployment log with verification evidence and rollback instructions.
+12. **Claims must match tooling and evidence.** README, ADRs, plan, pre-commit, `pyproject.toml`, tests, and external-review claims must be mutually consistent.
+
 ---
 
 ## 3. Engineering Standards

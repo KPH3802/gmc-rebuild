@@ -1,51 +1,67 @@
-### Reconciliation Tolerance
+# ADR-003: Broker Reconciliation Discipline
 
-**Formula**: `tolerance = max($10, 0.1% of NLV)`
+## Status
 
-| NLV | Tolerance |
-|-----|-----------|
-| $10,000 | $10 |
-| $50,000 | $50 |
-| $100,000 | $100 |
-| $1,000,000 | $1,000 |
+Accepted
 
-**Rationale**: $10 minimum covers IB fees, rounding errors. 0.1% covers slippage, FX rounding, order fill variations.
+## Date
 
-### Reconciliation Schedule
+2026-05-10 UTC
 
-| Time | Frequency | Details |
-|------|-----------|---------|
-| Every hour | 24/day | Full position + cash reconciliation |
-| Daily 22:00 UTC | 1/day | Full detailed report (logs to DB) |
-| Weekly (Mon 09:00 UTC) | 1/week | Deep audit (compare transaction history) |
+## Context / Problem
 
----
+Future trading infrastructure must detect mismatches between expected state and broker-reported state before they can compound into unsafe decisions. Phase 1 must define the reconciliation standard without implementing broker execution or trading strategy code.
 
-## Rationale
+## Decision
 
-Why hourly auto-daemon?
+Require an automated reconciliation daemon in Phase 2 design. The daemon will compare expected positions, cash, and account state against broker-reported values on an hourly schedule, produce a daily UTC report, and trigger the kill switch when a material mismatch is confirmed.
 
-- **Early detection**: Mismatches caught within 60 min, not hours or days
-- **Automated**: Solo operator can't manually reconcile daily
-- **Audit trail**: 24 hourly reconciliation logs per day (excellent for postmortems)
-- **Fail-safe**: Kill switch auto-triggers on mismatch (prevents bad decisions)
+## Alternatives Considered
 
----
+- Manual reconciliation only: insufficient for a solo operator and too easy to miss during travel or sleep.
+- Daily automated reconciliation only: useful for audit, but too slow for runtime safety.
+- Per-order reconciliation only: valuable later, but requires broker execution code that is out of scope for Phase 1.
 
-## Follow-Up Actions
+## Consequences
 
-| Action | Timeline |
-|--------|----------|
-| Implement reconcile_daemon.py | Phase 2 |
-| Create launchd .plist configuration | Phase 2 |
-| Test with historical IB data | Phase 2 |
-| Define reconciliation tolerance precisely | Phase 2 |
-| Add to daily report template | Phase 2 |
+- Positive: Position and cash mismatches become visible within a bounded window.
+- Positive: Reconciliation evidence can be attached to deployment logs and daily reports.
+- Negative: Phase 2 must model tolerances precisely enough to avoid noisy false positives.
+- Risk: Broker outages can look like mismatches; the daemon must distinguish unavailable data from confirmed disagreement.
 
----
+## Implementation Notes
 
-## Approval
+Initial tolerance policy for Phase 2 review:
 
-**Decision Made By**: Kevin Heaney (2026-05-10)  
-**Status**: Accepted  
-**Implementation**: Phase 2
+`tolerance = max(10 USD, 0.1% of net liquidation value)`
+
+| Net Liquidation Value | Tolerance |
+| --- | --- |
+| 10,000 USD | 10 USD |
+| 50,000 USD | 50 USD |
+| 100,000 USD | 100 USD |
+| 1,000,000 USD | 1,000 USD |
+
+Initial schedule:
+
+| Cadence | Purpose |
+| --- | --- |
+| Hourly | Position, cash, and account-state reconciliation |
+| Daily at 22:00 UTC | Detailed report for audit trail |
+| Weekly Monday at 09:00 UTC | Deep audit against transaction history |
+
+All reconciliation timestamps must follow ADR-004 and use UTC ISO 8601 strings with `Z` suffix.
+
+## Follow-up Actions
+
+- Write reconciliation specifications and tests before implementation.
+- Define broker data fixtures for dry-run validation.
+- Add daily-report fields for clean, warning, and failed reconciliation states.
+- Define kill-switch trigger criteria for confirmed material mismatches.
+
+## Related ADRs
+
+- ADR-002: Runtime Kill Switch Architecture
+- ADR-004: UTC and Timezone Discipline
+- ADR-005: Operator Availability Heartbeat
+- ADR-006: Deployment and Rollback Logs
