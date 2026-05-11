@@ -16,6 +16,7 @@ Phase 2 may start only after Phase 1 passes external verification and Kevin expl
 | `AI_WORKFLOW.md` | Separation of duties: Codex builds, Perplexity Computer verifies, Kevin approves, backup AI reviews adversarially |
 | `README.md` | Operating overview, setup, phase gates, and safety rules |
 | `plan/rebuild_plan.md` | Canonical rebuild plan and the 12 governance invariants |
+| `plan/phase2_entry_plan.md` | Phase 2 entry plan (planning only; Phase 2 implementation not yet open) |
 | `docs/decisions/ADR-*.md` | Accepted architecture decision records |
 | `docs/decisions/ADR-template.md` | Template for future ADRs |
 | `docs/deploys/deploy-log-template.md` | Template for deployment and rollback logs |
@@ -54,6 +55,8 @@ Phase 2 entry criteria:
 - No unresolved blocker remains in ADRs, templates, README, tooling, or repo hygiene.
 - Kevin explicitly authorizes Phase 2.
 - The first Phase 2 task is infrastructure-only unless Kevin approves a narrower implementation plan.
+
+See `plan/phase2_entry_plan.md` for the planning-stage Phase 2 entry plan, including proposed first PRs, required proof per PR, and stop conditions.
 
 ## The 12 Invariants
 
