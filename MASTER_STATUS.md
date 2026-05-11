@@ -139,21 +139,36 @@ git merge-base --is-ancestor 1f101fc HEAD && echo "OK: descended from 1f101fc" |
 #    gate authorizes them): strategy, signals, scanners, models, portfolio,
 #    backtests, broker, execution, live, paper trading wired to a real broker,
 #    runtime daemons affecting accounts, real market data ingestion, order
-#    placement, secrets. These directory names are illustrative; the categories
-#    apply regardless of where the code is placed.
-ls strategy/ strategies/ signals/ scanners/ models/ portfolio/ backtests/ \
-   broker/ execution/ live/ paper/ daemons/ data/ market_data/ orders/ \
-   secrets/ 2>/dev/null \
-  && echo "STOP: always-forbidden category directories present" \
-  || echo "OK: no always-forbidden category directories"
+#    placement, secrets. These names are illustrative; the categories apply
+#    regardless of where the code is placed. The loop below reports each
+#    forbidden path individually and matches both files and directories, so a
+#    single forbidden entry (e.g. an `orders/` directory or a `secrets` file)
+#    cannot hide behind sibling missing paths the way it could with a
+#    multi-arg `ls`.
+unset found
+for path in strategy strategies signal signals scanner scanners model models \
+            portfolio backtest backtests broker execution live paper daemons \
+            data market_data orders secrets; do
+  if [ -e "$path" ]; then
+    echo "STOP: always-forbidden category present: $path"
+    found=1
+  fi
+done
+[ "${found:-0}" -eq 0 ] && echo "OK: no always-forbidden category paths"
 
 # 4a. Phase 1 / pre-Phase-2-implementation mode (current default).
 #     In this mode, Phase 2 infrastructure directories such as src/ are also
 #     STOP, because Phase 2 implementation is not yet open. See
 #     plan/phase2_entry_plan.md §1, §4 (P2-01), §5 for the future sequence.
-ls src/ 2>/dev/null \
-  && echo "STOP: Phase 2 infrastructure present but Phase 2 implementation is not open (see plan/phase2_entry_plan.md)" \
-  || echo "OK: no Phase 2 infrastructure directories (pre-Phase-2-implementation mode)"
+#     Same per-path style as step 4 for consistency.
+unset p2_infra_found
+for path in src; do
+  if [ -e "$path" ]; then
+    echo "STOP: Phase 2 infrastructure present but Phase 2 implementation is not open: $path (see plan/phase2_entry_plan.md)"
+    p2_infra_found=1
+  fi
+done
+[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: no Phase 2 infrastructure paths (pre-Phase-2-implementation mode)"
 
 # 4b. Phase 2 implementation mode (only after Kevin's explicit written
 #     authorization per §7 and a specific accepted Phase 2 task/PR that names
