@@ -14,6 +14,7 @@ def test_phase1_has_governance_artifacts() -> None:
         root / ".pre-commit-config.yaml",
         root / "pyproject.toml",
         root / "docs" / "decisions" / "ADR-template.md",
+        root / "docs" / "decisions" / "ADR-008_monitoring_cadence_and_ai_monitor_role.md",
         root / "docs" / "deploys" / "deploy-log-template.md",
         root / "monitoring" / "daily" / "daily-report-template.md",
         root / "reviews" / "review-request-template.md",

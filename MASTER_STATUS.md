@@ -2,7 +2,7 @@
 
 **Read this document first at the start of every serious work session.** It is the canonical, single source of truth for the current state of `gmc-rebuild`. If anything in another document conflicts with this file, this file wins until it is updated.
 
-**Last updated:** 2026-05-11 UTC (P2-01 package skeleton authorized)
+**Last updated:** 2026-05-11 UTC (ADR-008 monitoring cadence and backup-AI monitor role accepted)
 **Maintained by:** Perplexity Computer (supervisor / status keeper), approved by Kevin
 
 ---
@@ -14,6 +14,8 @@
 Phase 1 (governance cleanup) was accepted per `1f101fc` (see §3). Phase 2 is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness), which creates the importable `src/gmc_rebuild/` layout with no runtime behavior. See `plan/phase2_entry_plan.md` §4 for the full P2-01..P2-05 sequence; only P2-01 is open. P2-02 and beyond require separate written authorization.
 
 The repository still contains no trading strategy code, no broker execution code, no live trading workflow, no runtime daemon, no market data ingestion, and no real secrets or account identifiers. Each future Phase 2 PR is authorized individually and must satisfy the proof bundle in `plan/phase2_entry_plan.md` §6.
+
+Governance monitoring is governed by `docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md`. Until runtime exists, a monitoring packet under `monitoring/daily/YYYY-MM-DD.md` is required on any active workday on which the default branch changes **or** a pull request is open or merged. The backup / adversarial AI is named in ADR-008 §D1 as the author of monitoring packets when invoked (Mode B), in addition to its existing gate-reviewer role (Mode A) per `AI_WORKFLOW.md` §4. Missed packets are handled per ADR-008 §D5 (catch-up note before the next phase-opening or phase-expanding PR; no automatic rollback while no runtime exists). Runtime-phase cadence is deferred to a follow-up ADR per ADR-008 §D6.
 
 ---
 
@@ -85,6 +87,7 @@ The repository contains, and only contains:
 - Project configuration: `pyproject.toml`, `.pre-commit-config.yaml`, `.gitignore`, `.secrets.baseline`.
 - Phase 1 governance placeholder tests and the P2-01 skeleton tests under `tests/`.
 - The P2-01 package skeleton at `src/gmc_rebuild/`: an empty importable package with `__init__.py`, a `__version__` string, and a `py.typed` marker. No submodules, no runtime behavior.
+- ADR-008 (`docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md`): the governance decision that clarifies the backup-AI monitor role and the monitoring cadence rule. Governance only; no runtime code added.
 
 ---
 
@@ -308,7 +311,7 @@ If any step fails, document the failure in the session log and stop. Do not "fix
 
 Only the following decisions are in scope right now. Any other change requires Kevin's explicit approval.
 
-1. Editing or extending governance documentation: `MASTER_STATUS.md`, `AI_WORKFLOW.md`, `README.md`, `plan/rebuild_plan.md`, `EXTERNAL_REVIEW_BRIEF.md`.
+1. Editing or extending governance documentation: `MASTER_STATUS.md`, `AI_WORKFLOW.md`, `README.md`, `plan/rebuild_plan.md`, `EXTERNAL_REVIEW_BRIEF.md`. Authoring monitoring packets under `monitoring/daily/` per ADR-008 §D3 and §D4 is in scope.
 2. Editing or extending ADRs and the four templates under `docs/` and adjacent directories, in line with the existing structure.
 3. Fixing documented blockers raised by external verification, scoped to Phase 1 only.
 4. Repository hygiene: `.gitignore`, `.pre-commit-config.yaml`, `pyproject.toml`, `.secrets.baseline`, where the change strictly preserves Phase 1 invariants.

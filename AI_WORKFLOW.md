@@ -37,10 +37,12 @@ There are exactly four roles. Each role has a single, well-defined responsibilit
 
 ### 1.4 Backup AI — Adversarial Reviewer (Optional, Conditional)
 
-- Used **only** in three situations, defined in Section 4: phase gates, high-risk architecture decisions, and safety-critical decisions.
-- Reviews adversarially: looks for ways the proposed change can fail, violate an invariant, or expand scope.
-- Does **not** build, does **not** decide, does **not** edit files.
-- Output is a written critique. Kevin reads it. Codex addresses it. Perplexity Computer re-verifies.
+The Backup AI operates in two distinct modes with non-overlapping triggers. Both modes share the same adversarial stance and the same constraint surface — only the trigger differs. See `docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md` for the full decision.
+
+- **Mode A — Gate Reviewer.** Used **only** in the three situations defined in Section 4: phase gates, high-risk architecture decisions, and safety-critical decisions. Reviews adversarially: looks for ways the proposed change can fail, violate an invariant, or expand scope. Output is a written critique. Kevin reads it. Codex addresses it. Perplexity Computer re-verifies.
+- **Mode B — Continuous Governance Monitor.** Used when a monitoring packet is required under the cadence rule in ADR-008 §D3. Reads the working tree and recent PR activity and writes a packet under `monitoring/daily/YYYY-MM-DD.md` using the existing template. Producing a monitoring packet is **not** approval and does **not** substitute for Perplexity Computer's verification or Kevin's decision.
+
+In both modes the Backup AI does **not** build, does **not** decide, does **not** merge, and does **not** edit files outside `monitoring/daily/` in Mode B (Mode A edits no files at all). Routine documentation edits, template tweaks, dependency bumps that match committed versions, and typo fixes do not trigger either mode.
 
 ---
 
@@ -109,13 +111,22 @@ A verification report with no file-specific evidence is not a verification.
 
 ## 4. When to Use the Backup AI
 
-The backup AI is opt-in and conditional. It is not part of the default flow. Use it **only** for:
+The backup AI is opt-in and conditional. It is not part of the default flow.
+
+**Mode A — Gate Reviewer.** Use the backup AI in Mode A **only** for:
 
 1. **Phase gates.** Before Kevin is asked to close a phase or open the next phase, the backup AI reviews the artifacts and the verification report adversarially.
 2. **High-risk architecture decisions.** Any ADR that defines a new control surface, a new trust boundary, or a non-reversible decision. Examples: secrets management, kill switch, reconciliation, deployment process.
 3. **Safety-critical decisions.** Any change that, if wrong, could cause real-world loss: live trading authorization, broker integration, kill switch behavior, operator heartbeat policy, data retention or destruction policy.
 
-Do not invoke the backup AI for routine documentation edits, template tweaks, dependency bumps that match committed versions, or typo fixes. Routine use erodes its signal.
+Do not invoke the backup AI in Mode A for routine documentation edits, template tweaks, dependency bumps that match committed versions, or typo fixes. Routine use erodes its signal.
+
+**Mode B — Continuous Governance Monitor.** Use the backup AI in Mode B when a monitoring packet is required by ADR-008 §D3:
+
+- The repository state changes on the default branch (a merge to `main`) on an active workday, **or**
+- A pull request is open for review or is merged during an active workday.
+
+Mode B is governed entirely by ADR-008. The packet location, format, and missed-packet handling are defined there. Mode B does not bypass §3 verification or §1.3 approval.
 
 ---
 
