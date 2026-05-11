@@ -16,7 +16,7 @@ P2-03..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and may n
 | `AI_WORKFLOW.md` | Separation of duties: Codex builds, Perplexity Computer verifies, Kevin approves, backup AI reviews adversarially |
 | `README.md` | Operating overview, setup, phase gates, and safety rules |
 | `plan/rebuild_plan.md` | Canonical rebuild plan and the 12 governance invariants |
-| `plan/phase2_entry_plan.md` | Phase 2 entry plan and P2-01..P2-05 sequence (Phase 2 implementation open for P2-01 only; P2-02+ require separate written authorization) |
+| `plan/phase2_entry_plan.md` | Phase 2 entry plan and P2-01..P2-05 sequence (Phase 2 implementation open for P2-01 and P2-02 only; P2-03+ require separate written authorization) |
 | `docs/decisions/ADR-*.md` | Accepted architecture decision records |
 | `docs/decisions/ADR-template.md` | Template for future ADRs |
 | `docs/deploys/deploy-log-template.md` | Template for deployment and rollback logs |
