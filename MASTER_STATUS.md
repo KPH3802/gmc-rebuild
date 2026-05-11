@@ -37,7 +37,7 @@ Anything not in this list is supporting material, not source of truth. If a conf
 
 **Accepted Phase 1 baseline:** `1f101fc` (`docs: fix Phase 1 verification blockers`).
 
-The accepted Phase 1 baseline is `1f101fc`, established by Kevin's written acceptance on PR #3. That written acceptance is the audit-visible record per `AI_WORKFLOW.md` §3.1 and §6 rule 2; it supersedes earlier candidate baselines. Any session on the default branch should start from `1f101fc` or a descendant of it. The current `main` head is a descendant of `1f101fc` (see §8 step 3 for the verification command).
+The accepted Phase 1 baseline is `1f101fc`, established by Kevin's written acceptance note on PR #3. That note is itself the audit-visible record (GitHub PR-comment history); it supersedes earlier candidate baselines. Any session on the default branch should start from `1f101fc` or a descendant of it. The current `main` head is a descendant of `1f101fc` (see §8 step 3 for the verification command).
 
 This section deliberately does not require `MASTER_STATUS.md` to name the merge commit that lands a given PR as a "new baseline" — that recursion is unnecessary. The accepted Phase 1 baseline (`1f101fc`) is fixed; subsequent work lives as descendants of it.
 
@@ -51,7 +51,7 @@ This section deliberately does not require `MASTER_STATUS.md` to name the merge 
 
 ### P2-01 authorization is separate from the baseline
 
-Kevin's written authorization for PR P2-01 (package skeleton and test harness, see `plan/phase2_entry_plan.md` §4) is recorded in §1, §5, §7, and §8. P2-01 does not change the accepted Phase 1 baseline; it opens Phase 2 implementation narrowly on top of that baseline. Any future change to the accepted Phase 1 baseline must be made the audit-visible way required by `AI_WORKFLOW.md` §3.1 — in this section and in the PR that lands it.
+Kevin's written authorization for PR P2-01 (package skeleton and test harness, see `plan/phase2_entry_plan.md` §4) is recorded in §1, §5, §7, and §8. P2-01 does not change the accepted Phase 1 baseline; it opens Phase 2 implementation narrowly on top of that baseline. Any future change to the accepted Phase 1 baseline must be recorded audit-visibly — in this section and in the PR that lands it — and must not silently substitute a different baseline (`AI_WORKFLOW.md` §3 covers the proof-bundle requirements that make this enforceable).
 
 ---
 
@@ -104,7 +104,7 @@ Phase 2 implementation is forbidden **except** for tasks named in an accepted Ph
 
 - **PR P2-01 — package skeleton and test harness.** Authorizes the importable `src/gmc_rebuild/` layout, the corresponding pytest fixtures under `tests/`, and the minimal `pyproject.toml` package-discovery wiring. Does not authorize submodules, runtime behavior, or any of the always-forbidden categories above.
 
-P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and remain forbidden until Kevin records explicit written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 8. A PR that introduces work outside the §8 step 4a allowlist must be rejected at review.
+P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and remain forbidden until Kevin records explicit written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 ("One approver") / rule 7 ("No phase drift"). A PR that introduces work outside the §8 step 4a allowlist must be rejected at review.
 
 ---
 
@@ -120,7 +120,7 @@ Phase 1 was accepted by Kevin in writing on PR #3 against `1f101fc` (see §3). P
 What this means in practice:
 
 - The §8 step 4a allowlist currently contains exactly `src/`, authorizing P2-01's importable `src/gmc_rebuild/` skeleton and nothing else.
-- P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized. Each requires its own written authorization from Kevin per `AI_WORKFLOW.md` §6 rule 8 and a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory.
+- P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized. Each requires its own written authorization from Kevin per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), and a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory.
 - The always-forbidden categories in §6 and `plan/phase2_entry_plan.md` §2 remain forbidden regardless of mode. Authorizing P2-01 does not authorize any Phase 3+ behavior.
 - Any pull request that introduces strategy logic, broker integration, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, or real secrets must be closed without merge, even if it is presented as "Phase 2 infrastructure."
 
@@ -213,7 +213,7 @@ pre-commit run --all-files
 pytest
 ```
 
-If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 8, controls may not be silently relaxed. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
+If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), the phase boundary cannot be moved by Codex or Perplexity Computer alone, and per rule 8, tooling hooks (pre-commit, mypy strict, detect-secrets) may not be weakened to make a failure go away. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
 
 ---
 

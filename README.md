@@ -4,9 +4,9 @@
 
 ## Current Phase
 
-Phase 1 is governance cleanup only. There is no trading strategy code, no broker execution code, no live trading integration, and no Phase 2 implementation in this repository yet.
+Phase 1 (governance cleanup) was accepted by Kevin in writing on PR #3 against commit `1f101fc`. Phase 2 implementation is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness, see `plan/phase2_entry_plan.md` §4), which creates the importable `src/gmc_rebuild/` layout with no runtime behavior. No other Phase 2 task is authorized. Strategy code, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, and real secrets remain forbidden — see `MASTER_STATUS.md` §6.
 
-Phase 2 may start only after Phase 1 passes external verification and Kevin explicitly decides to proceed.
+P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and may not be started without separate written authorization from Kevin, per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 ("One approver").
 
 ## Repository Architecture
 
@@ -16,7 +16,7 @@ Phase 2 may start only after Phase 1 passes external verification and Kevin expl
 | `AI_WORKFLOW.md` | Separation of duties: Codex builds, Perplexity Computer verifies, Kevin approves, backup AI reviews adversarially |
 | `README.md` | Operating overview, setup, phase gates, and safety rules |
 | `plan/rebuild_plan.md` | Canonical rebuild plan and the 12 governance invariants |
-| `plan/phase2_entry_plan.md` | Phase 2 entry plan (planning only; Phase 2 implementation not yet open) |
+| `plan/phase2_entry_plan.md` | Phase 2 entry plan and P2-01..P2-05 sequence (Phase 2 implementation open for P2-01 only; P2-02+ require separate written authorization) |
 | `docs/decisions/ADR-*.md` | Accepted architecture decision records |
 | `docs/decisions/ADR-template.md` | Template for future ADRs |
 | `docs/deploys/deploy-log-template.md` | Template for deployment and rollback logs |
@@ -50,14 +50,16 @@ Phase 1 exit criteria:
 - `README.md` and `plan/rebuild_plan.md` define the 12 invariants without dangling claims.
 - `pre-commit run --all-files` passes or any blocker is documented exactly.
 
-Phase 2 entry criteria:
+Phase 2 entry criteria (status as of P2-01):
 
-- Phase 1 external verification is accepted by Kevin.
-- No unresolved blocker remains in ADRs, templates, README, tooling, or repo hygiene.
-- Kevin explicitly authorizes Phase 2.
-- The first Phase 2 task is infrastructure-only unless Kevin approves a narrower implementation plan.
+- Phase 1 accepted by Kevin in writing on PR #3 against `1f101fc`. **Satisfied.**
+- No unresolved blocker in ADRs, templates, README, tooling, or repo hygiene. **Satisfied.**
+- Kevin explicitly authorized Phase 2 implementation, narrowly scoped to PR P2-01. **Satisfied for P2-01 only.**
+- The first Phase 2 task is infrastructure-only (package skeleton and test harness, per `plan/phase2_entry_plan.md` §4). **Satisfied.**
 
-See `plan/phase2_entry_plan.md` for the planning-stage Phase 2 entry plan, including proposed first PRs, required proof per PR, and stop conditions.
+P2-02..P2-05 each require their own written authorization; the above criteria do not auto-extend to them.
+
+See `plan/phase2_entry_plan.md` for the full Phase 2 entry plan, the P2-01..P2-05 sequence, required proof per PR, and stop conditions.
 
 ## The 12 Invariants
 
@@ -102,13 +104,11 @@ Run all checks manually:
 pre-commit run --all-files
 ```
 
-The Phase 1 hook stack includes Ruff linting, Ruff formatting, mypy strict type checking, pytest, detect-secrets, and basic repository hygiene checks.
+The hook stack includes Ruff linting, Ruff formatting, mypy strict type checking, pytest, detect-secrets, and basic repository hygiene checks.
 
 ## Safety Rules
 
-- Do not add live trading code in Phase 1.
-- Do not add broker execution code in Phase 1.
-- Do not add trading strategy code in Phase 1.
+- Do not add live trading code, broker execution code, or trading strategy code without explicit per-task written authorization from Kevin. See `MASTER_STATUS.md` §6 for the always-forbidden category list; none of those categories are authorized at this time.
 - Do not commit secrets, private keys, certificates, `.env` files, local databases, logs, or generated market data.
 - Use timezone-aware UTC timestamps such as `datetime.now(timezone.utc)` in all future Python examples and code.
 - If a safety control is missing or uncertain, stop at the phase gate and document the blocker.
