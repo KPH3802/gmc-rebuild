@@ -1,34 +1,65 @@
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 
-.DS_Store
+# Python caches and tooling
 __pycache__/
-*.py[cod]
-.venv
-venv/
-.env
-.env.local
+*.pyc
+*.pyo
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
-scratch/
-tmp/
-~$*.md
-~$*.xlsx
-~$*.docx
-*.db
-*.sqlite3
-*.csv
-*.xlsx
-*.json
-config.py
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local environment and secrets
+.env
+.env.*
+.envrc
+secrets/
+*.pem
+*.key
+*.crt
+id_rsa*
+id_ed25519*
 secrets.yaml
 .credentials
-.vscode/
-.idea/
-*.swp
-*.swo
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Trading/data outputs
+*.csv
+*.parquet
+*.pkl
+*.h5
+data/raw/
+data/processed/
+gmc_data/
+
+# Logs and reports
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
 *.whl
 *.tar.gz
+
+# Local scratch and editor temp files
+scratch/
+tmp/
+~$*
+*.swp
+*.swo
+.vscode/
+.idea/
