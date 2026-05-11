@@ -134,6 +134,8 @@ Run these in order at the start of every serious work session. Do not skip steps
 
 The boundary check in step 4 distinguishes two modes. Phase 2 implementation is **partially open** at the time of writing: Kevin has authorized PR P2-01 (package skeleton and test harness) per `plan/phase2_entry_plan.md` §4, which names `src/` as the authorized Phase 2 infrastructure directory. Step 4a below therefore runs in Phase 2 implementation mode restricted to that allowlist. The Phase 2 implementation mode applies only to directories named in an accepted Phase 2 task or PR; any other Phase 2 infrastructure path is STOP. Switching modes does not silently relax controls: forbidden categories (strategy, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, secrets) remain STOP unless and until a later gate specifically authorizes them.
 
+Step 4 only inspects top-level paths. Step 4c below augments it with a recursive scan that walks every path component in the working tree, tokenizes each component on dot, hyphen, and underscore, and flags any token (or consecutive `_`-joined token pair) that matches the forbidden set. Tokenization is what catches forbidden concepts hiding under the now-allowlisted `src/` subtree (`src/strategy/`, `src/gmc_rebuild/broker.py`, `src/gmc_rebuild/orders/`, `src/gmc_rebuild/signals.py`), multi-dot extensions (`strategy.tar.gz`, `broker.test.py`), and hyphen/underscore compounds (`market-data.py`, `order_book.py`, `sub-strategy/`). Whole-token matching means innocuous names that merely contain a forbidden substring (e.g. `database.py`, `dataclass_helper.py`) are not flagged. The recursive scan is a human-run startup gate, not a substitute for code review: it matches names, not intent, and it cannot detect a forbidden concept implemented under a benign filename. Code review and the `plan/phase2_entry_plan.md` §6 proof bundle remain the authoritative checks. Step 4c's subshell exits non-zero on any STOP, so automation and `set -e` callers can rely on `$?`.
+
 ```bash
 # 1. Confirm working tree state
 git status
@@ -202,6 +204,89 @@ done
 #     the comment block. Step 4 (always-forbidden categories) still applies in
 #     this mode; switching modes never relaxes those categories.
 
+# 4c. Recursive audit of forbidden category names anywhere in the tree.
+#     Step 4 only inspects top-level paths, so a forbidden concept could in
+#     principle hide one level down (e.g. src/strategy/, src/gmc_rebuild/
+#     broker.py, src/gmc_rebuild/orders/, src/gmc_rebuild/signals.py). This
+#     step walks the working tree and, for every path component, tokenizes
+#     the name on dot, hyphen, and underscore and compares each token
+#     case-insensitively against the forbidden set. Each consecutive pair
+#     of tokens joined by underscore is also compared, so compound entries
+#     like `market_data` still match `market-data.py` and `market.data.py`.
+#     Tokenizing instead of stem-stripping is what closes the multi-dot
+#     (e.g. `strategy.tar.gz`, `broker.test.py`) and hyphen/underscore
+#     compound (e.g. `market-data.py`, `order_book.py`, `sub-strategy/`)
+#     gaps. Whole-token comparison avoids broad substring false positives:
+#     `database.py` tokenizes to [database, py] and does not match `data`;
+#     `dataclass_helper.py` tokenizes to [dataclass, helper, py] and does
+#     not match either. Three files are explicitly allowlisted by exact
+#     relative path; nothing else is exempt.
+#
+#     The prune list uses -name (not -path), so the excluded directories
+#     are skipped at any depth — a nested .venv/, __pycache__/, build/,
+#     dist/, .tox/, etc. is not walked.
+#
+#     This is a human-run startup gate intended to catch obvious phase-
+#     drift mistakes early. It is a name-based audit, not a substitute
+#     for code review: it cannot judge intent, semantics, or content,
+#     and a forbidden concept implemented inside a benignly-named file
+#     will not be caught. Code review and the proof bundle in
+#     plan/phase2_entry_plan.md §6 remain the authoritative checks. A
+#     non-zero exit from this step is a STOP.
+# Wrapped in a subshell so the exit 1 below only terminates the
+# subshell, not the surrounding interactive shell. The subshell's exit
+# status is then available as $? for automation or `set -e` callers.
+(
+  forbidden=" strategy strategies signal signals scanner scanners model \
+              models portfolio backtest backtests broker brokers execution \
+              executions live paper daemon daemons market_data order \
+              orders secret secrets "
+  matches=$(
+    find . \
+        \( -name .git -o -name .venv -o -name venv -o -name env \
+           -o -name .mypy_cache -o -name .pytest_cache -o -name .ruff_cache \
+           -o -name __pycache__ -o -name build -o -name dist \
+           -o -name '*.egg-info' -o -name node_modules -o -name .tox \
+        \) -prune -o \( -type f -o -type d \) -print \
+      | awk -v forb="$forbidden" '
+          {
+            rel = $0; sub(/^\.\//, "", rel)
+            if (rel == "." || rel == "") next
+            # Audit-visible allowlist. Each entry is an exact relative path.
+            if (rel == "src/gmc_rebuild/__init__.py") next
+            if (rel == "src/gmc_rebuild/py.typed") next
+            if (rel == ".secrets.baseline") next
+            if (rel == "docs/decisions/ADR-001_secrets_management.md") next
+            n = split(rel, parts, "/")
+            for (i = 1; i <= n; i++) {
+              comp = parts[i]
+              m = split(comp, toks, /[._-]+/)
+              for (j = 1; j <= m; j++) {
+                tk = tolower(toks[j])
+                if (tk == "") continue
+                if (index(forb, " " tk " ") > 0) {
+                  printf "STOP: forbidden token %s in path: %s\n", tk, rel
+                }
+                if (j < m) {
+                  nx = tolower(toks[j+1])
+                  if (nx != "") {
+                    pair = tk "_" nx
+                    if (index(forb, " " pair " ") > 0) {
+                      printf "STOP: forbidden compound %s in path: %s\n", \
+                             pair, rel
+                    }
+                  }
+                }
+              }
+            }
+          }')
+  if [ -n "$matches" ]; then
+    printf '%s\n' "$matches"
+    exit 1
+  fi
+  echo "OK: no forbidden category names found anywhere in tree"
+)
+
 # 5. Confirm tooling is installed and matches committed versions
 python --version          # expect Python 3.12.x
 pre-commit --version
@@ -213,7 +298,7 @@ pre-commit run --all-files
 pytest
 ```
 
-If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), the phase boundary cannot be moved by Codex or Perplexity Computer alone, and per rule 8, tooling hooks (pre-commit, mypy strict, detect-secrets) may not be weakened to make a failure go away. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
+If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a, the `forbidden` set or per-path allowlist in step 4c, or any other startup-gate filter without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), the phase boundary cannot be moved by Codex or Perplexity Computer alone, and per rule 8, tooling hooks (pre-commit, mypy strict, detect-secrets) may not be weakened to make a failure go away. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
 
 ---
 
