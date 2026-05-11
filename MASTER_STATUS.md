@@ -118,6 +118,8 @@ Until those conditions are met, any pull request that introduces strategy logic,
 
 Run these in order at the start of every serious work session. Do not skip steps. Stop at the first failure and resolve it before continuing.
 
+The boundary check in step 4 distinguishes two modes. Phase 2 implementation is **not yet open** at the time of writing — see `plan/phase2_entry_plan.md` §1, §5 for the criteria — so the default mode is Phase 1 / pre-Phase-2-implementation. The Phase 2 implementation mode applies only after Kevin has authorized Phase 2 in writing per §7 and the specific infrastructure directory has been named in an accepted Phase 2 task or PR. Switching modes does not silently relax controls: forbidden categories (strategy, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, secrets) remain STOP in both modes unless and until a later gate specifically authorizes them.
+
 ```bash
 # 1. Confirm working tree state
 git status
@@ -126,11 +128,42 @@ git status
 git log --oneline -10
 git rev-parse HEAD
 
-# 3. Confirm you are on or descended from the candidate baseline (§3)
-git merge-base --is-ancestor b39d036 HEAD && echo "OK: descended from b39d036" || echo "STOP: not descended from b39d036"
+# 3. Confirm you are on or descended from the accepted Phase 1 baseline
+#    Accepted Phase 1 baseline: 1f101fc (per Kevin's written acceptance on PR #3;
+#    supersedes the candidate b39d036 noted in §3). Current main descendant at
+#    time of writing: 04faaa1 (plan: add Phase 2 entry plan).
+git merge-base --is-ancestor 1f101fc HEAD && echo "OK: descended from 1f101fc" || echo "STOP: not descended from accepted Phase 1 baseline 1f101fc"
 
-# 4. Confirm Phase 1 boundary is intact (no forbidden directories)
-ls src/ strategies/ broker/ execution/ live/ daemons/ 2>/dev/null && echo "STOP: forbidden Phase 2 directories present" || echo "OK: no forbidden directories"
+# 4. Confirm the Phase 1 / Phase 2 boundary is intact.
+#    Always-forbidden categories (STOP in both modes unless a later, specific
+#    gate authorizes them): strategy, signals, scanners, models, portfolio,
+#    backtests, broker, execution, live, paper trading wired to a real broker,
+#    runtime daemons affecting accounts, real market data ingestion, order
+#    placement, secrets. These directory names are illustrative; the categories
+#    apply regardless of where the code is placed.
+ls strategy/ strategies/ signals/ scanners/ models/ portfolio/ backtests/ \
+   broker/ execution/ live/ paper/ daemons/ data/ market_data/ orders/ \
+   secrets/ 2>/dev/null \
+  && echo "STOP: always-forbidden category directories present" \
+  || echo "OK: no always-forbidden category directories"
+
+# 4a. Phase 1 / pre-Phase-2-implementation mode (current default).
+#     In this mode, Phase 2 infrastructure directories such as src/ are also
+#     STOP, because Phase 2 implementation is not yet open. See
+#     plan/phase2_entry_plan.md §1, §4 (P2-01), §5 for the future sequence.
+ls src/ 2>/dev/null \
+  && echo "STOP: Phase 2 infrastructure present but Phase 2 implementation is not open (see plan/phase2_entry_plan.md)" \
+  || echo "OK: no Phase 2 infrastructure directories (pre-Phase-2-implementation mode)"
+
+# 4b. Phase 2 implementation mode (only after Kevin's explicit written
+#     authorization per §7 and a specific accepted Phase 2 task/PR that names
+#     the directory). In this mode, step 4a is replaced by a check that any
+#     Phase 2 infrastructure directory present is documented in an accepted
+#     Phase 2 task or PR (e.g. src/ under PR P2-01 per
+#     plan/phase2_entry_plan.md §4). If a directory exists that is not
+#     documented in such a task or PR, treat it as STOP and reconcile before
+#     continuing. Step 4 (always-forbidden categories) still applies in this
+#     mode; switching modes never relaxes those categories.
 
 # 5. Confirm tooling is installed and matches committed versions
 python --version          # expect Python 3.12.x
@@ -143,7 +176,7 @@ pre-commit run --all-files
 pytest
 ```
 
-If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope.
+If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not switch from Phase 1 / pre-Phase-2-implementation mode (step 4a) to Phase 2 implementation mode (step 4b) without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 8, controls may not be silently relaxed. Phase 2 implementation is not open at the time of writing — see `plan/phase2_entry_plan.md` for the P2-01 sequence and the Phase 2 entry criteria.
 
 ---
 
