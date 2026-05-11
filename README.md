@@ -24,7 +24,8 @@ Phase 2 may start only after Phase 1 passes external verification and Kevin expl
 | `reviews/review-request-template.md` | Template for independent review requests |
 | `.pre-commit-config.yaml` | Local quality gate configuration |
 | `pyproject.toml` | Python metadata and tool settings |
-| `tests/` | Phase 1 governance placeholder tests |
+| `src/gmc_rebuild/` | Phase 2 infrastructure package skeleton (authorized by PR P2-01; no runtime trading behavior) |
+| `tests/` | Phase 1 governance placeholder tests and P2-01 skeleton tests |
 
 Generated data, logs, local databases, local environments, and secrets are intentionally excluded from Git.
 

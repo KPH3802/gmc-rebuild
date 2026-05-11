@@ -26,8 +26,12 @@ dev = [
     "ruff==0.15.11",
 ]
 
-[tool.setuptools]
-packages = []
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gmc_rebuild*"]
+
+[tool.setuptools.package-data]
+gmc_rebuild = ["py.typed"]
 
 [tool.ruff]
 line-length = 100
@@ -50,6 +54,8 @@ warn_unused_configs = true
 warn_return_any = true
 no_implicit_optional = true
 show_error_codes = true
+mypy_path = ["src"]
+packages = ["gmc_rebuild"]
 
 [tool.pytest.ini_options]
 minversion = "9.0.3"
@@ -61,7 +67,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["."]
+source = ["src/gmc_rebuild"]
 omit = [
     "tests/*",
     ".venv/*",

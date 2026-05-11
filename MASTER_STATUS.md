@@ -2,22 +2,18 @@
 
 **Read this document first at the start of every serious work session.** It is the canonical, single source of truth for the current state of `gmc-rebuild`. If anything in another document conflicts with this file, this file wins until it is updated.
 
-**Last updated:** 2026-05-11 UTC
+**Last updated:** 2026-05-11 UTC (P2-01 package skeleton authorized)
 **Maintained by:** Perplexity Computer (supervisor / status keeper), approved by Kevin
 
 ---
 
 ## 1. Current Phase
 
-**Phase 1 — Governance cleanup only.**
+**Phase 2 — Infrastructure foundation, narrowly opened at P2-01.**
 
-Phase 1 covers planning, architecture decisions, templates, project configuration, verification tooling, and the governance workflow itself. Phase 1 is documentation and tooling only. No runtime trading behavior exists in this repository.
+Phase 1 (governance cleanup) was accepted per `1f101fc` (see §3). Phase 2 is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness), which creates the importable `src/gmc_rebuild/` layout with no runtime behavior. See `plan/phase2_entry_plan.md` §4 for the full P2-01..P2-05 sequence; only P2-01 is open. P2-02 and beyond require separate written authorization.
 
-Phase 2 has **not** started, and Phase 1 has **not** yet been externally verified. Phase 2 may begin only after:
-
-1. Phase 1 is externally verified against the candidate baseline (see §3) and Kevin accepts the verification report in writing.
-2. Kevin explicitly authorizes Phase 2 in writing (commit message, PR comment, or governance entry).
-3. The first Phase 2 task is infrastructure-only unless Kevin approves a narrower implementation plan.
+The repository still contains no trading strategy code, no broker execution code, no live trading workflow, no runtime daemon, no market data ingestion, and no real secrets or account identifiers. Each future Phase 2 PR is authorized individually and must satisfy the proof bundle in `plan/phase2_entry_plan.md` §6.
 
 ---
 
@@ -74,16 +70,17 @@ Rules:
 
 ---
 
-## 5. What Phase 1 Contains
+## 5. What Phase 1 (and the P2-01 Skeleton) Contains
 
-Phase 1 is intentionally narrow. The repository contains, and only contains:
+The repository contains, and only contains:
 
 - Governance documents (`MASTER_STATUS.md`, `AI_WORKFLOW.md`, `README.md`, `plan/rebuild_plan.md`).
 - Verification-facing documents: `EXTERNAL_REVIEW_BRIEF.md` (the request) and `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md` (the submission).
 - Accepted architecture decision records under `docs/decisions/ADR-*.md`.
 - Templates for ADRs, deployment logs, daily monitoring reports, and review requests.
 - Project configuration: `pyproject.toml`, `.pre-commit-config.yaml`, `.gitignore`, `.secrets.baseline`.
-- Phase 1 governance placeholder tests under `tests/`.
+- Phase 1 governance placeholder tests and the P2-01 skeleton tests under `tests/`.
+- The P2-01 package skeleton at `src/gmc_rebuild/`: an empty importable package with `__init__.py`, a `__version__` string, and a `py.typed` marker. No submodules, no runtime behavior.
 
 ---
 
@@ -118,7 +115,7 @@ Until those conditions are met, any pull request that introduces strategy logic,
 
 Run these in order at the start of every serious work session. Do not skip steps. Stop at the first failure and resolve it before continuing.
 
-The boundary check in step 4 distinguishes two modes. Phase 2 implementation is **not yet open** at the time of writing — see `plan/phase2_entry_plan.md` §1, §5 for the criteria — so the default mode is Phase 1 / pre-Phase-2-implementation. The Phase 2 implementation mode applies only after Kevin has authorized Phase 2 in writing per §7 and the specific infrastructure directory has been named in an accepted Phase 2 task or PR. Switching modes does not silently relax controls: forbidden categories (strategy, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, secrets) remain STOP in both modes unless and until a later gate specifically authorizes them.
+The boundary check in step 4 distinguishes two modes. Phase 2 implementation is **partially open** at the time of writing: Kevin has authorized PR P2-01 (package skeleton and test harness) per `plan/phase2_entry_plan.md` §4, which names `src/` as the authorized Phase 2 infrastructure directory. Step 4a below therefore runs in Phase 2 implementation mode restricted to that allowlist. The Phase 2 implementation mode applies only to directories named in an accepted Phase 2 task or PR; any other Phase 2 infrastructure path is STOP. Switching modes does not silently relax controls: forbidden categories (strategy, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, secrets) remain STOP unless and until a later gate specifically authorizes them.
 
 ```bash
 # 1. Confirm working tree state
@@ -156,29 +153,37 @@ for path in strategy strategies signal signals scanner scanners model models \
 done
 [ "${found:-0}" -eq 0 ] && echo "OK: no always-forbidden category paths"
 
-# 4a. Phase 1 / pre-Phase-2-implementation mode (current default).
-#     In this mode, Phase 2 infrastructure directories such as src/ are also
-#     STOP, because Phase 2 implementation is not yet open. See
-#     plan/phase2_entry_plan.md §1, §4 (P2-01), §5 for the future sequence.
-#     Same per-path style as step 4 for consistency.
+# 4a. Phase 2 implementation mode — restricted to directories authorized by an
+#     accepted Phase 2 task or PR. The allowlist below is exactly the set of
+#     Phase 2 infrastructure paths Kevin has authorized in writing:
+#       - src/  → authorized by PR P2-01 (package skeleton and test harness),
+#                 see plan/phase2_entry_plan.md §4.
+#     A Phase 2 infrastructure path present but not on this allowlist is STOP;
+#     reconcile before continuing. The always-forbidden categories in step 4
+#     still apply unchanged in this mode.
+allowed_p2_infra="src"
 unset p2_infra_found
 for path in src; do
   if [ -e "$path" ]; then
-    echo "STOP: Phase 2 infrastructure present but Phase 2 implementation is not open: $path (see plan/phase2_entry_plan.md)"
-    p2_infra_found=1
+    case " $allowed_p2_infra " in
+      *" $path "*)
+        echo "OK: Phase 2 infrastructure present and authorized: $path (PR P2-01)"
+        ;;
+      *)
+        echo "STOP: Phase 2 infrastructure present but not authorized: $path (see plan/phase2_entry_plan.md)"
+        p2_infra_found=1
+        ;;
+    esac
   fi
 done
-[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: no Phase 2 infrastructure paths (pre-Phase-2-implementation mode)"
+[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: Phase 2 infrastructure paths conform to P2-01 allowlist"
 
-# 4b. Phase 2 implementation mode (only after Kevin's explicit written
-#     authorization per §7 and a specific accepted Phase 2 task/PR that names
-#     the directory). In this mode, step 4a is replaced by a check that any
-#     Phase 2 infrastructure directory present is documented in an accepted
-#     Phase 2 task or PR (e.g. src/ under PR P2-01 per
-#     plan/phase2_entry_plan.md §4). If a directory exists that is not
-#     documented in such a task or PR, treat it as STOP and reconcile before
-#     continuing. Step 4 (always-forbidden categories) still applies in this
-#     mode; switching modes never relaxes those categories.
+# 4b. Phase 2 implementation mode is operating under the P2-01 allowlist in
+#     step 4a. To extend the allowlist for a future Phase 2 PR (e.g. P2-02,
+#     P2-03, …), update the `allowed_p2_infra` variable above in the same PR
+#     that adds the new directory, and reference the authorizing PR number in
+#     the comment block. Step 4 (always-forbidden categories) still applies in
+#     this mode; switching modes never relaxes those categories.
 
 # 5. Confirm tooling is installed and matches committed versions
 python --version          # expect Python 3.12.x
@@ -191,7 +196,7 @@ pre-commit run --all-files
 pytest
 ```
 
-If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not switch from Phase 1 / pre-Phase-2-implementation mode (step 4a) to Phase 2 implementation mode (step 4b) without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 8, controls may not be silently relaxed. Phase 2 implementation is not open at the time of writing — see `plan/phase2_entry_plan.md` for the P2-01 sequence and the Phase 2 entry criteria.
+If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 8, controls may not be silently relaxed. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
 
 ---
 
