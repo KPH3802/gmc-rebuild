@@ -116,7 +116,7 @@ The hook stack includes Ruff linting, Ruff formatting, mypy strict type checking
 
 ## Decisions
 
-Accepted Phase 1 ADRs:
+Accepted ADRs:
 
 - ADR-001: Secrets Management Strategy
 - ADR-002: Runtime Kill Switch Architecture
@@ -125,6 +125,7 @@ Accepted Phase 1 ADRs:
 - ADR-005: Operator Availability Heartbeat
 - ADR-006: Deployment and Rollback Logs
 - ADR-007: Minimal CI Strategy
+- ADR-008: Monitoring Cadence and Backup-AI Monitor Role
 
 ## License
 

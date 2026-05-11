@@ -2,7 +2,7 @@
 
 **Read this document first at the start of every serious work session.** It is the canonical, single source of truth for the current state of `gmc-rebuild`. If anything in another document conflicts with this file, this file wins until it is updated.
 
-**Last updated:** 2026-05-11 UTC (P2-01 package skeleton authorized)
+**Last updated:** 2026-05-11 UTC (ADR-008 monitoring cadence and backup-AI monitor role accepted)
 **Maintained by:** Perplexity Computer (supervisor / status keeper), approved by Kevin
 
 ---
@@ -14,6 +14,8 @@
 Phase 1 (governance cleanup) was accepted per `1f101fc` (see §3). Phase 2 is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness), which creates the importable `src/gmc_rebuild/` layout with no runtime behavior. See `plan/phase2_entry_plan.md` §4 for the full P2-01..P2-05 sequence; only P2-01 is open. P2-02 and beyond require separate written authorization.
 
 The repository still contains no trading strategy code, no broker execution code, no live trading workflow, no runtime daemon, no market data ingestion, and no real secrets or account identifiers. Each future Phase 2 PR is authorized individually and must satisfy the proof bundle in `plan/phase2_entry_plan.md` §6.
+
+Governance monitoring is governed by `docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md`. Until runtime exists, a monitoring packet under `monitoring/daily/YYYY-MM-DD.md` is required on any **active workday** (defined audit-visibly in ADR-008 §D3 by GitHub-observable events) on which the default branch changes **or** a pull request is open, updated, or merged. The Backup AI is named in ADR-008 §D1 as the **author of packet text** under Mode B; Codex commits the packet under the safety boundary in `AI_WORKFLOW.md` §1.4 and §6 rule 1 (the Backup AI never writes code, governance decisions, or any non-packet content, and never commits directly). Mode A (gate reviewer) and Mode B (monitor) are independent; when both fire on the same PR, both artifacts are required per ADR-008 §D7. Missed packets are handled per ADR-008 §D5: a catch-up note is required **before the next merge to `main`** and again before any phase-opening or phase-expanding PR; no automatic rollback exists while no runtime exists. Runtime-phase cadence is deferred to a follow-up ADR per ADR-008 §D6.
 
 ---
 
@@ -85,6 +87,7 @@ The repository contains, and only contains:
 - Project configuration: `pyproject.toml`, `.pre-commit-config.yaml`, `.gitignore`, `.secrets.baseline`.
 - Phase 1 governance placeholder tests and the P2-01 skeleton tests under `tests/`.
 - The P2-01 package skeleton at `src/gmc_rebuild/`: an empty importable package with `__init__.py`, a `__version__` string, and a `py.typed` marker. No submodules, no runtime behavior.
+- ADR-008 (`docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md`): the governance decision that clarifies the backup-AI monitor role and the monitoring cadence rule. Governance only; no runtime code added.
 
 ---
 
@@ -309,11 +312,12 @@ If any step fails, document the failure in the session log and stop. Do not "fix
 Only the following decisions are in scope right now. Any other change requires Kevin's explicit approval.
 
 1. Editing or extending governance documentation: `MASTER_STATUS.md`, `AI_WORKFLOW.md`, `README.md`, `plan/rebuild_plan.md`, `EXTERNAL_REVIEW_BRIEF.md`.
-2. Editing or extending ADRs and the four templates under `docs/` and adjacent directories, in line with the existing structure.
-3. Fixing documented blockers raised by external verification, scoped to Phase 1 only.
-4. Repository hygiene: `.gitignore`, `.pre-commit-config.yaml`, `pyproject.toml`, `.secrets.baseline`, where the change strictly preserves Phase 1 invariants.
-5. Updating Phase 1 placeholder tests in `tests/` so they continue to verify governance artifacts, not behavior.
-6. Recording Kevin's decision to open Phase 2 — and only then planning the first Phase 2 infrastructure-only change. Every phase-opening or phase-expanding authorization (P2-02, P2-03, …, and any later phase) must be mirrored as a durable in-tree artifact under `governance/authorizations/` per `AI_WORKFLOW.md` §7, before or as part of the authorized PR.
+2. Authoring and committing monitoring packets under `monitoring/daily/` (including catch-up notes per ADR-008 §D5) when the cadence rule in ADR-008 §D3 requires one. The Backup AI may author packet text under Mode B; Codex commits it (see `AI_WORKFLOW.md` §1.4 and §6 rule 1).
+3. Editing or extending ADRs and the four templates under `docs/` and adjacent directories, in line with the existing structure.
+4. Fixing documented blockers raised by external verification, scoped to Phase 1 only.
+5. Repository hygiene: `.gitignore`, `.pre-commit-config.yaml`, `pyproject.toml`, `.secrets.baseline`, where the change strictly preserves Phase 1 invariants.
+6. Updating Phase 1 placeholder tests in `tests/` so they continue to verify governance artifacts, not behavior.
+7. Recording Kevin's decision to open Phase 2 — and only then planning the first Phase 2 infrastructure-only change. Every phase-opening or phase-expanding authorization (P2-02, P2-03, …, and any later phase) must be mirrored as a durable in-tree artifact under `governance/authorizations/` per `AI_WORKFLOW.md` §7, before or as part of the authorized PR.
 
 Decisions that are **not** allowed without a new approval from Kevin:
 
