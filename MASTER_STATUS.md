@@ -39,20 +39,25 @@ Anything not in this list is supporting material, not source of truth. If a conf
 
 ## 3. Candidate Baseline
 
-**Candidate Phase 1 baseline:** `b39d036` (`docs: add AI governance control docs`).
+**Candidate Phase 1 baseline:** `1f101fc` (`docs: fix Phase 1 verification blockers`).
 
-This is the commit currently proposed for external verification per `EXTERNAL_REVIEW_BRIEF.md` and summarized in `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md`. It is the current `main` head after the governance documents (`MASTER_STATUS.md` and `AI_WORKFLOW.md`) landed, and it supersedes the prior candidate `ee3457f` because those two governance documents are now part of the artifact set under review. Recording the promotion from `ee3457f` to `b39d036` in this file is what makes the change auditable; per `AI_WORKFLOW.md` §3.1 and §6 rule 2, the candidate baseline may not be silently substituted, and any future change of the candidate baseline must be recorded the same way (in this section and in the PR that lands it).
+This is the commit currently proposed for external verification per `EXTERNAL_REVIEW_BRIEF.md` and summarized in `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md`. It is the current `main` head after the PR #2 blocker fixes landed on top of the prior candidate `b39d036`. Adversarial verification of `b39d036` surfaced documentation blockers; the internally consistent audited tree is `1f101fc`, not `b39d036`. Per `AI_WORKFLOW.md` §3.1 and §6 rule 2, the candidate baseline may not be silently substituted, so the promotions are recorded here:
 
-`b39d036` has passed local quality gates (`pre-commit run --all-files` and `pytest`) and is the basis for the verification request, but it is **not** yet externally verified and has not yet been accepted by Kevin against an external verification report.
+- `ee3457f` → `b39d036`: governance documents (`MASTER_STATUS.md` and `AI_WORKFLOW.md`) added to the artifact set under review.
+- `b39d036` → `1f101fc`: PR #2 blocker-fix promotion. `b39d036` failed adversarial verification on documentation grounds; `1f101fc` is the internally consistent tree after those blockers were fixed and is the new candidate proposed for external verification.
 
-The Phase 1 status today is "Ready for external verification," not "verified." `b39d036` becomes the **accepted Phase 1 baseline** only after:
+Any future change of the candidate baseline must be recorded the same way (in this section and in the PR that lands it).
+
+`1f101fc` has passed local quality gates (`pre-commit run --all-files` and `pytest`) and is the basis for the verification request, but it is **not** yet externally verified and has not yet been accepted by Kevin against an external verification report.
+
+The Phase 1 status today is "Ready for external verification," not "verified." `1f101fc` becomes the **accepted Phase 1 baseline** only after:
 
 1. An external verification report is produced against this exact commit hash, and
 2. Kevin records acceptance of that report in writing (commit message, PR comment, or governance entry).
 
-Until those two conditions are met, `b39d036` is a *candidate* / *locally verified candidate* baseline only. The term "verified baseline" is reserved for use after Kevin has accepted an external verification report in writing; it is not applied to any commit before that point.
+Until those two conditions are met, `1f101fc` is a *candidate* / *locally verified candidate* baseline only. The term "verified baseline" is reserved for use after Kevin has accepted an external verification report in writing; it is not applied to any commit before that point.
 
-Any work session should start from `b39d036` or a descendant of it on the default branch. If `HEAD` is not a descendant of `b39d036`, stop and reconcile before doing further work.
+Any work session should start from `1f101fc` or a descendant of it on the default branch. If `HEAD` is not a descendant of `1f101fc`, stop and reconcile before doing further work.
 
 ---
 
@@ -127,7 +132,7 @@ git log --oneline -10
 git rev-parse HEAD
 
 # 3. Confirm you are on or descended from the candidate baseline (§3)
-git merge-base --is-ancestor b39d036 HEAD && echo "OK: descended from b39d036" || echo "STOP: not descended from b39d036"
+git merge-base --is-ancestor 1f101fc HEAD && echo "OK: descended from 1f101fc" || echo "STOP: not descended from 1f101fc"
 
 # 4. Confirm Phase 1 boundary is intact (no forbidden directories)
 ls src/ strategies/ broker/ execution/ live/ daemons/ 2>/dev/null && echo "STOP: forbidden Phase 2 directories present" || echo "OK: no forbidden directories"

@@ -4,7 +4,7 @@
 **Date**: 2026-05-11 UTC
 **Status**: Ready for verification after governance cleanup
 **Repository**: https://github.com/KPH3802/gmc-rebuild
-**Candidate baseline**: `b39d036` (see `MASTER_STATUS.md` §3)
+**Candidate baseline**: `1f101fc` (see `MASTER_STATUS.md` §3)
 
 ## Scope
 

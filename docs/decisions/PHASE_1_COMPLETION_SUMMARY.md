@@ -4,7 +4,7 @@
 
 **Status**: Ready for external verification
 
-**Candidate baseline**: `b39d036` (see `MASTER_STATUS.md` §3)
+**Candidate baseline**: `1f101fc` (see `MASTER_STATUS.md` §3)
 
 ## Scope
 
