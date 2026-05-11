@@ -32,7 +32,6 @@ The authoritative artifacts, in priority order:
 5. `docs/decisions/ADR-*.md` — accepted architecture decision records.
 6. `EXTERNAL_REVIEW_BRIEF.md` — scope and checklist for independent Phase 1 verification (the request side of the gate).
 7. `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md` — Phase 1 cleanup summary listing the artifacts presented for review (the submission side of the gate).
-8. `plan/phase2_entry_plan.md` — Phase 2 entry plan (planning only; supporting material for the Phase 2 boundary).
 
 Anything not in this list is supporting material, not source of truth. If a conflict appears, escalate to Kevin before changing behavior.
 

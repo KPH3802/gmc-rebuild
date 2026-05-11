@@ -11,7 +11,7 @@ If anything here conflicts with `MASTER_STATUS.md` or `AI_WORKFLOW.md`, those fi
 
 ## 1. Current Status
 
-- **Phase 1 accepted baseline:** `1f101fc` (`docs: fix Phase 1 verification blockers`), accepted per the written GitHub acceptance note on PR #3. This is the accepted Phase 1 baseline; earlier candidates referenced in `MASTER_STATUS.md` §3 (`b39d036`, `ee3457f`) are superseded by Kevin's written acceptance of `1f101fc` and any subsequent `MASTER_STATUS.md` update must record that promotion in the same audit-visible way described in `AI_WORKFLOW.md` §6 rule 2.
+- **Phase 1 accepted baseline:** `1f101fc` (`docs: fix Phase 1 verification blockers`), accepted per the written GitHub acceptance note on PR #3. That written acceptance is itself the audit-visible record and, per its own terms, supersedes the stale `b39d036` reference inside `MASTER_STATUS.md` §3 at commit `1f101fc`. Editing §3 to restate the promotion is not required to make the acceptance valid; if §3 is ever revised, it must be revised in the audit-visible way required by `AI_WORKFLOW.md` §3.1 (no silent substitution of the baseline).
 - **Phase 2 planning:** Authorized by Kevin. This document is the only Phase 2 artifact in flight.
 - **Phase 2 implementation:** Not yet open. No source code, no runtime, no strategy, no broker integration, no live data, no order placement, no daemons, no scanners, no signal rules, no scheduled services are authorized at this time.
 - **Workflow in effect:** Codex builds → Perplexity Computer verifies → Kevin approves → backup AI reviews adversarially at gates and high-risk decisions (per `AI_WORKFLOW.md` §1, §2, §4).
@@ -79,16 +79,23 @@ Sequencing rules:
 - Each PR is small enough that the diff and the proof bundle (Section 6) fit a single review.
 - Any PR that grows beyond its stated scope during implementation is split or stopped.
 
+Pre-P2-01 planning note — `MASTER_STATUS.md` §8 startup check reconciliation:
+
+- `MASTER_STATUS.md` §8 step 4 currently treats `src/` as a forbidden Phase 2 directory and reports `STOP: forbidden Phase 2 directories present` if it exists.
+- P2-01 will create exactly that directory. Before P2-01 is opened, `MASTER_STATUS.md` §8 (and §6 if needed) must be updated in a separate, audit-visible governance PR to list `src/` (and the other Phase 2 infrastructure paths explicitly authorized by Kevin) as **allowed** Phase 2 paths, so the startup check distinguishes legitimate approved infrastructure from forbidden strategy/broker/live/data directories.
+- This reconciliation is planning-only here. It does not modify `MASTER_STATUS.md` in this PR. It is not a tooling relaxation under `AI_WORKFLOW.md` §6 rule 8 because it does not weaken any quality hook, mypy strict mode, or `detect-secrets`; it only updates the boundary list to match Kevin's written Phase 2 authorization.
+- If P2-01 is opened before this reconciliation lands, the §8 check will produce a false STOP. The fix is the reconciliation PR, not skipping the check.
+
 ---
 
 ## 5. Phase 2 Entry Criteria
 
 Phase 2 implementation may begin only when **all** of the following are true and recorded:
 
-1. The Phase 1 accepted baseline is `1f101fc` (per PR #3 written acceptance) and `MASTER_STATUS.md` §3 has been updated to reflect that acceptance.
+1. The accepted Phase 1 baseline is `1f101fc`, established by Kevin's written acceptance on PR #3. That written acceptance is the audit-visible record and, per its own terms, supersedes the stale `b39d036` reference inside `MASTER_STATUS.md` §3 at commit `1f101fc`. No further §3 rewrite is required to satisfy this criterion; future work on the default branch starts from `1f101fc` or a descendant of it.
 2. No unresolved blocker remains in ADRs, templates, README, tooling, or repo hygiene.
-3. Kevin has explicitly authorized Phase 2 in writing — commit message, PR comment, or governance entry, not a chat message — per `MASTER_STATUS.md` §7.3.
-4. This Phase 2 Entry Plan has been merged and is referenced from `MASTER_STATUS.md` and/or `README.md`.
+3. Kevin has explicitly authorized Phase 2 in writing — commit message, PR comment, or governance entry, not a chat message — per `MASTER_STATUS.md` §7.3. Authorization of "Phase 2 in general" does not by itself authorize any specific P2-0N PR; each first PR's scope must also be named in the authorization, per `MASTER_STATUS.md` §7.4.
+4. This Phase 2 Entry Plan has been merged and is referenced from `README.md` (and optionally from `MASTER_STATUS.md` §9 "Next Allowed Decisions" if Perplexity Computer chooses to point to it from there).
 5. The first Phase 2 PR is one of the proposals in Section 4 and is infrastructure-only, unless Kevin pre-approves a different narrow plan.
 
 If any criterion fails, Phase 2 stays closed. Phase 1 maintenance continues under `MASTER_STATUS.md` §9.
@@ -134,8 +141,9 @@ Standard review per `AI_WORKFLOW.md` §2:
 Adversarial backup review per `AI_WORKFLOW.md` §4 and §5 is required at:
 
 - The Phase 2 entry decision itself (opening Phase 2).
-- Any Phase 2 PR that defines a new control surface or trust boundary (e.g. the risk-control interface PR, the config schema PR if it touches secret references, the audit/logging conventions PR).
-- Any future change that, if wrong, could cause real-world loss — this should not appear in Phase 2 at all; if it does, treat it as scope drift per `AI_WORKFLOW.md` §6 rule 7.
+- Any Phase 2 PR that defines a new control surface or trust boundary — e.g. the risk-control interface PR, the config schema PR if it touches secret references, the audit/logging conventions PR.
+
+A Phase 2 PR that, if wrong, could cause real-world loss (live trading authorization, broker integration, kill-switch behavior, operator-heartbeat policy, data retention or destruction policy) is by definition out of Phase 2 scope per Section 2. The correct response is to treat it as scope drift and stop per `AI_WORKFLOW.md` §6 rule 7 and Section 8 of this plan, not to invoke the backup AI as a substitute for stopping.
 
 The backup AI produces a written critique only. It does not edit files, commit, or approve.
 
