@@ -9,6 +9,8 @@ def test_phase1_has_governance_artifacts() -> None:
 
     required_paths = [
         root / "README.md",
+        root / "MASTER_STATUS.md",
+        root / "AI_WORKFLOW.md",
         root / ".pre-commit-config.yaml",
         root / "pyproject.toml",
         root / "docs" / "decisions" / "ADR-template.md",
