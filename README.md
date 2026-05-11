@@ -25,6 +25,7 @@ P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and may n
 | `.pre-commit-config.yaml` | Local quality gate configuration |
 | `pyproject.toml` | Python metadata and tool settings |
 | `src/gmc_rebuild/` | Phase 2 infrastructure package skeleton (authorized by PR P2-01; no runtime trading behavior) |
+| `governance/authorizations/` | Durable in-tree copies of Kevin's phase-opening / phase-expanding authorizations (per `AI_WORKFLOW.md` §7) |
 | `tests/` | Phase 1 governance placeholder tests and P2-01 skeleton tests |
 
 Generated data, logs, local databases, local environments, and secrets are intentionally excluded from Git.

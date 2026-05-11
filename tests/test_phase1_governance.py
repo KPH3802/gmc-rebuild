@@ -17,6 +17,7 @@ def test_phase1_has_governance_artifacts() -> None:
         root / "docs" / "deploys" / "deploy-log-template.md",
         root / "monitoring" / "daily" / "daily-report-template.md",
         root / "reviews" / "review-request-template.md",
+        root / "governance" / "authorizations" / "2026-05-11_p2-01.md",
     ]
 
     assert all(path.is_file() and path.stat().st_size > 0 for path in required_paths)
