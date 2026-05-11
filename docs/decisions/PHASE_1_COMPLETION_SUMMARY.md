@@ -4,11 +4,18 @@
 
 **Status**: Ready for external verification
 
+**Candidate baseline**: `b39d036` (see `MASTER_STATUS.md` §3)
+
 ## Scope
 
 Phase 1 is governance only. This cleanup does not add trading strategy code, broker execution code, live trading integration, or Phase 2 runtime implementation.
 
 ## Governance Artifacts
+
+Source-of-truth governance documents:
+
+- `MASTER_STATUS.md` — canonical current phase, candidate baseline, and startup verification.
+- `AI_WORKFLOW.md` — separation of duties between Codex, Perplexity Computer, Kevin, and the optional backup AI.
 
 Configuration and tooling:
 
@@ -37,10 +44,12 @@ Architecture decisions:
 
 ## Verification Focus
 
+- `MASTER_STATUS.md` is current: phase, candidate baseline, and startup verification commands match the repository state.
+- `AI_WORKFLOW.md` defines the four roles and the §3 proof bundle without internal contradiction.
 - ADRs share a common format.
 - ADR-003 is complete.
 - UTC examples are timezone-aware and consistent with ADR-004.
-- Tooling claims match `.pre-commit-config.yaml` and `pyproject.toml`.
+- Tooling claims match `.pre-commit-config.yaml` and `pyproject.toml`. Coverage threshold enforcement is **not** active in Phase 1 (see ADR-007 follow-ups and the Phase 1 note in `plan/rebuild_plan.md` §3.2); enabling it is a Phase 2 decision.
 - Template files are non-empty and ready for Phase 2 use.
 - The 12 governance invariants are defined in `plan/rebuild_plan.md`.
 

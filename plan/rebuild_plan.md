@@ -65,13 +65,15 @@ Promotion of work from scratch to the main rebuild is a deliberate operation. A 
 
 The test framework is **pytest**, with **coverage.py** (via the `pytest-cov` plugin) measuring coverage. Both are pinned in the project's dependency manifest with specific versions; updates require a deliberate version bump committed with rationale.
 
-Coverage thresholds are enforced as pre-commit blockers and as CI checks (when CI is added):
+**Phase 1 status (current):** Coverage threshold enforcement is **not** active in Phase 1. There is no executable production code in the repository yet, so a coverage gate would either be vacuous or reject every commit. `pyproject.toml` reflects this with `fail_under = 0` and there is no coverage hook in `.pre-commit-config.yaml`. ADR-007 records the same position. Turning on coverage enforcement is a Phase 2 decision and must be made deliberately when the first executable production modules land.
+
+**Phase 2 target (not yet active):** Once production modules exist, coverage thresholds become pre-commit blockers and CI checks at these levels:
 
 - **Signal logic and runtime enforcement code: 100% line + branch coverage.** Includes signal scanners, the autotrader's signal-handling code, runtime safety checks, schema validation, and any code path whose failure could result in incorrect trading behavior.
 - **Glue and utility code: 80% line coverage minimum.** Includes data loading helpers, logging, configuration parsing, and similar non-signal infrastructure.
 - **Every module containing executable logic must have at least one corresponding test module.** Empty `__init__.py` and pure-data constants modules are exempt because they contain no executable paths.
 
-Coverage thresholds and directory-to-category mapping are stored in `pyproject.toml` (`[tool.coverage.run]` and `[tool.coverage.report]` sections). Threshold changes require a commit with rationale.
+When the Phase 2 thresholds are turned on, the values and directory-to-category mapping live in `pyproject.toml` (`[tool.coverage.run]` and `[tool.coverage.report]` sections), and threshold changes require a commit with rationale.
 
 ### 3.3 Pre-commit Hooks
 
@@ -82,7 +84,7 @@ The required hook stack:
 - **ruff (lint + format).** Replaces flake8, isort, black, and pyupgrade with one fast tool. Runs as both linter (catching errors and style violations) and formatter (auto-fixing).
 - **mypy (strict mode).** All new code is type-annotated and passes `mypy --strict`. Existing code carried forward from the prior project must add type annotations to clear the audit standard before being designated rebuilt.
 - **pytest (all tests pass).** The full test suite must pass before a commit is created. Slow tests can be marked with `@pytest.mark.slow` and excluded from pre-commit but must run in CI.
-- **coverage check.** Coverage thresholds in 3.2 must be met. If coverage drops below threshold, the commit is rejected.
+- **coverage check.** Once Phase 2 production modules exist, coverage thresholds in 3.2 must be met and the commit is rejected if coverage drops below threshold. This hook is not enabled in Phase 1; see the Phase 1 status note in 3.2 and ADR-007.
 
 Hook configuration lives in `.pre-commit-config.yaml`, committed to the repository, and version-pinned. Hook installation is a setup step documented in the project README and verified by an installation test.
 
@@ -453,7 +455,7 @@ Per-signal status, reflecting the May 8 audit findings on `signal_benchmarks`:
 - `ib_autotrader.py` exists; runs via cron at 8:00 AM CT Mon–Fri **(verified by Master_status.md cron success record)**.
 - 5 signals wired to autotrader: PEAD, SI Squeeze, COT, CEL, 13F **(claim, needs verification — wiring details)**.
 - Autotrader is in dry-run; `run_ib_autotrader.sh` carries `--dry-run` flag at line ~32 **(verified)**.
-- IB account `U5140084`; live NLV ~$6,069 **(verified May 8 audit pull)**.
+- IB account `U-REDACTED` (real account identifier and live NLV held outside this repository; redacted per Phase 1 secrets policy) **(verified May 8 audit pull, evidence retained in private audit log)**.
 - DIV_CUT suspended in autotrader **(verified)**.
 - DIV_INIT scanner runs at 23:45 UTC; not wired to IB autotrader **(claim, needs verification)**.
 - Mac Studio is the sole 24/7 trading machine; sleep=0; MBP off-network **(verified by ongoing operation)**.
