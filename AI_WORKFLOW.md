@@ -145,3 +145,15 @@ Rules that exist specifically to prevent multiple AIs from creating contradictor
 8. **No tooling relaxation under pressure.** If pre-commit, mypy strict, or detect-secrets fails, fix the underlying issue. Do not weaken the hook to make the failure go away.
 9. **Every claim has evidence.** "Tests pass" without output is not a claim Perplexity Computer accepts. "It should be safe" without an invariant cite is not a claim Kevin accepts.
 10. **When in doubt, stop.** A paused task is recoverable. A merged Phase 2 change made by accident is not.
+
+---
+
+## 7. Durable Authorization Artifacts
+
+Every phase-opening or phase-expanding authorization from Kevin must be captured **both** in PR history **and** in a durable in-tree artifact under `governance/authorizations/`, before or as part of the authorized PR.
+
+- The approver is and remains Kevin (`AI_WORKFLOW.md` §1.3 and §6 rule 3). This section does not introduce a new approver; it only records where the existing approval is captured.
+- "Phase-opening" means opening a phase that was previously closed (e.g. opening Phase 2). "Phase-expanding" means authorizing an additional task or directory inside an already-open phase (e.g. authorizing P2-02 on top of P2-01). Routine bug fixes, documentation edits, and Phase 1 maintenance under `MASTER_STATUS.md` §9 do not require a new artifact.
+- The artifact lives at `governance/authorizations/<YYYY-MM-DD>_<task-id>.md` and records: the date, the approver (Kevin), the PR or commit being authorized, the authorized scope, the items explicitly **not** authorized, and any links to supporting PR-history evidence. The existing record at `governance/authorizations/2026-05-11_p2-01.md` is the template to follow.
+- PR history remains supporting evidence. It is not a substitute for the in-tree artifact: GitHub comments can be edited or deleted, are not reachable from `git log`, and are not part of the working tree. The in-tree artifact is the authorization of record.
+- If a phase-opening or phase-expanding PR lands without its sibling artifact, the omission is a §6 rule 6 ("No retroactive scope changes") and rule 9 ("Every claim has evidence") failure and must be corrected by a follow-up governance PR before the next phase-opening or phase-expanding PR opens.

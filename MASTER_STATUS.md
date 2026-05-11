@@ -28,6 +28,7 @@ The authoritative artifacts, in priority order:
 5. `docs/decisions/ADR-*.md` — accepted architecture decision records.
 6. `EXTERNAL_REVIEW_BRIEF.md` — scope and checklist for independent Phase 1 verification (the request side of the gate).
 7. `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md` — Phase 1 cleanup summary listing the artifacts presented for review (the submission side of the gate).
+8. `governance/authorizations/` — durable in-tree copies of Kevin's phase-opening and phase-expanding authorizations. Required by `AI_WORKFLOW.md` §7. PR history remains supporting evidence but is not a substitute for the in-tree record.
 
 Anything not in this list is supporting material, not source of truth. If a conflict appears, escalate to Kevin before changing behavior.
 
@@ -115,12 +116,12 @@ Phase 1 was accepted by Kevin in writing on PR #3 against `1f101fc` (see §3). P
 1. Accepted Phase 1 baseline established at `1f101fc` and recorded in §3.
 2. `plan/phase2_entry_plan.md` merged on `main` (commit `04faaa1`) and referenced from `README.md`.
 3. `MASTER_STATUS.md` §8 reconciled to distinguish always-forbidden categories (step 4) from a per-PR Phase 2 infrastructure allowlist (step 4a). The reconciliation landed in commit `5c84d85` ("docs: reconcile MASTER_STATUS startup checks").
-4. Kevin's explicit written authorization for PR P2-01 (package skeleton and test harness, per `plan/phase2_entry_plan.md` §4). P2-01 is the only Phase 2 implementation task authorized at this time.
+4. Kevin's explicit written authorization for PR P2-01 (package skeleton and test harness, per `plan/phase2_entry_plan.md` §4). P2-01 is the only Phase 2 implementation task authorized at this time. The durable in-tree copy of that authorization is recorded at `governance/authorizations/2026-05-11_p2-01.md`; GitHub PR #6 history (merged at `e0278c4`) remains supporting evidence.
 
 What this means in practice:
 
 - The §8 step 4a allowlist currently contains exactly `src/`, authorizing P2-01's importable `src/gmc_rebuild/` skeleton and nothing else.
-- P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized. Each requires its own written authorization from Kevin per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), and a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory.
+- P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized. Each requires its own written authorization from Kevin per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), a sibling authorization artifact under `governance/authorizations/` per `AI_WORKFLOW.md` §7, and a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory.
 - The always-forbidden categories in §6 and `plan/phase2_entry_plan.md` §2 remain forbidden regardless of mode. Authorizing P2-01 does not authorize any Phase 3+ behavior.
 - Any pull request that introduces strategy logic, broker integration, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, or real secrets must be closed without merge, even if it is presented as "Phase 2 infrastructure."
 
@@ -176,7 +177,8 @@ done
 #     accepted Phase 2 task or PR. The allowlist below is exactly the set of
 #     Phase 2 infrastructure paths Kevin has authorized in writing:
 #       - src/  → authorized by PR P2-01 (package skeleton and test harness),
-#                 see plan/phase2_entry_plan.md §4.
+#                 see plan/phase2_entry_plan.md §4 and the durable in-tree
+#                 record at governance/authorizations/2026-05-11_p2-01.md.
 #     A Phase 2 infrastructure path present but not on this allowlist is STOP;
 #     reconcile before continuing. The always-forbidden categories in step 4
 #     still apply unchanged in this mode.
@@ -311,7 +313,7 @@ Only the following decisions are in scope right now. Any other change requires K
 3. Fixing documented blockers raised by external verification, scoped to Phase 1 only.
 4. Repository hygiene: `.gitignore`, `.pre-commit-config.yaml`, `pyproject.toml`, `.secrets.baseline`, where the change strictly preserves Phase 1 invariants.
 5. Updating Phase 1 placeholder tests in `tests/` so they continue to verify governance artifacts, not behavior.
-6. Recording Kevin's decision to open Phase 2 — and only then planning the first Phase 2 infrastructure-only change.
+6. Recording Kevin's decision to open Phase 2 — and only then planning the first Phase 2 infrastructure-only change. Every phase-opening or phase-expanding authorization (P2-02, P2-03, …, and any later phase) must be mirrored as a durable in-tree artifact under `governance/authorizations/` per `AI_WORKFLOW.md` §7, before or as part of the authorized PR.
 
 Decisions that are **not** allowed without a new approval from Kevin:
 
