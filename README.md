@@ -4,9 +4,9 @@
 
 ## Current Phase
 
-Phase 1 (governance cleanup) was accepted by Kevin in writing on PR #3 against commit `1f101fc`. Phase 2 implementation is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness, see `plan/phase2_entry_plan.md` §4), which creates the importable `src/gmc_rebuild/` layout with no runtime behavior. No other Phase 2 task is authorized. Strategy code, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, and real secrets remain forbidden — see `MASTER_STATUS.md` §6.
+Phase 1 (governance cleanup) was accepted by Kevin in writing on PR #3 against commit `1f101fc`. Phase 2 implementation is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness, see `plan/phase2_entry_plan.md` §4) and PR P2-02 (minimal safe config schema). P2-01 created the importable `src/gmc_rebuild/` layout with no runtime behavior; P2-02 adds the `src/gmc_rebuild/config/` submodule that exposes a frozen `ProjectConfig` dataclass with safe local-only defaults and no runtime behavior. No other Phase 2 task is authorized. Strategy code, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, and real secrets remain forbidden — see `MASTER_STATUS.md` §6.
 
-P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and may not be started without separate written authorization from Kevin, per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 ("One approver").
+P2-03..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and may not be started without separate written authorization from Kevin, per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 ("One approver").
 
 ## Repository Architecture
 
@@ -25,6 +25,7 @@ P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and may n
 | `.pre-commit-config.yaml` | Local quality gate configuration |
 | `pyproject.toml` | Python metadata and tool settings |
 | `src/gmc_rebuild/` | Phase 2 infrastructure package skeleton (authorized by PR P2-01; no runtime trading behavior) |
+| `src/gmc_rebuild/config/` | Minimal safe config schema (authorized by PR P2-02; frozen dataclass with safe local-only defaults; no runtime behavior) |
 | `governance/authorizations/` | Durable in-tree copies of Kevin's phase-opening / phase-expanding authorizations (per `AI_WORKFLOW.md` §7) |
 | `tests/` | Phase 1 governance placeholder tests and P2-01 skeleton tests |
 
@@ -51,14 +52,14 @@ Phase 1 exit criteria:
 - `README.md` and `plan/rebuild_plan.md` define the 12 invariants without dangling claims.
 - `pre-commit run --all-files` passes or any blocker is documented exactly.
 
-Phase 2 entry criteria (status as of P2-01):
+Phase 2 entry criteria (status as of P2-02):
 
 - Phase 1 accepted by Kevin in writing on PR #3 against `1f101fc`. **Satisfied.**
 - No unresolved blocker in ADRs, templates, README, tooling, or repo hygiene. **Satisfied.**
-- Kevin explicitly authorized Phase 2 implementation, narrowly scoped to PR P2-01. **Satisfied for P2-01 only.**
-- The first Phase 2 task is infrastructure-only (package skeleton and test harness, per `plan/phase2_entry_plan.md` §4). **Satisfied.**
+- Kevin explicitly authorized Phase 2 implementation, narrowly scoped to PR P2-01 and PR P2-02. **Satisfied for P2-01 and P2-02 only.**
+- The first two Phase 2 tasks are infrastructure-only (package skeleton and test harness; minimal safe config schema; per `plan/phase2_entry_plan.md` §4). **Satisfied.**
 
-P2-02..P2-05 each require their own written authorization; the above criteria do not auto-extend to them.
+P2-03..P2-05 each require their own written authorization; the above criteria do not auto-extend to them.
 
 See `plan/phase2_entry_plan.md` for the full Phase 2 entry plan, the P2-01..P2-05 sequence, required proof per PR, and stop conditions.
 

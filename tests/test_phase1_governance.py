@@ -19,6 +19,7 @@ def test_phase1_has_governance_artifacts() -> None:
         root / "monitoring" / "daily" / "daily-report-template.md",
         root / "reviews" / "review-request-template.md",
         root / "governance" / "authorizations" / "2026-05-11_p2-01.md",
+        root / "governance" / "authorizations" / "2026-05-11_p2-02.md",
     ]
 
     for path in required_paths:

@@ -36,8 +36,18 @@ def test_package_has_py_typed_marker() -> None:
     assert (src_root / "py.typed").is_file()
 
 
-def test_package_has_no_runtime_submodules() -> None:
-    """Phase 2 P2-01 is skeleton-only; no submodules are introduced yet."""
+def test_package_contents_match_authorized_phase2_tasks() -> None:
+    """The ``src/gmc_rebuild`` tree must only contain authorized entries.
+
+    Authorized entries to date:
+
+    - ``py.typed`` and ``__init__.py`` — PR P2-01 (package skeleton).
+    - ``config/`` — PR P2-02 (minimal safe config schema). See
+      ``governance/authorizations/2026-05-11_p2-02.md``.
+
+    Any additional entry indicates a phase-expanding change without an
+    authorization artifact and must be rejected at review.
+    """
     src_root = Path(__file__).resolve().parents[1] / "src" / "gmc_rebuild"
     entries = {p.name for p in src_root.iterdir() if not p.name.startswith("__")}
-    assert entries == {"py.typed"}, f"unexpected package contents: {entries}"
+    assert entries == {"py.typed", "config"}, f"unexpected package contents: {entries}"

@@ -2,16 +2,16 @@
 
 **Read this document first at the start of every serious work session.** It is the canonical, single source of truth for the current state of `gmc-rebuild`. If anything in another document conflicts with this file, this file wins until it is updated.
 
-**Last updated:** 2026-05-11 UTC (ADR-008 monitoring cadence and backup-AI monitor role accepted)
+**Last updated:** 2026-05-11 UTC (P2-02 minimal safe config schema authorized; PR opened as draft)
 **Maintained by:** Perplexity Computer (supervisor / status keeper), approved by Kevin
 
 ---
 
 ## 1. Current Phase
 
-**Phase 2 — Infrastructure foundation, narrowly opened at P2-01.**
+**Phase 2 — Infrastructure foundation, narrowly opened at P2-01 and P2-02.**
 
-Phase 1 (governance cleanup) was accepted per `1f101fc` (see §3). Phase 2 is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness), which creates the importable `src/gmc_rebuild/` layout with no runtime behavior. See `plan/phase2_entry_plan.md` §4 for the full P2-01..P2-05 sequence; only P2-01 is open. P2-02 and beyond require separate written authorization.
+Phase 1 (governance cleanup) was accepted per `1f101fc` (see §3). Phase 2 is **partially open**: Kevin has authorized PR P2-01 (package skeleton and test harness) and PR P2-02 (minimal safe config schema with fake/example values only). P2-01 created the importable `src/gmc_rebuild/` layout with no runtime behavior; P2-02 adds the `src/gmc_rebuild/config/` submodule that exposes an immutable, safe-by-default project metadata object with no runtime behavior. See `plan/phase2_entry_plan.md` §4 for the full P2-01..P2-05 sequence; only P2-01 and P2-02 are open. P2-03..P2-05 require separate written authorization. The durable in-tree records of these authorizations are at `governance/authorizations/2026-05-11_p2-01.md` and `governance/authorizations/2026-05-11_p2-02.md`.
 
 The repository still contains no trading strategy code, no broker execution code, no live trading workflow, no runtime daemon, no market data ingestion, and no real secrets or account identifiers. Each future Phase 2 PR is authorized individually and must satisfy the proof bundle in `plan/phase2_entry_plan.md` §6.
 
@@ -76,7 +76,7 @@ Rules:
 
 ---
 
-## 5. What Phase 1 (and the P2-01 Skeleton) Contains
+## 5. What Phase 1 (and the P2-01 / P2-02 Implementation) Contains
 
 The repository contains, and only contains:
 
@@ -85,8 +85,9 @@ The repository contains, and only contains:
 - Accepted architecture decision records under `docs/decisions/ADR-*.md`.
 - Templates for ADRs, deployment logs, daily monitoring reports, and review requests.
 - Project configuration: `pyproject.toml`, `.pre-commit-config.yaml`, `.gitignore`, `.secrets.baseline`.
-- Phase 1 governance placeholder tests and the P2-01 skeleton tests under `tests/`.
-- The P2-01 package skeleton at `src/gmc_rebuild/`: an empty importable package with `__init__.py`, a `__version__` string, and a `py.typed` marker. No submodules, no runtime behavior.
+- Phase 1 governance placeholder tests, the P2-01 skeleton tests, and the P2-02 config schema tests under `tests/`.
+- The P2-01 package skeleton at `src/gmc_rebuild/`: an importable package with `__init__.py`, a `__version__` string, and a `py.typed` marker. No runtime behavior.
+- The P2-02 config submodule at `src/gmc_rebuild/config/`: an `__init__.py` and a single `schema.py` defining a frozen dataclass `ProjectConfig` with safe, local-only defaults and no runtime behavior. No env-var loading, no credentials, no real broker / account / venue identifiers, no live or paper toggles. Authorized by `governance/authorizations/2026-05-11_p2-02.md`.
 - ADR-008 (`docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md`): the governance decision that clarifies the backup-AI monitor role and the monitoring cadence rule. Governance only; no runtime code added.
 
 ---
@@ -104,11 +105,12 @@ Always-forbidden (no current authorization, regardless of phase):
 - Market data ingestion code, real data pipelines, or stored datasets.
 - Secrets, private keys, certificates, `.env` files, local databases, or generated reports.
 
-Phase 2 implementation is forbidden **except** for tasks named in an accepted Phase 2 PR and recorded on the §8 step 4a allowlist. At the time of writing, the only authorized Phase 2 implementation task is:
+Phase 2 implementation is forbidden **except** for tasks named in an accepted Phase 2 PR and recorded on the §8 step 4a allowlist. At the time of writing, the authorized Phase 2 implementation tasks are:
 
-- **PR P2-01 — package skeleton and test harness.** Authorizes the importable `src/gmc_rebuild/` layout, the corresponding pytest fixtures under `tests/`, and the minimal `pyproject.toml` package-discovery wiring. Does not authorize submodules, runtime behavior, or any of the always-forbidden categories above.
+- **PR P2-01 — package skeleton and test harness.** Authorizes the importable `src/gmc_rebuild/` layout, the corresponding pytest fixtures under `tests/`, and the minimal `pyproject.toml` package-discovery wiring. Does not authorize unrelated submodules, runtime behavior, or any of the always-forbidden categories above.
+- **PR P2-02 — minimal safe config schema.** Authorizes the `src/gmc_rebuild/config/` submodule with a single `schema.py` defining an immutable, safe-by-default `ProjectConfig` dataclass, plus matching tests under `tests/`. Does not authorize env-var loading, real credentials, real broker / account / venue identifiers, runtime behavior, or any of the always-forbidden categories above. Recorded at `governance/authorizations/2026-05-11_p2-02.md`.
 
-P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and remain forbidden until Kevin records explicit written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 ("One approver") / rule 7 ("No phase drift"). A PR that introduces work outside the §8 step 4a allowlist must be rejected at review.
+P2-03..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized and remain forbidden until Kevin records explicit written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 ("One approver") / rule 7 ("No phase drift"). A PR that introduces work outside the §8 step 4a allowlist must be rejected at review.
 
 ---
 
@@ -119,13 +121,13 @@ Phase 1 was accepted by Kevin in writing on PR #3 against `1f101fc` (see §3). P
 1. Accepted Phase 1 baseline established at `1f101fc` and recorded in §3.
 2. `plan/phase2_entry_plan.md` merged on `main` (commit `04faaa1`) and referenced from `README.md`.
 3. `MASTER_STATUS.md` §8 reconciled to distinguish always-forbidden categories (step 4) from a per-PR Phase 2 infrastructure allowlist (step 4a). The reconciliation landed in commit `5c84d85` ("docs: reconcile MASTER_STATUS startup checks").
-4. Kevin's explicit written authorization for PR P2-01 (package skeleton and test harness, per `plan/phase2_entry_plan.md` §4). P2-01 is the only Phase 2 implementation task authorized at this time. The durable in-tree copy of that authorization is recorded at `governance/authorizations/2026-05-11_p2-01.md`; GitHub PR #6 history (merged at `e0278c4`) remains supporting evidence.
+4. Kevin's explicit written authorization for PR P2-01 (package skeleton and test harness, per `plan/phase2_entry_plan.md` §4) and PR P2-02 (minimal safe config schema, per `plan/phase2_entry_plan.md` §4). The durable in-tree copies of those authorizations are recorded at `governance/authorizations/2026-05-11_p2-01.md` and `governance/authorizations/2026-05-11_p2-02.md`; GitHub PR #6 history (merged at `e0278c4`) remains supporting evidence for P2-01, and the P2-02 PR is the corresponding evidence for P2-02.
 
 What this means in practice:
 
-- The §8 step 4a allowlist currently contains exactly `src/`, authorizing P2-01's importable `src/gmc_rebuild/` skeleton and nothing else.
-- P2-02..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized. Each requires its own written authorization from Kevin per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), a sibling authorization artifact under `governance/authorizations/` per `AI_WORKFLOW.md` §7, and a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory.
-- The always-forbidden categories in §6 and `plan/phase2_entry_plan.md` §2 remain forbidden regardless of mode. Authorizing P2-01 does not authorize any Phase 3+ behavior.
+- The §8 step 4a allowlist currently contains exactly `src/` (authorizing P2-01's importable `src/gmc_rebuild/` skeleton) and `src/gmc_rebuild/config/` (authorizing the P2-02 config schema submodule). No other Phase 2 infrastructure paths are authorized.
+- P2-03..P2-05 in `plan/phase2_entry_plan.md` §4 are **not** authorized. Each requires its own written authorization from Kevin per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), a sibling authorization artifact under `governance/authorizations/` per `AI_WORKFLOW.md` §7, and a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory.
+- The always-forbidden categories in §6 and `plan/phase2_entry_plan.md` §2 remain forbidden regardless of mode. Authorizing P2-01 and P2-02 does not authorize any Phase 3+ behavior, does not authorize env-var loading of secrets, and does not authorize any runtime entry point.
 - Any pull request that introduces strategy logic, broker integration, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, or real secrets must be closed without merge, even if it is presented as "Phase 2 infrastructure."
 
 The proof bundle required for every Phase 2 PR is defined in `plan/phase2_entry_plan.md` §6.
@@ -136,7 +138,7 @@ The proof bundle required for every Phase 2 PR is defined in `plan/phase2_entry_
 
 Run these in order at the start of every serious work session. Do not skip steps. Stop at the first failure and resolve it before continuing.
 
-The boundary check in step 4 distinguishes two modes. Phase 2 implementation is **partially open** at the time of writing: Kevin has authorized PR P2-01 (package skeleton and test harness) per `plan/phase2_entry_plan.md` §4, which names `src/` as the authorized Phase 2 infrastructure directory. Step 4a below therefore runs in Phase 2 implementation mode restricted to that allowlist. The Phase 2 implementation mode applies only to directories named in an accepted Phase 2 task or PR; any other Phase 2 infrastructure path is STOP. Switching modes does not silently relax controls: forbidden categories (strategy, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, secrets) remain STOP unless and until a later gate specifically authorizes them.
+The boundary check in step 4 distinguishes two modes. Phase 2 implementation is **partially open** at the time of writing: Kevin has authorized PR P2-01 (package skeleton and test harness) and PR P2-02 (minimal safe config schema) per `plan/phase2_entry_plan.md` §4, which name `src/` and `src/gmc_rebuild/config/` as the authorized Phase 2 infrastructure directories. Step 4a below therefore runs in Phase 2 implementation mode restricted to that allowlist. The Phase 2 implementation mode applies only to directories named in an accepted Phase 2 task or PR; any other Phase 2 infrastructure path is STOP. Switching modes does not silently relax controls: forbidden categories (strategy, broker execution, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, secrets) remain STOP unless and until a later gate specifically authorizes them.
 
 Step 4 only inspects top-level paths. Step 4c below augments it with a recursive scan that walks every path component in the working tree, tokenizes each component on dot, hyphen, and underscore, and flags any token (or consecutive `_`-joined token pair) that matches the forbidden set. Tokenization is what catches forbidden concepts hiding under the now-allowlisted `src/` subtree (`src/strategy/`, `src/gmc_rebuild/broker.py`, `src/gmc_rebuild/orders/`, `src/gmc_rebuild/signals.py`), multi-dot extensions (`strategy.tar.gz`, `broker.test.py`), and hyphen/underscore compounds (`market-data.py`, `order_book.py`, `sub-strategy/`). Whole-token matching means innocuous names that merely contain a forbidden substring (e.g. `database.py`, `dataclass_helper.py`) are not flagged. The recursive scan is a human-run startup gate, not a substitute for code review: it matches names, not intent, and it cannot detect a forbidden concept implemented under a benign filename. Code review and the `plan/phase2_entry_plan.md` §6 proof bundle remain the authoritative checks. Step 4c's subshell exits non-zero on any STOP, so automation and `set -e` callers can rely on `$?`.
 
@@ -179,19 +181,31 @@ done
 # 4a. Phase 2 implementation mode — restricted to directories authorized by an
 #     accepted Phase 2 task or PR. The allowlist below is exactly the set of
 #     Phase 2 infrastructure paths Kevin has authorized in writing:
-#       - src/  → authorized by PR P2-01 (package skeleton and test harness),
-#                 see plan/phase2_entry_plan.md §4 and the durable in-tree
-#                 record at governance/authorizations/2026-05-11_p2-01.md.
+#       - src/                       → authorized by PR P2-01 (package skeleton
+#                                      and test harness), see
+#                                      plan/phase2_entry_plan.md §4 and the
+#                                      durable in-tree record at
+#                                      governance/authorizations/2026-05-11_p2-01.md.
+#       - src/gmc_rebuild/config/    → authorized by PR P2-02 (minimal safe
+#                                      config schema), see
+#                                      plan/phase2_entry_plan.md §4 and the
+#                                      durable in-tree record at
+#                                      governance/authorizations/2026-05-11_p2-02.md.
 #     A Phase 2 infrastructure path present but not on this allowlist is STOP;
 #     reconcile before continuing. The always-forbidden categories in step 4
 #     still apply unchanged in this mode.
-allowed_p2_infra="src"
+allowed_p2_infra="src src/gmc_rebuild/config"
 unset p2_infra_found
-for path in src; do
+for path in src src/gmc_rebuild/config; do
   if [ -e "$path" ]; then
     case " $allowed_p2_infra " in
       *" $path "*)
-        echo "OK: Phase 2 infrastructure present and authorized: $path (PR P2-01)"
+        case "$path" in
+          src)                       pr_tag="PR P2-01" ;;
+          src/gmc_rebuild/config)    pr_tag="PR P2-02" ;;
+          *)                         pr_tag="(allowlisted)" ;;
+        esac
+        echo "OK: Phase 2 infrastructure present and authorized: $path ($pr_tag)"
         ;;
       *)
         echo "STOP: Phase 2 infrastructure present but not authorized: $path (see plan/phase2_entry_plan.md)"
@@ -200,14 +214,15 @@ for path in src; do
     esac
   fi
 done
-[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: Phase 2 infrastructure paths conform to P2-01 allowlist"
+[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: Phase 2 infrastructure paths conform to P2-01/P2-02 allowlist"
 
-# 4b. Phase 2 implementation mode is operating under the P2-01 allowlist in
-#     step 4a. To extend the allowlist for a future Phase 2 PR (e.g. P2-02,
-#     P2-03, …), update the `allowed_p2_infra` variable above in the same PR
-#     that adds the new directory, and reference the authorizing PR number in
-#     the comment block. Step 4 (always-forbidden categories) still applies in
-#     this mode; switching modes never relaxes those categories.
+# 4b. Phase 2 implementation mode is operating under the P2-01 and P2-02
+#     allowlist in step 4a. To extend the allowlist for a future Phase 2 PR
+#     (e.g. P2-03, P2-04, P2-05), update the `allowed_p2_infra` variable above
+#     in the same PR that adds the new directory, and reference the
+#     authorizing PR number in the comment block. Step 4 (always-forbidden
+#     categories) still applies in this mode; switching modes never relaxes
+#     those categories.
 
 # 4c. Recursive audit of forbidden category names anywhere in the tree.
 #     Step 4 only inspects top-level paths, so a forbidden concept could in
@@ -303,7 +318,7 @@ pre-commit run --all-files
 pytest
 ```
 
-If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a, the `forbidden` set or per-path allowlist in step 4c, or any other startup-gate filter without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), the phase boundary cannot be moved by Codex or Perplexity Computer alone, and per rule 8, tooling hooks (pre-commit, mypy strict, detect-secrets) may not be weakened to make a failure go away. The only directory currently on the allowlist is `src/` under PR P2-01 — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
+If any step fails, document the failure in the session log and stop. Do not "fix" by widening scope. In particular, do not extend the `allowed_p2_infra` allowlist in step 4a, the `forbidden` set or per-path allowlist in step 4c, or any other startup-gate filter without Kevin's explicit written authorization per §7 and a specific accepted Phase 2 task or PR that names the directory; per `AI_WORKFLOW.md` §6 rule 3 ("One approver") and rule 7 ("No phase drift"), the phase boundary cannot be moved by Codex or Perplexity Computer alone, and per rule 8, tooling hooks (pre-commit, mypy strict, detect-secrets) may not be weakened to make a failure go away. The directories currently on the allowlist are `src/` (PR P2-01) and `src/gmc_rebuild/config/` (PR P2-02) — see `plan/phase2_entry_plan.md` for the full P2-01..P2-05 sequence and the Phase 2 entry criteria.
 
 ---
 
