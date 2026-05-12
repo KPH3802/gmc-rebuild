@@ -17,6 +17,8 @@ Phase 1 (governance cleanup) was accepted by Kevin in writing on PR #3 against c
 | `plan/phase2_entry_plan.md` | Phase 2 entry plan and P2-01..P2-05 sequence (all five tasks merged on `main` as of 2026-05-12; Phase 2 is not declared closed and no Phase 2 task beyond P2-05 / no Phase 3+ task is authorized without separate written approval) |
 | `docs/decisions/ADR-*.md` | Accepted architecture decision records |
 | `docs/decisions/ADR-template.md` | Template for future ADRs |
+| `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md` | Point-in-time inventory of Phase 1 governance cleanup artifacts (submission side of the Phase 1 verification gate) |
+| `docs/decisions/PHASE_2_P2_01_TO_P2_05_CHECKPOINT_SUMMARY.md` | Documentation-only checkpoint inventory recording the merged P2-01..P2-05 task sequence at `main` checkpoint `5c390ff`; not a Phase 2 closure and not a Phase 3 opening |
 | `docs/deploys/deploy-log-template.md` | Template for deployment and rollback logs |
 | `monitoring/daily/daily-report-template.md` | Template for daily monitoring reports |
 | `reviews/review-request-template.md` | Template for independent review requests |
@@ -62,7 +64,7 @@ Phase 2 entry criteria (status after the P2-05 implementation merge):
 
 P2-05 is the final task in the `plan/phase2_entry_plan.md` §4 P2-01..P2-05 sequence and is merged. **Phase 2 is *not* declared closed** by this milestone; closing Phase 2, opening Phase 3, or opening any new Phase 2 task beyond P2-05 requires Kevin's separate written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 / rule 7, plus a sibling artifact under `governance/authorizations/` and (where it introduces a new directory) a corresponding update to the §8 step 4a allowlist.
 
-See `plan/phase2_entry_plan.md` for the full Phase 2 entry plan, the P2-01..P2-05 sequence, required proof per PR, and stop conditions.
+See `plan/phase2_entry_plan.md` for the full Phase 2 entry plan, the P2-01..P2-05 sequence, required proof per PR, and stop conditions. The point-in-time inventory of the merged P2-01..P2-05 sequence at `main` checkpoint `5c390ff` is recorded in `docs/decisions/PHASE_2_P2_01_TO_P2_05_CHECKPOINT_SUMMARY.md`; that document is documentation-only and does **not** close Phase 2, open Phase 3, authorize any new Phase 2 task, or relax any quality gate.
 
 ## The 12 Invariants
 
