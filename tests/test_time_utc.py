@@ -228,6 +228,4 @@ def test_time_module_does_not_call_naive_utcnow() -> None:
     time_root = Path(__file__).resolve().parents[1] / "src" / "gmc_rebuild" / "time"
     for path in time_root.glob("*.py"):
         text = path.read_text(encoding="utf-8")
-        assert "utcnow(" not in text, (
-            f"{path} calls utcnow(); ADR-004 forbids naive UTC helpers"
-        )
+        assert "utcnow(" not in text, f"{path} calls utcnow(); ADR-004 forbids naive UTC helpers"
