@@ -2,22 +2,23 @@
 
 **Date:** 2026-05-12 UTC
 
-**Status:** Documentation-only checkpoint. The `plan/phase2_entry_plan.md` §4 P2-01..P2-05 task sequence is merged on `main`.
+**Status:** Documentation-only checkpoint. The `plan/phase2_entry_plan.md` §4 P2-01..P2-05 task sequence is merged on `main`. **Phase 2 is now formally closed (governance-only) at the current `main` checkpoint after PR #23** per Kevin's written authorization recorded at `governance/authorizations/2026-05-12_phase-2-closure.md`. The closure is governance-only and does not open Phase 3, does not open any new Phase 2 task, does not extend the §8 step 4a allowlist, does not relax any quality gate, and does not create any tag or release.
 
-**Main checkpoint commit:** `5c390ff` (merge of PR #20 — the 2026-05-12 monitoring packet recording PR #21's UP042 remediation). The `5c390ff` head is a descendant of the accepted Phase 1 baseline `1f101fc` and of every P2-01..P2-05 merge commit listed below.
+**Main checkpoint commit:** `5c390ff` (merge of PR #20 — the 2026-05-12 monitoring packet recording PR #21's UP042 remediation). The `5c390ff` head is a descendant of the accepted Phase 1 baseline `1f101fc` and of every P2-01..P2-05 merge commit listed below. The formal Phase 2 closure lands on top of this checkpoint after PR #22 (`f787a48`, documentation-only checkpoint summary) and PR #23 (`0193d45`, 2026-05-12 monitoring packet recording PR #22).
 
 ## What This Document Is
 
 This file records that the Phase 2 entry task sequence enumerated in `plan/phase2_entry_plan.md` §4 (P2-01 through P2-05) has been authorized, implemented, and merged through the `main` checkpoint `5c390ff`. It mirrors the `docs/decisions/PHASE_1_COMPLETION_SUMMARY.md` pattern used at the Phase 1 review gate: a point-in-time inventory of the artifacts that landed, written so that an external reviewer can locate them.
 
-This file is **not** an authorization artifact. It does not open, close, or expand any phase or task. It does not extend the `MASTER_STATUS.md` §8 step 4a allowlist. It does not change the `allowed_p2_infra` set. It does not relax pre-commit, Ruff, mypy strict mode, `detect-secrets`, `.gitignore`, `.secrets.baseline`, or any other quality gate. It does not introduce any runtime code, test fixture, or implementation file. If anything in this document conflicts with `MASTER_STATUS.md`, `AI_WORKFLOW.md`, `plan/phase2_entry_plan.md`, or the durable authorization records under `governance/authorizations/`, those files win.
+This file is **not** itself the Phase 2 closure authorization. The formal Phase 2 closure authorization is recorded at `governance/authorizations/2026-05-12_phase-2-closure.md`. This document is the supporting inventory; the closure authorization is the governance act.
+
+This file does not open or expand any phase or task. It does not extend the `MASTER_STATUS.md` §8 step 4a allowlist. It does not change the `allowed_p2_infra` set. It does not relax pre-commit, Ruff, mypy strict mode, `detect-secrets`, `.gitignore`, `.secrets.baseline`, or any other quality gate. It does not introduce any runtime code, test fixture, or implementation file. If anything in this document conflicts with `MASTER_STATUS.md`, `AI_WORKFLOW.md`, `plan/phase2_entry_plan.md`, or the durable authorization records under `governance/authorizations/`, those files win.
 
 ## What This Document Is **Not**
 
-Recording the P2-01..P2-05 checkpoint is explicitly **not** any of the following. None of these are opened, authorized, implied, or pre-approved by this document or by the closure PR that lands it. Each remains forbidden until Kevin records a separate written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 / rule 7, with a sibling artifact under `governance/authorizations/` and (where it introduces a new directory) a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory:
+Recording the P2-01..P2-05 checkpoint, and the formal Phase 2 closure that lands on top of it, is explicitly **not** any of the following. None of these are opened, authorized, implied, or pre-approved by this document, by the closure authorization at `governance/authorizations/2026-05-12_phase-2-closure.md`, or by the PR that lands either. Each remains forbidden until Kevin records a separate written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 / rule 7, with a sibling artifact under `governance/authorizations/` and (where it introduces a new directory) a corresponding update to the §8 step 4a allowlist in the PR that introduces the directory:
 
-- **Phase 2 closure.** Phase 2 is not declared closed by the merge of P2-01..P2-05 or by this document. The P2-01..P2-05 sequence is the merged subset of Phase 2 work; Phase 2 itself remains the partially-open boundary described in `MASTER_STATUS.md` §1 and §7.
-- **Phase 3 entry, planning, or scoping.** No Phase 3 task, no Phase 3 entry plan, no Phase 3 directory, and no Phase 3 authorization is opened.
+- **Phase 3 entry, planning, or scoping.** No Phase 3 task, no Phase 3 entry plan, no Phase 3 directory, and no Phase 3 authorization is opened by this document or by the Phase 2 closure. Closing Phase 2 does not open Phase 3.
 - **Any new Phase 2 task beyond P2-05.** The §4 P2-01..P2-05 sequence is exhausted; no P2-06 or sibling Phase 2 task is opened.
 - **Runtime work of any kind.** No `__main__` entry point, no daemon, no scheduler, no background worker, no long-running service, no live execution loop is authorized.
 - **Broker integration.** No broker SDK, no broker connector, no broker reconciliation runtime, no broker authentication, no broker credentials.
@@ -78,11 +79,12 @@ These checks are name-based and structural. They do not certify intent or implem
 
 ## Phase 2 Boundary After This Checkpoint
 
-After this checkpoint, the Phase 2 boundary is unchanged:
+After this checkpoint and the formal Phase 2 closure authorization at `governance/authorizations/2026-05-12_phase-2-closure.md`, the Phase 2 boundary is:
 
-- **Partially open.** Phase 2 implementation is open exactly for the merged P2-01..P2-05 sequence and the directories on the §8 step 4a allowlist. Nothing else.
-- **Not closed.** Phase 2 is not declared closed by the merge of P2-01..P2-05 or by this document. Closing Phase 2 requires Kevin's separate written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 / rule 7.
+- **Formally closed (governance-only).** Phase 2 is formally closed at the current `main` checkpoint after PR #23 (`0193d45`). The closure is governance-only; no implementation lands with it.
+- **§8 step 4a allowlist unchanged.** The allowlist still contains exactly the five P2-01..P2-05 entries. The closure does not extend it.
 - **No successor opened.** No Phase 2 task beyond P2-05 is opened. No Phase 3 task is opened. No runtime, broker, market-data, order, strategy, scheduling, persistence, or deployment work is opened.
 - **Always-forbidden categories unchanged.** Strategy code, broker execution code, live or paper trading wired to a real broker, runtime daemons affecting accounts, real market data ingestion, order placement, and real secrets remain forbidden regardless of mode.
+- **Preserved gates for any future work.** Any work beyond this closure — Phase 3 entry, a Phase 2 task not in the §4 sequence, or any runtime / broker / market-data / order / strategy / scheduler / persistence / deployment work — requires Kevin's separate written authorization per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 / rule 7, a sibling artifact under `governance/authorizations/`, any applicable runtime-cadence ADR follow-up (ADR-008 §D6), Mode A / Mode B review per `AI_WORKFLOW.md` §4 and ADR-008 where required, and (where it introduces a new directory) a corresponding update to the §8 step 4a allowlist in the same PR.
 
 The next allowed decisions remain those listed in `MASTER_STATUS.md` §9.
