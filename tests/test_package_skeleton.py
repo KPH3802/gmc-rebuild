@@ -46,10 +46,18 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       ``governance/authorizations/2026-05-11_p2-02.md``.
     - ``time/`` — PR P2-03 (minimal UTC time utility). See
       ``governance/authorizations/2026-05-12_p2-03.md``.
+    - ``logging/`` — PR P2-04 (structured logging and audit event
+      conventions). See
+      ``governance/authorizations/2026-05-12_p2-04.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
     """
     src_root = Path(__file__).resolve().parents[1] / "src" / "gmc_rebuild"
     entries = {p.name for p in src_root.iterdir() if not p.name.startswith("__")}
-    assert entries == {"py.typed", "config", "time"}, f"unexpected package contents: {entries}"
+    assert entries == {
+        "py.typed",
+        "config",
+        "time",
+        "logging",
+    }, f"unexpected package contents: {entries}"
