@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Any, Protocol, runtime_checkable
 
@@ -43,7 +43,7 @@ class RiskControlError(ValueError):
     """
 
 
-class KillSwitchState(str, Enum):
+class KillSwitchState(StrEnum):
     """Allowed kill-switch states.
 
     ``ARMED`` — no active trip; future runtime is permitted to trade
@@ -56,7 +56,7 @@ class KillSwitchState(str, Enum):
     TRIPPED = "tripped"
 
 
-class ReconciliationStatus(str, Enum):
+class ReconciliationStatus(StrEnum):
     """Allowed reconciliation outcomes.
 
     ``CLEAN`` — expected and observed values agree within tolerance.
@@ -74,7 +74,7 @@ class ReconciliationStatus(str, Enum):
     UNAVAILABLE = "unavailable"
 
 
-class HeartbeatStatus(str, Enum):
+class HeartbeatStatus(StrEnum):
     """Allowed heartbeat statuses.
 
     ``FRESH`` — last update is within the configured staleness window.
@@ -287,9 +287,7 @@ def to_utc_string(value: datetime) -> str:
     :class:`gmc_rebuild.time.NaiveDatetimeError` from ``ensure_utc``.
     """
     if not isinstance(value, datetime):
-        raise RiskControlError(
-            f"to_utc_string expects a datetime, got {type(value).__name__}"
-        )
+        raise RiskControlError(f"to_utc_string expects a datetime, got {type(value).__name__}")
     return format_utc(ensure_utc(value))
 
 
