@@ -49,6 +49,8 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
     - ``logging/`` — PR P2-04 (structured logging and audit event
       conventions). See
       ``governance/authorizations/2026-05-12_p2-04.md``.
+    - ``risk/`` — PR P2-05 (risk-control interfaces). See
+      ``governance/authorizations/2026-05-12_p2-05.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -60,4 +62,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "config",
         "time",
         "logging",
+        "risk",
     }, f"unexpected package contents: {entries}"
