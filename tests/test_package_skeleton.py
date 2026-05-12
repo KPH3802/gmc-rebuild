@@ -44,10 +44,12 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
     - ``py.typed`` and ``__init__.py`` — PR P2-01 (package skeleton).
     - ``config/`` — PR P2-02 (minimal safe config schema). See
       ``governance/authorizations/2026-05-11_p2-02.md``.
+    - ``time/`` — PR P2-03 (minimal UTC time utility). See
+      ``governance/authorizations/2026-05-12_p2-03.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
     """
     src_root = Path(__file__).resolve().parents[1] / "src" / "gmc_rebuild"
     entries = {p.name for p in src_root.iterdir() if not p.name.startswith("__")}
-    assert entries == {"py.typed", "config"}, f"unexpected package contents: {entries}"
+    assert entries == {"py.typed", "config", "time"}, f"unexpected package contents: {entries}"
