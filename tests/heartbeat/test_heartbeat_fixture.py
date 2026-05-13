@@ -37,7 +37,6 @@ from gmc_rebuild.risk import (
 )
 from gmc_rebuild.time import NaiveDatetimeError
 
-
 _FIXED_CLOCK = datetime(2026, 5, 13, 14, 0, 0, tzinfo=UTC)
 
 
@@ -59,9 +58,7 @@ def _expect_naive_error(call: object) -> None:
         call()  # type: ignore[operator]
     except NaiveDatetimeError as exc:
         raised = exc
-    assert isinstance(raised, NaiveDatetimeError), (
-        f"expected NaiveDatetimeError, got {raised!r}"
-    )
+    assert isinstance(raised, NaiveDatetimeError), f"expected NaiveDatetimeError, got {raised!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -73,7 +70,7 @@ def test_heartbeat_subpackage_imports() -> None:
     module = importlib.import_module("gmc_rebuild.heartbeat")
     assert module is not None
     assert hasattr(module, "InMemoryHeartbeat")
-    assert getattr(module, "__all__") == ["InMemoryHeartbeat"]
+    assert module.__all__ == ["InMemoryHeartbeat"]
 
 
 def test_default_staleness_is_adr_005_eight_hours() -> None:
@@ -226,9 +223,7 @@ def test_advance_rejects_negative_or_non_numeric() -> None:
 def test_beat_rejects_empty_or_whitespace_component() -> None:
     fake = InMemoryHeartbeat(observed_at=_FIXED_CLOCK)
     _expect_risk_error(lambda: fake.beat("", _FIXED_CLOCK), "non-empty str")
-    _expect_risk_error(
-        lambda: fake.beat("op erator", _FIXED_CLOCK), "must not contain whitespace"
-    )
+    _expect_risk_error(lambda: fake.beat("op erator", _FIXED_CLOCK), "must not contain whitespace")
 
 
 def test_status_rejects_empty_or_whitespace_component() -> None:
@@ -285,7 +280,9 @@ def _strip_docstrings_and_comments(source: str) -> str:
 
 
 def _heartbeat_code_text() -> str:
-    return "\n".join(_strip_docstrings_and_comments(p.read_text()) for p in _heartbeat_source_files())
+    return "\n".join(
+        _strip_docstrings_and_comments(p.read_text()) for p in _heartbeat_source_files()
+    )
 
 
 def test_heartbeat_package_has_no_main_entry_point() -> None:
@@ -302,9 +299,8 @@ def test_heartbeat_package_has_no_forbidden_runtime_imports() -> None:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     imported.add(alias.name.split(".")[0])
-            elif isinstance(node, ast.ImportFrom):
-                if node.module is not None:
-                    imported.add(node.module.split(".")[0])
+            elif isinstance(node, ast.ImportFrom) and node.module is not None:
+                imported.add(node.module.split(".")[0])
     forbidden = {
         "os",
         "socket",
