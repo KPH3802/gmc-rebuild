@@ -132,10 +132,7 @@ Accepted ADRs:
 - ADR-006: Deployment and Rollback Logs
 - ADR-007: Minimal CI Strategy
 - ADR-008: Monitoring Cadence and Backup-AI Monitor Role
-
-Proposed ADRs (drafted, not yet accepted):
-
-- ADR-009: Runtime Monitoring Cadence and Missed-Packet Severity (ADR-008 §D6 follow-up; **Proposed** — drafted under `governance/authorizations/2026-05-13_p3-01.md`; acceptance is a future, separate authorization requiring Mode A adversarial review per `AI_WORKFLOW.md` §4(2))
+- ADR-009: Runtime Monitoring Cadence and Missed-Packet Severity (ADR-008 §D6 follow-up; accepted under `governance/authorizations/2026-05-13_p3-01-acceptance.md`; D3 and D5 replace ADR-008 §D3 / §D5 runtime-phase guidance on a going-forward basis once runtime exists on `main`)
 
 ## License
 
