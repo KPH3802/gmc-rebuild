@@ -178,8 +178,8 @@ ADR-008 §D7 defines the Mode A + Mode B dual-artifact rule for the governance p
   ```
   Stored timestamps in monitoring packets and runtime logs (when runtime exists) use `YYYY-MM-DDTHH:MM:SSZ` or a clearly documented equivalent UTC format.
 - Cross-references made by the companion governance edits in the drafting PR for this ADR:
-  - `README.md` ADR list adds ADR-009 in Proposed status.
-  - `docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md` "Follow-up Actions" first checkbox is checked off with a parenthetical pointer to ADR-009 in Proposed status. ADR-008's Decision sections (D3, D5, D6, D7) are **not** modified.
+  - `README.md` adds a separate "Proposed ADRs (drafted, not yet accepted)" subsection naming ADR-009 in Proposed status, kept distinct from the "Accepted ADRs:" list so ADR-009 is not misread as accepted.
+  - `docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md` "Follow-up Actions" first entry gains a parenthetical note pointing to ADR-009 in Proposed status. The checkbox **remains unchecked** because acceptance of ADR-009 is still pending; drafting in Proposed status does not close the §D6 follow-up action. ADR-008's Decision sections (D3, D5, D6, D7) are **not** modified.
   - No `MASTER_STATUS.md` edit is made by the drafting PR (per `AI_WORKFLOW.md` §1.2 / §6 rule 2: status keeper is Perplexity Computer; the drafting PR is governance documentation only).
   - No file under `src/**` or `tests/**` is modified by the drafting PR.
 - Acceptance of this ADR (changing `Status` to `Accepted`) is reserved for a future PR. That acceptance PR requires its own separate written authorization from Kevin per `MASTER_STATUS.md` §7 and `AI_WORKFLOW.md` §6 rule 3 / rule 7, a sibling artifact under `governance/authorizations/`, Mode A adversarial review per `AI_WORKFLOW.md` §4(2) and `plan/phase3_entry_plan.md` §7, and a Mode B monitoring packet per ADR-008 §D3 / §D5. Acceptance does **not** by itself open Phase 3; opening Phase 3 is a separate phase-gate decision (candidate task P3-02 in `plan/phase3_entry_plan.md` §4 item 2).

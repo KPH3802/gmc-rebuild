@@ -139,7 +139,7 @@ A single artifact may satisfy both **only** if it explicitly contains a clearly-
 
 ## Follow-up Actions
 
-- [x] Future ADR: define runtime monitoring cadence and missed-packet severity (D6). Owner: whoever opens the first runtime PR. Target phase: before any Phase 2 PR that introduces runtime (daemon, broker integration, market data ingestion, paper or live trading). *(Drafted in **Proposed** status as `docs/decisions/ADR-009_runtime_monitoring_cadence.md` under `governance/authorizations/2026-05-13_p3-01.md`; acceptance is a future, separate authorization requiring Mode A adversarial review.)*
+- [ ] Future ADR: define runtime monitoring cadence and missed-packet severity (D6). Owner: whoever opens the first runtime PR. Target phase: before any Phase 2 PR that introduces runtime (daemon, broker integration, market data ingestion, paper or live trading). *(Drafted in **Proposed** status as `docs/decisions/ADR-009_runtime_monitoring_cadence.md` under `governance/authorizations/2026-05-13_p3-01.md`; acceptance remains pending and requires separate written authorization from Kevin plus Mode A adversarial review per `AI_WORKFLOW.md` §4(2). This follow-up action is **not** closed until ADR-009 is Accepted.)*
 - [ ] No retroactive packet backfill. If a packet was due under D3 and is missing, the catch-up note in D5 is the remediation, not fabricated per-day history.
 - [ ] First D3 packet for PR #9 (the PR that adopts this ADR): committed as a follow-up under `monitoring/daily/` before the next merge to `main` after PR #9, per D4.
 
