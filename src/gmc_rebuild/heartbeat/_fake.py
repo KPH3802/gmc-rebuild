@@ -43,7 +43,7 @@ class InMemoryHeartbeat:
     ``time.sleep``, no scheduler, no background activity.
     """
 
-    __slots__ = ("_observed_at", "_threshold", "_last_updates")
+    __slots__ = ("_last_updates", "_observed_at", "_threshold")
 
     def __init__(
         self,
@@ -51,16 +51,10 @@ class InMemoryHeartbeat:
         threshold_seconds: float = DEFAULT_STALENESS_SECONDS,
     ) -> None:
         observed = ensure_utc(observed_at)
-        if isinstance(threshold_seconds, bool) or not isinstance(
-            threshold_seconds, (int, float)
-        ):
-            raise RiskControlError(
-                "InMemoryHeartbeat.threshold_seconds must be a number"
-            )
+        if isinstance(threshold_seconds, bool) or not isinstance(threshold_seconds, (int, float)):
+            raise RiskControlError("InMemoryHeartbeat.threshold_seconds must be a number")
         if threshold_seconds <= 0:
-            raise RiskControlError(
-                "InMemoryHeartbeat.threshold_seconds must be positive"
-            )
+            raise RiskControlError("InMemoryHeartbeat.threshold_seconds must be positive")
         self._observed_at: datetime = observed
         self._threshold: float = float(threshold_seconds)
         self._last_updates: dict[str, datetime] = {}
@@ -70,21 +64,15 @@ class InMemoryHeartbeat:
         if isinstance(seconds, bool) or not isinstance(seconds, (int, float)):
             raise RiskControlError("InMemoryHeartbeat.advance seconds must be a number")
         if seconds < 0:
-            raise RiskControlError(
-                "InMemoryHeartbeat.advance seconds must be non-negative"
-            )
+            raise RiskControlError("InMemoryHeartbeat.advance seconds must be non-negative")
         self._observed_at = self._observed_at + timedelta(seconds=float(seconds))
 
     def beat(self, component: str, when: datetime) -> None:
         """Record a heartbeat for ``component`` at ``when`` (UTC datetime)."""
         if not isinstance(component, str) or not component:
-            raise RiskControlError(
-                "InMemoryHeartbeat.beat component must be a non-empty str"
-            )
+            raise RiskControlError("InMemoryHeartbeat.beat component must be a non-empty str")
         if any(ch.isspace() for ch in component):
-            raise RiskControlError(
-                "InMemoryHeartbeat.beat component must not contain whitespace"
-            )
+            raise RiskControlError("InMemoryHeartbeat.beat component must not contain whitespace")
         self._last_updates[component] = ensure_utc(when)
 
     def status(self, component: str) -> HeartbeatRecord:
@@ -94,13 +82,9 @@ class InMemoryHeartbeat:
         unknown components return ``status=STALE`` rather than raising.
         """
         if not isinstance(component, str) or not component:
-            raise RiskControlError(
-                "InMemoryHeartbeat.status component must be a non-empty str"
-            )
+            raise RiskControlError("InMemoryHeartbeat.status component must be a non-empty str")
         if any(ch.isspace() for ch in component):
-            raise RiskControlError(
-                "InMemoryHeartbeat.status component must not contain whitespace"
-            )
+            raise RiskControlError("InMemoryHeartbeat.status component must not contain whitespace")
 
         last = self._last_updates.get(component)
         if last is None:
