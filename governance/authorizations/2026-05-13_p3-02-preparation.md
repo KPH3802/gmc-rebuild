@@ -1,7 +1,8 @@
 # P3-02 Preparation — Draft Phase 3 Entry Authorization Text (Governance/Documentation-Only, Pending Mode A Review)
 
 Date: 2026-05-13
-Authorizer: Kevin (preparation scope only — see Section "Authorization Status" below)
+Authorizer: Kevin — preparation scope only; NOT a Phase 3 / P3-02 entry authorization (see Section "Authorization Status" below)
+Status: Pending Mode A adversarial review of this preparation artifact; not a Phase 3 entry decision and not a P3-02 entry authorization.
 Scope: P3-02 **preparation only** — governance / documentation scope (**does not open Phase 3, does not authorize any Phase 3 implementation, does not authorize P3-02 itself, does not extend the `MASTER_STATUS.md` §8 step 4a allowlist, does not add or modify any file under `src/**` or `tests/**`, does not authorize any runtime / broker / market-data / order / strategy / scheduler / persistence / deployment / env-var / secrets / concrete risk implementation / automation / notification / CI gate / tag / release**)
 
 ## Authorization Status
@@ -50,9 +51,9 @@ The preparation artifact must **not**, by content:
 
 ## Intended First Phase 3 Task Scope (Planning Level Only)
 
-This section names the intended first Phase 3 task at the planning level only, to satisfy the `MASTER_STATUS.md` §7.4 pattern recorded in `plan/phase2_entry_plan.md` §5 that any phase-opening authorization "must also name the first PR's scope". Naming the scope here **does not authorize implementation**. The scope still requires its own separate written authorization at the time it is opened, and Mode A / Mode B review as applicable.
+This section **restates `plan/phase3_entry_plan.md` §4 item 3 verbatim** (the candidate P3-03 task) at the planning level only, to satisfy the `MASTER_STATUS.md` §7.4 pattern recorded in `plan/phase2_entry_plan.md` §5 that any phase-opening authorization "must also name the first PR's scope". This restatement is for review convenience — so the Mode A reviewer of this preparation artifact and any future Phase 3 entry PR can see the intended first-task scope in one place — and **does not narrow Kevin's later P3-03 choice**. It does **not** authorize implementation, does **not** name the specific protocol, does **not** authorize P3-03 itself, and does **not** preclude Kevin from authorizing a different first Phase 3 task scope (or a different protocol within P3-03) in writing at the time of P3-03 authorization. The scope still requires its own separate written authorization at the time it is opened, and Mode A / Mode B review as applicable. If the future P3-02 entry PR (or the future P3-03 authorization) names a different first Phase 3 task scope, the entry PR's / authorization's text controls and this section is treated as superseded.
 
-The intended first Phase 3 task is the candidate task already named in `plan/phase3_entry_plan.md` §4 item 3:
+The intended first Phase 3 task is the candidate task already named in `plan/phase3_entry_plan.md` §4 item 3 (restated verbatim below from that plan; see the explicit non-narrowing clause in the paragraph immediately after the blockquote):
 
 > **PR P3-03 — (future / not authorized) Test-fixture implementation of one risk-control protocol.** A first, narrowly scoped test-fixture implementation of exactly one of the P2-05 protocols (the specific protocol is to be named by Kevin in writing at the time of authorization). Restricted to a single protocol; restricted to test-fixture code that runs under `pytest`; no broker SDK, no network, no real account identifiers, no real venue identifiers, no real endpoints, no real secrets, no scheduler, no daemon, no `__main__` entry point, no order objects, no market-data ingestion.
 
