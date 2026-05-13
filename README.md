@@ -133,6 +133,10 @@ Accepted ADRs:
 - ADR-007: Minimal CI Strategy
 - ADR-008: Monitoring Cadence and Backup-AI Monitor Role
 
+Proposed ADRs (drafted, not yet accepted):
+
+- ADR-009: Runtime Monitoring Cadence and Missed-Packet Severity (ADR-008 §D6 follow-up; **Proposed** — drafted under `governance/authorizations/2026-05-13_p3-01.md`; acceptance is a future, separate authorization requiring Mode A adversarial review per `AI_WORKFLOW.md` §4(2))
+
 ## License
 
 MIT
