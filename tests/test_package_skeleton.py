@@ -51,6 +51,9 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       ``governance/authorizations/2026-05-12_p2-04.md``.
     - ``risk/`` — PR P2-05 (risk-control interfaces). See
       ``governance/authorizations/2026-05-12_p2-05.md``.
+    - ``heartbeat/`` — PR P3-03 (HeartbeatProtocol in-memory test
+      fixture; pure-Python in-memory fake only, no runtime activation).
+      See ``governance/authorizations/2026-05-13_p3-03.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -63,4 +66,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "time",
         "logging",
         "risk",
+        "heartbeat",
     }, f"unexpected package contents: {entries}"
