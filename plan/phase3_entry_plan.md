@@ -245,6 +245,7 @@ The always-forbidden categories in `MASTER_STATUS.md` §6 and `plan/phase2_entry
 - Phase 2 entry plan (pattern reference for this Phase 3 entry plan): `plan/phase2_entry_plan.md`.
 - Phase 2 closure authorization: `governance/authorizations/2026-05-12_phase-2-closure.md`.
 - Phase 3 closure authorization (merged on `main` as of 2026-05-14 via PR #56 at `3131a69`, with sibling Mode B packet PR #57 merged first at `302dff6`): `governance/authorizations/2026-05-14_phase-3-closure.md`.
-- Phase 3 entry planning authorization (the governance/documentation-only authorization that opens this planning workstream): `governance/authorizations/2026-05-13_phase-3-entry-planning.md`.
+- Phase 4 entry planning authorization (governance/documentation-only; **open and pending merge** as of 2026-05-14): `governance/authorizations/2026-05-14_phase-4-entry-planning.md`. The Phase 4 entry plan opened under that authorization is `plan/phase4_entry_plan.md`. Phase 4 itself is **not** opened by either artifact; opening Phase 4 requires Kevin's separate written authorization and is a phase gate per `AI_WORKFLOW.md` §4(1).
+- Phase 3 entry planning authorization (the governance/documentation-only authorization that opened this Phase 3 entry plan workstream): `governance/authorizations/2026-05-13_phase-3-entry-planning.md`.
 - Monitoring cadence rule governing the Mode B packet for the PR that lands this plan: `docs/decisions/ADR-008_monitoring_cadence_and_ai_monitor_role.md` §D3 / §D5, with the deferred runtime-phase follow-up in §D6.
 - Workflow separation of duties: `AI_WORKFLOW.md` §1 (roles), §2 (standard workflow), §3 (required proof), §4 (when to use the Backup AI), §6 (anti-chaos rules), §7 (durable authorization artifacts).
