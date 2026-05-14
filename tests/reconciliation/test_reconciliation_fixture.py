@@ -195,12 +195,8 @@ def test_enqueue_warning_outcome_is_reported() -> None:
 def test_outcomes_are_drained_in_fifo_order() -> None:
     fake = InMemoryReconciliation(checked_at=_FIXED_CLOCK)
     fake.enqueue(status=ReconciliationStatus.CLEAN, tolerance=10.0, observed_delta=0.0)
-    fake.enqueue(
-        status=ReconciliationStatus.WARNING, tolerance=10.0, observed_delta=3.0
-    )
-    fake.enqueue(
-        status=ReconciliationStatus.FAILED, tolerance=10.0, observed_delta=99.0
-    )
+    fake.enqueue(status=ReconciliationStatus.WARNING, tolerance=10.0, observed_delta=3.0)
+    fake.enqueue(status=ReconciliationStatus.FAILED, tolerance=10.0, observed_delta=99.0)
     statuses = [fake.reconcile().status for _ in range(3)]
     assert statuses == [
         ReconciliationStatus.CLEAN,
@@ -214,12 +210,8 @@ def test_outcomes_are_drained_in_fifo_order() -> None:
 def test_set_next_clears_existing_queue() -> None:
     fake = InMemoryReconciliation(checked_at=_FIXED_CLOCK)
     fake.enqueue(status=ReconciliationStatus.CLEAN, tolerance=10.0, observed_delta=0.0)
-    fake.enqueue(
-        status=ReconciliationStatus.WARNING, tolerance=10.0, observed_delta=3.0
-    )
-    fake.set_next(
-        status=ReconciliationStatus.FAILED, tolerance=10.0, observed_delta=50.0
-    )
+    fake.enqueue(status=ReconciliationStatus.WARNING, tolerance=10.0, observed_delta=3.0)
+    fake.set_next(status=ReconciliationStatus.FAILED, tolerance=10.0, observed_delta=50.0)
     report = fake.reconcile()
     assert report.status is ReconciliationStatus.FAILED
     assert fake.reconcile().status is ReconciliationStatus.UNAVAILABLE
@@ -233,9 +225,7 @@ def test_set_next_clears_existing_queue() -> None:
 def test_reconcile_does_not_raise_in_steady_state() -> None:
     fake = InMemoryReconciliation(checked_at=_FIXED_CLOCK)
     fake.reconcile()
-    fake.enqueue(
-        status=ReconciliationStatus.FAILED, tolerance=10.0, observed_delta=1.0
-    )
+    fake.enqueue(status=ReconciliationStatus.FAILED, tolerance=10.0, observed_delta=1.0)
     fake.reconcile()
     fake.reconcile()
 
@@ -268,9 +258,7 @@ def test_report_timestamps_are_z_suffixed_utc_strings() -> None:
     unavailable = fake.reconcile()
     assert unavailable.checked_at.endswith("Z")
     assert unavailable.checked_at == "2026-05-14T14:00:00Z"
-    fake.enqueue(
-        status=ReconciliationStatus.CLEAN, tolerance=10.0, observed_delta=0.0
-    )
+    fake.enqueue(status=ReconciliationStatus.CLEAN, tolerance=10.0, observed_delta=0.0)
     clean = fake.reconcile()
     assert clean.checked_at.endswith("Z")
     assert clean.checked_at == "2026-05-14T14:00:00Z"
@@ -296,9 +284,7 @@ def test_enqueue_rejects_non_status() -> None:
 def test_enqueue_rejects_negative_tolerance() -> None:
     fake = InMemoryReconciliation(checked_at=_FIXED_CLOCK)
     _expect_risk_error(
-        lambda: fake.enqueue(
-            status=ReconciliationStatus.CLEAN, tolerance=-1.0, observed_delta=0.0
-        ),
+        lambda: fake.enqueue(status=ReconciliationStatus.CLEAN, tolerance=-1.0, observed_delta=0.0),
         "tolerance must be non-negative",
     )
 
@@ -316,9 +302,7 @@ def test_enqueue_rejects_negative_observed_delta() -> None:
 def test_enqueue_rejects_nonzero_delta_for_clean() -> None:
     fake = InMemoryReconciliation(checked_at=_FIXED_CLOCK)
     _expect_risk_error(
-        lambda: fake.enqueue(
-            status=ReconciliationStatus.CLEAN, tolerance=10.0, observed_delta=1.0
-        ),
+        lambda: fake.enqueue(status=ReconciliationStatus.CLEAN, tolerance=10.0, observed_delta=1.0),
         "observed_delta must be 0.0",
     )
 
@@ -364,9 +348,7 @@ def test_advance_rejects_negative_or_non_numeric() -> None:
 # ---------------------------------------------------------------------------
 
 
-_PKG_ROOT = (
-    Path(__file__).resolve().parent.parent.parent / "src" / "gmc_rebuild" / "reconciliation"
-)
+_PKG_ROOT = Path(__file__).resolve().parent.parent.parent / "src" / "gmc_rebuild" / "reconciliation"
 
 
 def _reconciliation_source_files() -> list[Path]:
@@ -461,9 +443,7 @@ def test_reconciliation_package_has_no_sleep_or_env_reads() -> None:
         "urllib.",
         "requests.",
     ):
-        assert needle not in code, (
-            f"reconciliation package code must not contain {needle!r}"
-        )
+        assert needle not in code, f"reconciliation package code must not contain {needle!r}"
 
 
 def test_reconciliation_package_does_not_modify_risk_subpackage() -> None:

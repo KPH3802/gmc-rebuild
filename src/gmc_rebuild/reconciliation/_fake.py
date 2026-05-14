@@ -111,23 +111,21 @@ class InMemoryReconciliation:
         if isinstance(tolerance, bool) or not isinstance(tolerance, (int, float)):
             raise RiskControlError("InMemoryReconciliation.enqueue tolerance must be a number")
         if tolerance < 0:
-            raise RiskControlError(
-                "InMemoryReconciliation.enqueue tolerance must be non-negative"
-            )
+            raise RiskControlError("InMemoryReconciliation.enqueue tolerance must be non-negative")
         if isinstance(observed_delta, bool) or not isinstance(observed_delta, (int, float)):
-            raise RiskControlError(
-                "InMemoryReconciliation.enqueue observed_delta must be a number"
-            )
+            raise RiskControlError("InMemoryReconciliation.enqueue observed_delta must be a number")
         if observed_delta < 0:
             raise RiskControlError(
                 "InMemoryReconciliation.enqueue observed_delta must be non-negative"
             )
-        if status in (ReconciliationStatus.CLEAN, ReconciliationStatus.UNAVAILABLE):
-            if observed_delta != 0:
-                raise RiskControlError(
-                    "InMemoryReconciliation.enqueue observed_delta must be 0.0 "
-                    "when status is CLEAN or UNAVAILABLE"
-                )
+        if (
+            status in (ReconciliationStatus.CLEAN, ReconciliationStatus.UNAVAILABLE)
+            and observed_delta != 0
+        ):
+            raise RiskControlError(
+                "InMemoryReconciliation.enqueue observed_delta must be 0.0 "
+                "when status is CLEAN or UNAVAILABLE"
+            )
         if details is None:
             details = {}
         if not isinstance(details, Mapping):
