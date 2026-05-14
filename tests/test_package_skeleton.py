@@ -57,6 +57,10 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
     - ``kill_switch/`` — PR P3-04 (KillSwitchProtocol in-memory test
       fixture; pure-Python in-memory fake only, no runtime activation).
       See ``governance/authorizations/2026-05-14_p3-04.md``.
+    - ``reconciliation/`` — PR P3-05 (ReconciliationProtocol in-memory
+      test fixture; pure-Python in-memory fake only, no runtime
+      activation). See
+      ``governance/authorizations/2026-05-14_p3-05.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -71,4 +75,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "risk",
         "heartbeat",
         "kill_switch",
+        "reconciliation",
     }, f"unexpected package contents: {entries}"
