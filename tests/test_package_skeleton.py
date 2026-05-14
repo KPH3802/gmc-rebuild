@@ -54,6 +54,9 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
     - ``heartbeat/`` — PR P3-03 (HeartbeatProtocol in-memory test
       fixture; pure-Python in-memory fake only, no runtime activation).
       See ``governance/authorizations/2026-05-13_p3-03.md``.
+    - ``kill_switch/`` — PR P3-04 (KillSwitchProtocol in-memory test
+      fixture; pure-Python in-memory fake only, no runtime activation).
+      See ``governance/authorizations/2026-05-14_p3-04.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -67,4 +70,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "logging",
         "risk",
         "heartbeat",
+        "kill_switch",
     }, f"unexpected package contents: {entries}"
