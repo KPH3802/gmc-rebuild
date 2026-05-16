@@ -186,9 +186,7 @@ def test_clear_iff_fresh_armed_clean_across_full_cross_product() -> None:
             f"clear must be {expected_clear} for state ({hb}, {ks}, {rc}); "
             f"got clear={verdict.clear}, blockers={verdict.blockers}"
         )
-        expected_blockers = _expected_blockers(
-            heartbeat_status=hb, kill_state=ks, recon_status=rc
-        )
+        expected_blockers = _expected_blockers(heartbeat_status=hb, kill_state=ks, recon_status=rc)
         assert verdict.blockers == expected_blockers, (
             f"blocker tuple drifted for state ({hb}, {ks}, {rc}): "
             f"expected {expected_blockers}, got {verdict.blockers}"
@@ -401,9 +399,7 @@ def test_multi_component_heartbeat_any_stale_blocks_even_with_armed_clean() -> N
     view = format_safety_verdict(verdict)
     assert view.status == VERDICT_BLOCKED
     rendered = view.render()
-    assert (
-        f"heartbeat[local_machine]: {HeartbeatStatus.STALE.value}" in rendered
-    )
+    assert f"heartbeat[local_machine]: {HeartbeatStatus.STALE.value}" in rendered
     assert f"heartbeat[operator]: {HeartbeatStatus.FRESH.value}" in rendered
 
 
