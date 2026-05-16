@@ -44,6 +44,12 @@ preferences:
 
 from __future__ import annotations
 
+from gmc_rebuild.runtime._operator_view import (
+    VERDICT_BLOCKED,
+    VERDICT_CLEAR,
+    OperatorSafetyView,
+    format_safety_verdict,
+)
 from gmc_rebuild.runtime._shell import (
     BLOCKER_HEARTBEAT_STALE,
     BLOCKER_KILL_SWITCH_TRIPPED,
@@ -61,7 +67,11 @@ __all__ = [
     "BLOCKER_RECONCILIATION_FAILED",
     "BLOCKER_RECONCILIATION_UNAVAILABLE",
     "BLOCKER_RECONCILIATION_WARNING",
+    "VERDICT_BLOCKED",
+    "VERDICT_CLEAR",
+    "OperatorSafetyView",
     "RuntimeShell",
     "RuntimeShellError",
     "SafetyVerdict",
+    "format_safety_verdict",
 ]
