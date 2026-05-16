@@ -1,6 +1,6 @@
 # RECOVERY — Project Resilience Plan (`gmc-rebuild`)
 
-**Status:** Documentation only. Captures the no-single-point-of-failure standard for the `gmc-rebuild` project. Authorized as the OPS-01 project resilience checkpoint on 2026-05-16 per `governance/authorizations/2026-05-16_ops-01.md`.
+**Status:** Documentation only. Captures the no-single-point-of-failure standard for the `gmc-rebuild` project. Authorized as the OPS-01 project resilience checkpoint on 2026-05-16 per `governance/authorizations/2026-05-16_ops-01.md`. Extended on 2026-05-16 by the OPS-02 Backblaze restore-drill record per `governance/authorizations/2026-05-16_ops-02.md` (see §5.5).
 
 **Maintained by:** Kevin Heaney (operator). The repository contains no agents, daemons, or schedulers; every operational action described here is performed by the human operator on his own hardware. This file describes the standard. It does **not** execute it.
 
@@ -78,7 +78,7 @@ The four backup layers, in priority order. Each layer is independent of the othe
 - **Role:** Continuous, encrypted offsite cloud backup. Independent of GitHub, the Mac Studio, the LaCie, and the X10 Pro.
 - **Failure modes covered:** Loss of all local hardware (fire, theft, flood, power surge), prolonged GitHub vendor outage, account-side issues that affect GitHub but not Backblaze.
 - **Failure modes NOT covered:** Operator-side account compromise of Backblaze itself, undiscovered backup-health failure (a backup that silently stopped working). Both are addressed by the recovery drill in §5.
-- **Observed state at 2026-05-16:** Backblaze is **installed** but **not yet proven healthy**. The Seagate X10 Pro is mounted and selected in Backblaze. Proving Backblaze healthy (verifying that a recent file from the working tree can be restored end-to-end from Backblaze to a known-good location, then deleting the restored copy) is an operator-side action that is **not authorized** by this packet; it is named here only as the next safe action.
+- **Observed state at 2026-05-16:** Backblaze is **installed** and, as of 2026-05-16, **restore-proven for one non-sensitive project file** (see §5.5 for the recorded drill and `governance/authorizations/2026-05-16_ops-02.md` for the authorization of record). The Seagate X10 Pro is mounted and selected in Backblaze. A single successful restore for one file is the minimum bar described in §9.3; Backblaze health is treated as verified at that scope as of 2026-05-16, and any broader claim (multiple files, larger artifacts, rotation across time) requires its own separate operator-side drill on its own date.
 
 ### 3.5 Layer 5 — Seagate X10 Pro (offline / rotating cold copy)
 
@@ -153,6 +153,22 @@ The drill is **operator-side**, performed by Kevin on a clean directory. It does
 - **At least once per quarter** as a calendar discipline.
 - **Immediately after any incident** (lost device, suspected compromise, suspected destructive action, suspected Backblaze health failure).
 
+### 5.5 Recorded Restore Drills
+
+This section records each operator-side restore drill that has actually been performed, in date order. Each entry is a one-time record of a real drill that succeeded; it is not a standing claim of layer health beyond the scope of the drill it describes.
+
+#### 2026-05-16 — Backblaze (Layer 4), single-file restore
+
+- **Layer exercised:** Backblaze (Layer 4 in §3.4).
+- **File chosen:** `docs/decisions/ADR-004_utc_discipline.md`. The file is an existing non-sensitive project file already on `main` at the time of the drill. It contains no secrets, credentials, broker data, market data, order data, or trading runtime content (consistent with §7 forbidden-artifact discipline; the file would not exist in this repository if it did).
+- **Operator action:** Kevin Heaney restored the file from Backblaze to a known-good location on his own hardware and verified it byte-for-byte against the copy on `main`. The restore drill itself was an operator-side action performed outside this repository, per §9.3.
+- **Restored file size:** 2,288 bytes.
+- **Restored file SHA-256:** `e9b335b77fb0ee520a47fa2d2e413fcb176355a6e71df619c4d392d3f4f93535`.
+- **Verification outcome:** The restored file matched the original byte-for-byte. The hash above was computed against the restored copy and is the value that the repository's copy of `docs/decisions/ADR-004_utc_discipline.md` on `main` must continue to match for this record to remain meaningful; any future change to that file by an authorized packet will leave this dated record unchanged, because the record describes the state restored on 2026-05-16, not the perpetual state of the file.
+- **Authorization of record:** `governance/authorizations/2026-05-16_ops-02.md`.
+- **What this entry proves:** Backblaze (Layer 4) successfully returned a real, recent, non-sensitive project file end-to-end on 2026-05-16. The "0 restore failures tolerated" half of the §1 standard is satisfied for Backblaze for this one file on this date.
+- **What this entry does not prove:** It does not prove Backblaze health for larger files, for binary files, for files outside the working tree, for older or deleted-then-recovered files, or for any future point in time. Those are separate drills that require their own separate operator-side actions and their own separate written authorizations from Kevin. It does not prove the health of any other layer (Time Machine, X10 Pro, GitHub reachability from the Mac Studio); those remain governed by their own §3 entries and §9 safe-next-actions.
+
 ---
 
 ## 6. Mac Studio Sync Procedure
@@ -207,7 +223,7 @@ These facts are recorded from the read-only Mac Studio check that motivated this
 - **Mac Studio checkout is behind current GitHub `main`.** The local working tree on the Mac Studio is not at the current `main` head. Action: sync per §6 step 1 before starting new work.
 - **Time Machine is active on the LaCie.** Layer 3 is operating. No setting change is authorized by this packet.
 - **Seagate X10 Pro is mounted and selected in Backblaze.** The X10 Pro is currently behaving as a Backblaze-included drive rather than as an offline rotating cold copy. This is acceptable as a transitional state; the eventual Layer 5 role (offline rotation) is a future operator-side action.
-- **Backblaze is installed but not yet proven healthy.** Layer 4 exists but has not yet been exercised by a real restore. Until a restore drill is performed and succeeds, Backblaze must be treated as **unverified**.
+- **Backblaze is installed and, as of 2026-05-16, restore-proven for one non-sensitive project file.** Layer 4 was exercised by a real restore of `docs/decisions/ADR-004_utc_discipline.md` (2,288 bytes; SHA-256 `e9b335b77fb0ee520a47fa2d2e413fcb176355a6e71df619c4d392d3f4f93535`) that matched the original byte-for-byte; see §5.5 for the recorded drill and `governance/authorizations/2026-05-16_ops-02.md` for the authorization of record. Broader Backblaze claims (multiple files, larger artifacts, rotation across time) remain unverified at this scope.
 - **Mac DNS / GitHub reachability failed during the check.** Layer 1 was unreachable from the Mac Studio at the time of the check. Action: repair reachability (§9) before any work that requires `git fetch`, `git push`, or `gh` operations.
 
 None of these observed conditions are emergencies. All are addressable by the safe next actions in §9.
@@ -231,8 +247,8 @@ These actions are named for clarity. They are **operator-side actions** that Kev
 
 ### 9.3 Backblaze (Layer 4)
 
-- Prove health by selecting a small, recent, non-sensitive file from the working tree, restoring it from Backblaze to a known-good location, and verifying byte-for-byte equality with the local original. Delete the restored copy afterwards.
-- Until this restore drill succeeds, Layer 4 remains **unverified**.
+- The single-file restore drill described here was performed on 2026-05-16 and succeeded; see §5.5 for the recorded drill and `governance/authorizations/2026-05-16_ops-02.md` for the authorization of record. Layer 4 is **restore-proven for one non-sensitive project file as of 2026-05-16**.
+- Recurring or broader drills (different files, larger artifacts, older snapshots, drills on later dates) are operator-side actions that each remain **not authorized** by any prior packet; each requires its own separate written authorization from Kevin at the time it is performed.
 - No setting change is authorized.
 
 ### 9.4 Seagate X10 Pro (Layer 5)
@@ -250,8 +266,8 @@ These actions are named for clarity. They are **operator-side actions** that Kev
 
 ## 10. Unresolved Risks at This Checkpoint
 
-- **Backblaze health is not yet proven.** Until the §9.3 restore drill succeeds, Layer 4 is a claimed offsite backup, not a verified one.
-- **The X10 Pro is not yet acting as an offline rotating cold copy.** Layer 5 is therefore not yet contributing. This is acceptable while Layer 4 is unverified, but it is a gap to close once Layer 4 is verified.
+- **Backblaze health is proven only for a single non-sensitive file as of 2026-05-16.** The §5.5 restore drill resolves the "Backblaze not yet proven healthy" risk recorded at the OPS-01 checkpoint at the scope of one file on that date. Broader Backblaze health (multiple files, larger artifacts, rotation across time) remains unverified at this scope; each broader drill is a separate operator-side action with its own separate written authorization.
+- **The X10 Pro is not yet acting as an offline rotating cold copy.** Layer 5 is therefore not yet contributing. Layer 4 is now restore-proven at the §5.5 scope, so establishing a Layer 5 offline rotation discipline is the next gap to close — but it remains an operator-side action that is **not authorized** by this packet and requires its own separate written authorization from Kevin.
 - **GitHub reachability was failing from the Mac Studio at the time of the read-only check.** Until reachability is repaired, the Mac Studio cannot benefit from Layer 1.
 - **The Mac checkout was behind current `main` at the time of the read-only check.** Until it is synced, any local work risks being authored against stale governance.
 - **The recovery drill (§5) has not yet been performed against this RECOVERY.md.** The drill is described and required, but is itself a future operator-side action.
@@ -277,7 +293,8 @@ Any change to those items requires its own separate written authorization from K
 
 ## 12. References
 
-- `governance/authorizations/2026-05-16_ops-01.md` — authorization of record for this packet.
+- `governance/authorizations/2026-05-16_ops-01.md` — authorization of record for the OPS-01 project resilience checkpoint that established this document.
+- `governance/authorizations/2026-05-16_ops-02.md` — authorization of record for the 2026-05-16 Backblaze single-file restore drill recorded in §5.5.
 - `governance/authorizations/2026-05-16_p4-08.md` — safety foundation closure (preserved unchanged).
 - `AI_WORKFLOW.md` §7 (authorization of record), §4 (Mode A scope), §1.4 / §6 rule 2 (status keeper).
 - `docs/decisions/ADR-001_secrets_management.md`, `ADR-002_kill_switch.md`, `ADR-003_reconciliation.md`, `ADR-004_utc_discipline.md`, `ADR-005_heartbeat.md`, `ADR-006_deployment_logs.md`, `ADR-007_minimal_ci.md`, `ADR-008_monitoring_cadence_and_ai_monitor_role.md`, `ADR-009_runtime_monitoring_cadence.md`.
