@@ -60,9 +60,7 @@ _BLOCKER_DESCRIPTIONS: Mapping[str, str] = MappingProxyType(
         BLOCKER_RECONCILIATION_UNAVAILABLE: (
             "reconciliation unavailable — no upstream data (ADR-003)"
         ),
-        BLOCKER_RECONCILIATION_WARNING: (
-            "reconciliation warning — advisory band (ADR-003)"
-        ),
+        BLOCKER_RECONCILIATION_WARNING: ("reconciliation warning — advisory band (ADR-003)"),
     }
 )
 
@@ -128,9 +126,7 @@ def format_safety_verdict(verdict: SafetyVerdict) -> OperatorSafetyView:
 
     status = VERDICT_CLEAR if verdict.clear else VERDICT_BLOCKED
 
-    blocker_lines = tuple(
-        _BLOCKER_DESCRIPTIONS.get(code, code) for code in verdict.blockers
-    )
+    blocker_lines = tuple(_BLOCKER_DESCRIPTIONS.get(code, code) for code in verdict.blockers)
 
     heartbeat_lines = tuple(
         f"heartbeat[{component}]: {verdict.heartbeat_statuses[component].value}"
