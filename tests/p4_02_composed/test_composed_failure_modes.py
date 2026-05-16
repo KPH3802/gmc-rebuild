@@ -136,7 +136,9 @@ def test_failure_mode_failed_reconciliation_then_explicit_trip_exposes_two_block
     )
     assert before_trip == ("reconciliation:failed",)
 
-    kill_switch.trip(reason="failed reconciliation in composed failure-mode test", triggered_by="operator")
+    kill_switch.trip(
+        reason="failed reconciliation in composed failure-mode test", triggered_by="operator"
+    )
     after_trip = _blocking_reasons(
         heartbeat.status("operator").status,
         kill_switch.current().state,
