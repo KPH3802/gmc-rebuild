@@ -61,6 +61,12 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       test fixture; pure-Python in-memory fake only, no runtime
       activation). See
       ``governance/authorizations/2026-05-14_p3-05.md``.
+    - ``runtime/`` — PR P4-06 (inert local runtime shell boundary;
+      composes the abstract Protocol boundaries declared in
+      ``gmc_rebuild.risk`` only, no runtime activation, no broker,
+      no market data, no orders, no scheduler, no persistence, no
+      network, no secrets, no ``time.sleep``). See
+      ``governance/authorizations/2026-05-16_p4-06.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -76,4 +82,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "heartbeat",
         "kill_switch",
         "reconciliation",
+        "runtime",
     }, f"unexpected package contents: {entries}"
