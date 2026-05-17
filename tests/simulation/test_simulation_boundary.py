@@ -95,13 +95,21 @@ def _blocked_verdict() -> SafetyVerdict:
 def test_simulation_subpackage_imports() -> None:
     module = importlib.import_module("gmc_rebuild.simulation")
     assert module is not None
+    # P5-01 surface.
     assert hasattr(module, "SimulationLane")
     assert hasattr(module, "SimulatedIntent")
     assert hasattr(module, "SimulationBoundary")
     assert hasattr(module, "SimulationBoundaryError")
+    # P5-02 surface.
+    assert hasattr(module, "SimulatedOrderIntent")
+    assert hasattr(module, "SimulatedOrderSide")
+    assert hasattr(module, "SimulatedOrderType")
     assert sorted(module.__all__) == sorted(
         [
             "SimulatedIntent",
+            "SimulatedOrderIntent",
+            "SimulatedOrderSide",
+            "SimulatedOrderType",
             "SimulationBoundary",
             "SimulationBoundaryError",
             "SimulationLane",
@@ -111,13 +119,26 @@ def test_simulation_subpackage_imports() -> None:
 
 def test_simulation_not_reexported_from_package_root() -> None:
     runtime_root = importlib.import_module("gmc_rebuild")
-    assert not hasattr(runtime_root, "simulation") or (
-        getattr(runtime_root, "__all__", None) is not None
-        and "simulation" not in runtime_root.__all__
-        and "SimulationBoundary" not in runtime_root.__all__
-        and "SimulatedIntent" not in runtime_root.__all__
-        and "SimulationLane" not in runtime_root.__all__
+    forbidden_root_attrs = (
+        "simulation",
+        "SimulationBoundary",
+        "SimulatedIntent",
+        "SimulationLane",
+        "SimulatedOrderIntent",
+        "SimulatedOrderSide",
+        "SimulatedOrderType",
     )
+    runtime_all = getattr(runtime_root, "__all__", None)
+    if runtime_all is not None:
+        for name in forbidden_root_attrs:
+            assert name not in runtime_all, (
+                f"simulation surface {name!r} must not be re-exported from gmc_rebuild"
+            )
+    else:
+        for name in forbidden_root_attrs:
+            assert not hasattr(runtime_root, name), (
+                f"simulation surface {name!r} must not appear on gmc_rebuild without __all__"
+            )
 
 
 # ---------------------------------------------------------------------------
