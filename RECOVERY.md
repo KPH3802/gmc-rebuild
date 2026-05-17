@@ -301,6 +301,7 @@ These actions are named for clarity. They are **operator-side actions** that Kev
 - **GitHub reachability was failing from the Mac Studio at the time of the read-only check.** Until reachability is repaired, the Mac Studio cannot benefit from Layer 1.
 - **The Mac checkout was behind current `main` at the time of the read-only check.** Until it is synced, any local work risks being authored against stale governance.
 - **The recovery drill (§5) has not yet been performed against this RECOVERY.md.** The drill is described and required, but is itself a future operator-side action.
+- **Mac Studio memory-pressure baseline is not yet established.** The 2026-05-16 X10 Pro panic-history investigation recorded at §5.6 surfaced a stronger evidence pattern for the 2026-05-13 ungraceful reboot — system-wide memory pressure (twelve same-day `JetsamEvent` artifacts) plus a UI hang — than for any X10 Pro storage fault. No baseline measurement of normal-vs-heavy-work memory pressure on the Mac Studio yet exists. The OPS-04 packet defined at §14 covers the baseline procedure, escalation criteria, and the P5 gate; the baseline itself is an operator-side action that is **not authorized** by the OPS-04 packet and is **not** performed by this document.
 
 None of these risks individually breach the no-single-point-of-failure standard, because the source of truth (Layer 1) is intact and at least one local recovery layer (Layer 3, Time Machine on LaCie) is active. Together, however, they are why this checkpoint exists: each risk has a named safe next action in §9, and each will be addressed in its own time outside the scope of this docs-only packet.
 
@@ -325,9 +326,76 @@ Any change to those items requires its own separate written authorization from K
 
 - `governance/authorizations/2026-05-16_ops-01.md` — authorization of record for the OPS-01 project resilience checkpoint that established this document.
 - `governance/authorizations/2026-05-16_ops-02.md` — authorization of record for the 2026-05-16 Backblaze single-file restore drill recorded in §5.5.
+- `governance/authorizations/2026-05-16_ops-04.md` — authorization of record for the OPS-04 memory-pressure baseline plan and OPS roadmap recorded in §13 and §14.
 - `governance/authorizations/2026-05-16_p4-08.md` — safety foundation closure (preserved unchanged).
 - `AI_WORKFLOW.md` §7 (authorization of record), §4 (Mode A scope), §1.4 / §6 rule 2 (status keeper).
 - `docs/decisions/ADR-001_secrets_management.md`, `ADR-002_kill_switch.md`, `ADR-003_reconciliation.md`, `ADR-004_utc_discipline.md`, `ADR-005_heartbeat.md`, `ADR-006_deployment_logs.md`, `ADR-007_minimal_ci.md`, `ADR-008_monitoring_cadence_and_ai_monitor_role.md`, `ADR-009_runtime_monitoring_cadence.md`.
 - `MASTER_STATUS.md` (current phase state).
 - `pyproject.toml` (pinned Python 3.12 toolchain and dev dependencies used in the §5 drill).
 - `.pre-commit-config.yaml` (the validation gate referenced in the §5 drill).
+
+---
+
+## 13. OPS Roadmap
+
+This section makes the operational-resilience packet sequence explicit so that no OPS item is implicit, lost, or assumed. Each item is dated, scoped, and either complete (with the merging PR named), current/pending (this packet), or future / not authorized. Future items are listed for sequencing visibility only; each future item continues to require its own separate written authorization from Kevin at the time it is initiated.
+
+- **OPS-01 — Project resilience checkpoint.** Status: **complete** (merged in PR #99 on 2026-05-16). Authorization of record: `governance/authorizations/2026-05-16_ops-01.md`. Scope: established this `RECOVERY.md` document, the 3-2-1-1-0 layer model, the recovery drill, the Mac Studio sync procedure, the local-only forbidden-artifact discipline, the observed local facts, and the original unresolved-risk list.
+- **OPS-02 — Backblaze single-file restore drill.** Status: **complete** (merged in PR #100 on 2026-05-16). Authorization of record: `governance/authorizations/2026-05-16_ops-02.md`. Scope: recorded the 2026-05-16 single-file restore of `docs/decisions/ADR-004_utc_discipline.md` from Backblaze with byte-for-byte verification; resolved the "Backblaze not yet proven healthy" risk at the §5.5 single-file scope. Recorded at §5.5.
+- **OPS-03 — Seagate X10 Pro panic-history investigation.** Status: **complete** (merged in PR #101 on 2026-05-16). Authorization of record: `governance/authorizations/2026-05-16_ops-03.md`. Scope: recorded the 2026-05-16 read-only investigation of the 2026-05-13 19:43 CDT ungraceful reboot; found no direct evidence tying the X10 Pro to the reboot within the 14-day window; recorded the four remaining gaps blocking Layer 5 promotion. Recorded at §5.6.
+- **OPS-04 — Memory-pressure baseline and OPS roadmap (this packet).** Status: **current / pending**. Authorization of record: `governance/authorizations/2026-05-16_ops-04.md`. Scope: this §13 roadmap and the §14 memory-pressure baseline procedure (procedure definition only; the baseline measurement itself is an operator-side action that is **not authorized** by this packet). Establishes the P5 gate at §14.4.
+- **OPS-05 — Seagate X10 Pro Layer 5 promotion decision.** Status: **future / not authorized**. No prior packet authorizes this. Scope (provisional, for sequencing visibility only): a separate, written, operator-authorized decision on whether to promote the X10 Pro to Layer 5 (offline / rotating cold copy), which will require resolving the four remaining gaps recorded in §5.6 / §10 (no SMART visibility through the USB enclosure, `Owners: Disabled`, FileVault not enabled, only 14 days of clean log evidence at the time of OPS-03) before promotion. OPS-05 is **not** authorized by any prior packet and continues to require its own separate written authorization from Kevin.
+- **OPS-06 — Recurring backup verification cadence.** Status: **future / not authorized**. No prior packet authorizes this. Scope (provisional, for sequencing visibility only): a separate, written, operator-authorized cadence for recurring restore drills across the Backblaze layer (different files, larger artifacts, older snapshots, drills on later dates) and the Time Machine layer, expressed as calendar discipline consistent with the §5.4 cadence. OPS-06 is **not** authorized by any prior packet and continues to require its own separate written authorization from Kevin.
+- **OPS-07 — Clean-directory or clean-machine disaster-recovery drill.** Status: **future / not authorized**. No prior packet authorizes this. Scope (provisional, for sequencing visibility only): a separate, written, operator-authorized end-to-end execution of the §5 "Fresh Clone From Cold" drill on a clean directory (and, optionally, on a clean machine), recorded as a dated entry under §5.5 / §5.6 with the artifacts and the pass / fail outcome. OPS-07 is **not** authorized by any prior packet and continues to require its own separate written authorization from Kevin.
+
+This roadmap is a sequence, not a schedule. No date commitment is implied for any future OPS item. OPS items may be reordered, expanded, contracted, retitled, or withdrawn by a separate, written, operator-authorized packet at any time. P4-09, P5-01, local/paper simulation boundary planning, broker integration, market-data ingestion, strategy/scanner/model/portfolio/backtest content, and any trading runtime remain future / not authorized by every OPS packet listed here.
+
+---
+
+## 14. OPS-04 Memory-Pressure Baseline Procedure
+
+This section defines (in documentation only) the operator-side procedure for establishing a Mac Studio memory-pressure baseline before P5 simulation work begins. The procedure is read-only; it makes no setting change, kills no app, runs no cleanup automation, tunes no OS parameter, and makes no hardware decision. The procedure is **not** executed by this document and is **not** authorized to be performed automatically by any agent.
+
+### 14.1 Why this baseline exists
+
+The 2026-05-13 19:43 CDT ungraceful reboot recorded at §5.6 had a stronger evidence pattern for **memory pressure plus a UI hang** than for any X10 Pro storage fault. Twelve `JetsamEvent-2026-05-13-*.ips` artifacts between 10:21 and 17:04 CDT on that day record macOS forcibly killing processes for memory; a 28-second `NotificationsSettings` UI hang ended 19:42:30 CDT (immediately before the ungraceful reboot at 19:43); and no storage-stack evidence implicating the X10 Pro was found in the 14-day kernel record.
+
+The Mac Studio is the operator's primary working machine for `gmc-rebuild`. P5 work (local/paper simulation, when authorized) will plausibly increase memory load on this machine. Before P5 begins, the operator should know what "normal" memory pressure looks like on the Mac Studio during everyday work and during heavy work, so that future drift toward jetsam-prone conditions can be recognized early — before another ungraceful reboot. The OPS-04 baseline exists for exactly that purpose: it does **not** prevent a memory event, it makes the precondition for one observable.
+
+### 14.2 Read-only baseline procedure
+
+This procedure is an **operator-side action** that Kevin performs on his own hardware. It is described here only so that it is reproducible and so the pass / fail / escalation criteria at §14.3 are anchored to a real measurement.
+
+1. **Before-heavy-work snapshot.** With the operator's usual idle-session set of apps running but no deliberately heavy task (no test suite, no build, no large file scan, no large model load, no batch download / upload), capture and save (locally, outside this repository) a snapshot of:
+   - `vm_stat` (one sample is enough).
+   - `memory_pressure` (one sample is enough).
+   - `top -l 1 -o mem -n 30` (top 30 processes by resident memory; one sample is enough).
+   - Activity Monitor → "Memory" tab screenshot or a copy of the visible columns (memory used, swap used, memory pressure indicator, top memory consumers).
+   - The current uptime (`uptime`) and the current `last reboot | head -3` output to anchor the snapshot to a specific boot session.
+2. **During-heavy-work snapshot.** With a deliberately heavy task running (for example, `python -m pre_commit run --all-files` in this repository on a freshly cloned working tree, or any other heavy task the operator would realistically run during a working session), capture and save the same five items as above. Take the snapshot while the heavy task is still running, not afterward.
+3. **After-heavy-work snapshot (optional).** A third snapshot taken five to ten minutes after the heavy task has completed and the system has been allowed to settle. This makes recovery vs. residual pressure observable.
+4. **Storage.** Snapshots are stored on the operator's own hardware, **outside** this repository (consistent with §7 — no operator-side measurement artifact, screenshot, or log dump is ever committed to this repository). The snapshots are records for the operator's own use; they are not governance artifacts.
+5. **Re-baseline cadence.** A baseline is a point-in-time record. Re-baseline whenever the apps the operator routinely runs change materially, after any macOS major version upgrade, after any new external device is connected, or after another ungraceful reboot. Each re-baseline is itself an operator-side action governed by this §14.2 procedure.
+
+This procedure explicitly does **not** include: changing any system setting, killing any app, running any memory-cleanup or "memory cleaner" tool, tuning any OS parameter, changing swap configuration, changing any Backblaze or Time Machine setting, ejecting / mounting / unmounting any drive, or making any hardware-buy / hardware-replace decision from a single baseline sample. Each of those is its own operator-side action that requires its own separate written authorization from Kevin and is **not** covered by this packet.
+
+### 14.3 Escalation criteria
+
+A single snapshot establishes a baseline. It is not enough to make a hardware decision and is not enough to revise the §10 risk list. Escalation begins only when the operator observes one or more of the following signals **after** the baseline has been established and **across more than one observation**:
+
+- **Recurring `JetsamEvent` artifacts.** Two or more new `JetsamEvent-*.ips` files in `/Library/Logs/DiagnosticReports` within any rolling seven-day window after the baseline is taken. (A single isolated `JetsamEvent` is noise; recurrence is a signal.)
+- **Sustained swap pressure.** `vm_stat` consistently reporting non-trivial swap-in / swap-out rates during idle work, or Activity Monitor's swap-used figure trending materially higher across multiple observations than the baseline showed during equivalent work.
+- **Sustained compressed-memory pressure.** `vm_stat` page-compression / decompression counters or Activity Monitor's "Compressed" figure trending materially higher than baseline across multiple observations under equivalent work.
+- **Repeated UI hangs.** Two or more new `*hang*.ips` (or `_Kevins-Mac-Studio.hang`) reports in `/Library/Logs/DiagnosticReports` within any rolling seven-day window after the baseline is taken whose hang stack does **not** clearly originate in storage code (a storage-rooted hang escalates separately under §9.4 / §5.6).
+- **Another ungraceful reboot.** A new `last` entry showing a `reboot` time without a paired `shutdown` time, or a new `loginwindow` `previousStartupWasAPanicOrHardRestart` flag.
+
+When any escalation signal triggers, the next step is a separate, written, operator-authorized investigation packet in the OPS-03 shape (a read-only investigation that characterizes the trigger before any decision). That follow-up is **not** authorized by this packet and is **not** assumed to happen on any schedule.
+
+### 14.4 P5 gate
+
+Phase 5 (local/paper simulation, when authorized) **may proceed only after** OPS-04 is either:
+
+- **Completed**, meaning the operator has taken at least one before-heavy-work snapshot and at least one during-heavy-work snapshot per §14.2 and has stored them locally outside this repository, with the result recorded as a dated note in §5.6 (Recorded Investigations) under its own future written authorization (OPS-05 / OPS-06 / OPS-07 or a separately numbered packet); **or**
+- **Explicitly waived** by Kevin in a separate, written, dated authorization that names this §14.4 gate and accepts the residual memory-pressure risk.
+
+Until one of those two conditions holds, P5 remains future / not authorized regardless of any other gate's state. This gate is additive to — not a replacement for — every other §10 unresolved risk and every other authorization required by `AI_WORKFLOW.md` §7. Satisfying §14.4 alone does not authorize P5; it only stops being a blocker.
