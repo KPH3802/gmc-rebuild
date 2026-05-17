@@ -67,6 +67,14 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       no market data, no orders, no scheduler, no persistence, no
       network, no secrets, no ``time.sleep``). See
       ``governance/authorizations/2026-05-16_p4-06.md``.
+    - ``simulation/`` — PR P5-01 (inert local simulation boundary
+      skeleton; declares ``SimulationLane``, ``SimulatedIntent``, and
+      a ``SimulationBoundary`` that gates a placeholder simulated
+      progression on an already-clear
+      ``gmc_rebuild.runtime.SafetyVerdict``; no broker, paper-broker,
+      market data, real orders, network, secrets, scheduler,
+      persistence, or ``time.sleep``). See
+      ``governance/authorizations/2026-05-17_p5-01.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -83,4 +91,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "kill_switch",
         "reconciliation",
         "runtime",
+        "simulation",
     }, f"unexpected package contents: {entries}"
