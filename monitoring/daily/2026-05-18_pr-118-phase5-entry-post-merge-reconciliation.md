@@ -1,0 +1,150 @@
+# Daily Monitoring Report: 2026-05-18 UTC (PR #118 — Phase 5 entry planning post-merge status reconciliation docs/governance-only packet)
+
+## Report Metadata
+
+**Environment**: Local (governance-only repository; no runtime, no broker, no live or paper trading wired to a real broker, no market data ingestion).
+**Operator**: Backup AI authors the packet text under ADR-008 Mode B (Continuous Governance Monitor) per `AI_WORKFLOW.md` §1.4; Codex commits per `AI_WORKFLOW.md` §6 rule 1 ("One builder at a time"); Perplexity Computer verifies and oversees per `AI_WORKFLOW.md` §1.2 (Supervisor / Verifier / Status Keeper) — Perplexity Computer is not the Mode B author.
+**Report Window**: 2026-05-18T00:00:00Z to 2026-05-18T23:59:59Z (third 2026-05-18 packet, following `monitoring/daily/2026-05-18_pr114-canonical-status-reconciliation.md` and `monitoring/daily/2026-05-18_pr-116-phase-5-entry-planning.md`).
+**Authored**: approx. 2026-05-18T20:00Z (authored timestamp; not a completed-at timestamp).
+**Overall Status**: Green at packet authoring (PR #118 is **open**, not merged; this packet is required by ADR-008 §D3 / §D5 to be committed and merged to `main` **before** PR #118 merges; `main` head at time of authoring is `3ec7395`, post-PR-#116 / PR-#117 Phase 5 entry planning merge).
+**Monitor Mode**: ADR-008 Mode B — Continuous Governance Monitor.
+**Trigger**: ADR-008 §D3 / §D5. PR #118 (`docs: reconcile Phase 5 entry planning status post-merge (PR #116 / PR #117)`, branch `docs/reconcile-phase5-entry-planning-post-merge-2026-05-18`) was opened on 2026-05-18 against `main` at `3ec7395`, making 2026-05-18 a third active-workday event under ADR-008 §D3 (after PR #114 / PR #115 and PR #116 / PR #117).
+
+**Naming note (ADR-008 §D4 / §D5):** This is the **third** Mode B packet for 2026-05-18, covering PR #118 (Phase 5 entry planning post-merge status reconciliation). The first 2026-05-18 packet (`monitoring/daily/2026-05-18_pr114-canonical-status-reconciliation.md`) covered the canonical-status reconciliation merged via PR #114 with its sibling PR #115. The second 2026-05-18 packet (`monitoring/daily/2026-05-18_pr-116-phase-5-entry-planning.md`) covered the Phase 5 entry planning packet merged via PR #116 with its sibling PR #117. Per ADR-008 §D5, the PR that commits this third packet must merge to `main` **before** PR #118 merges.
+
+---
+
+## Activity Summary
+
+UTC date 2026-05-18 has a third active-workday event under ADR-008 §D3: a pull request (`docs: reconcile Phase 5 entry planning status post-merge (PR #116 / PR #117)`, branch `docs/reconcile-phase5-entry-planning-post-merge-2026-05-18`, base `main` at `3ec7395`) is being opened against `main` on 2026-05-18 by the maintainer following the Phase 5 entry planning packet merged via PR #116 / PR #117 earlier on the same UTC date. At the time this packet is authored, **PR #118 is open and has not merged**; this packet must be committed and merged to `main` before PR #118 merges per ADR-008 §D5.
+
+**PR #118 metadata.**
+
+- **URL:** https://github.com/KPH3802/gmc-rebuild/pull/118
+- **Title:** `docs: reconcile Phase 5 entry planning status post-merge (PR #116 / PR #117)`
+- **Branch:** `docs/reconcile-phase5-entry-planning-post-merge-2026-05-18`
+- **Base:** `main` at `3ec7395`
+- **Head commit:** `10a4b1383a2b63f173668257731c299bd18d4ffe`
+- **State:** open
+- **Classification:** Bounded docs/governance-only post-merge status reconciliation packet. **PR #118 adds no production behaviour, modifies no `src/**`, modifies no `tests/**`, opens no new authorization, opens no successor P5 implementation task, and changes no runtime / broker / paper-trading / live-trading / market-data / order-routing / strategy / scheduler / daemon / persistence / deployment / env / secrets / network / allowlist / quality-gate / tag / release surface.**
+
+**Issue fixed by PR #118.** Stale canonical-doc current-state language about the Phase 5 entry planning packet. After PR #116 (`docs: Phase 5 entry planning packet (docs/governance-only)`) merged to `main` at `3ec7395` on 2026-05-18 — with its sibling Mode B monitoring packet PR #117 merged first at `1b72903` per ADR-008 §D5 — the canonical-doc current-state language in `MASTER_STATUS.md` and `README.md` still said "this planning PR is pending merge" and described the sibling Mode B sentence prospectively ("must be authored ... before this planning PR merges"). This is the same behind-sign-off / stale-canonical-status pattern that PR #114 reconciled for the prior P5-01 / P5-02 / P5-03 / P5-04 / GOV-01 / OPS-06 paragraphs, and that the `MASTER_STATUS.md` §8 step 8 canonical-doc staleness check introduced by PR #114 was designed to catch. PR #118 reconciles each stale current-state Phase 5 entry planning paragraph in place to "merged on `main` as of 2026-05-18 via PR #116 at `3ec7395`, with sibling Mode B monitoring PR #117 merged first at `1b72903`", and converts the accompanying sibling-Mode-B sentence from prospective to historical past tense, naming the actual merge SHAs. The PR is modeled directly on the PR #114 / PR #60 / PR #61 post-merge-reconciliation precedents.
+
+**PR #118 scope (verbatim from PR description).**
+
+| File | Change | Notes |
+|---|---|---|
+| `MASTER_STATUS.md` | modified (+1 / −1, single line) | §1 "Phase 5 entry planning status" header label rewritten in place from "this planning PR is pending merge" to "merged on `main` as of 2026-05-18 via PR #116 at `3ec7395`, with sibling Mode B monitoring PR #117 merged first at `1b72903`"; the trailing sibling-Mode-B sentence converted from prospective to past tense naming the actual merge SHAs. |
+| `README.md` | modified (+2 / −2) | Opening Phase 5 entry planning paragraph (line 39) header label rewritten in place from "this planning PR is pending merge" to "has merged on `main` as of 2026-05-18 via PR #116 at `3ec7395`, with sibling Mode B monitoring PR #117 merged first at `1b72903`"; the matching sibling-Mode-B sentence converted from prospective to past tense. Repository Architecture table row for `plan/phase5_entry_plan.md` (line 54) status label rewritten in place from "planning / enumeration only; this planning PR is pending merge" to "planning / enumeration only and merged on `main` as of 2026-05-18 ... via PR #116 at `3ec7395`, with sibling Mode B packet PR #117 merged first at `1b72903`". |
+
+Two files changed; total **3 insertions(+) / 3 deletions(−)**. No other file is modified by PR #118. PR #118 is **bounded docs/governance-only post-merge status reconciliation**. It explicitly does **not**:
+
+- Modify any file under `src/**`. PR #118's `src/**` diff is empty.
+- Modify any file under `tests/**`. PR #118's `tests/**` diff is empty.
+- Open any new packet authorization. No file under `governance/authorizations/` is added or modified.
+- Open any successor P5 implementation task (no P5-05, no P5-06, no later P5-0N task is authorized). The Phase 5 entry plan merged via PR #116 names P5-05 only as future / not authorized; PR #118 changes none of that prose.
+- Modify the `MASTER_STATUS.md` §8 step 4a `allowed_p2_infra` bash gate (preserved exactly at the ten entries synced by GOV-01: `src`, `src/gmc_rebuild/config`, `src/gmc_rebuild/time`, `src/gmc_rebuild/logging`, `src/gmc_rebuild/risk`, `src/gmc_rebuild/heartbeat`, `src/gmc_rebuild/kill_switch`, `src/gmc_rebuild/reconciliation`, `src/gmc_rebuild/runtime`, `src/gmc_rebuild/simulation`).
+- Modify the `MASTER_STATUS.md` §8 step 4c forbidden-token bash gate or the §8 step 8 canonical-doc staleness check introduced by PR #114.
+- Introduce any broker integration (real or paper), broker SDK, broker account identifier, broker session, broker handshake, or broker credential of any kind.
+- Introduce any live / delayed / paper market data, market-data feed, vendor SDK, real symbol universe, real venue identifier, or normalization to any vendor symbol format.
+- Introduce any real or paper order placement, order routing, order management, order book, fill, execution, position, P&L, trade report, OMS, EMS, or routing instruction.
+- Introduce any execution adapter, broker adapter, paper-broker adapter, mock-broker adapter, exchange adapter, FIX session, REST client, WebSocket client, or any other connectivity surface.
+- Introduce any venue, account, broker credential, or routing field on `SimulatedOrderIntent` or any other dataclass.
+- Introduce any secrets, credentials, API keys, broker keys, session tokens, OAuth tokens, SSH keys, `.env` files containing live credentials, recovery codes, PEKs, or any other credential storage.
+- Introduce any external API call, network call, `socket`, `urllib`, `requests`, `http`, `ssl`, `smtplib`, `ftplib`, DNS lookup, or any other outbound or inbound network surface.
+- Introduce any scheduler, daemon, background thread, long-running service, `__main__` entry point, `if __name__` block, `time.sleep`, `asyncio.sleep`, cron job, launchd plist, or any other timed / background execution mechanism.
+- Introduce any persistence, database, SQLite, pickle, shelve, filesystem write, caching to disk, append-only ledger, log file, audit trail, or any other persistence surface.
+- Introduce any strategy, scanner, model, portfolio, backtest, live trading, paper trading wired to a real broker, or production execution implementation.
+- Authorize any simulation expansion: no additional `SimulationLane` member beyond `LOCAL_ONLY`; no additional `SimulatedOrderSide` member beyond `BUY` / `SELL`; no additional `SimulatedOrderType` member beyond `MARKET` / `LIMIT`; no ninth field on `SimulatedOrderIntent`; no additional method on `SimulationBoundary` beyond the merged `propose` (P5-01) and `propose_order` (P5-02); no additional placeholder / order record class; no new public name on `gmc_rebuild.simulation`.
+- Authorize any order semantics change. No change to the meaning of `propose` or `propose_order`, no change to the `SafetyVerdict.clear` precondition, no change to the identity-return contract, no addition of side effects.
+- Authorize any runtime activation. No `__main__` entry point, no daemon, no scheduler, no background worker, no long-running service, no live execution loop, no re-export of any merged Phase 3 fixture (`InMemoryHeartbeat`, `InMemoryKillSwitch`, `InMemoryReconciliation`) from `src/gmc_rebuild/__init__.py` or any other runtime path, no consumption of any merged Phase 3 fixture from a `__main__`, a daemon, a scheduler, or any runtime path.
+- Authorize any ops execution work. No X10 Layer 5 promotion. No backup-monitoring automation (the OPS-06 plan remains rules and thresholds only; the periodic execution remains an operator-side action). No DR drill execution. No OPS-05 / OPS-07 opening. No change to any Backblaze / Time Machine / drive / FileVault / sleep / power / USB / network / macOS setting.
+- Modify the merged P4-06 `RuntimeShell` / `SafetyVerdict`, P4-07 `OperatorSafetyView` / `format_safety_verdict`, P4-08 safety-policy-hardening tests, P3-03 / P3-04 / P3-05 in-memory fakes, P2-01..P2-05 packages, P5-01 inert local simulation boundary, P5-02 simulated order intent model, P5-03 invariants tripwires, P5-04 composed integration tripwires, OPS-01..OPS-04B / OPS-06 operations records, GOV-01 governance reconciliation, the PR #114 canonical-status reconciliation, or the PR #116 Phase 5 entry planning packet (the new `governance/authorizations/2026-05-18_phase-5-entry-planning.md` authorization artifact and `plan/phase5_entry_plan.md` plan are preserved exactly as merged). All are preserved unchanged.
+- Modify any ADR, `AI_WORKFLOW.md`, any existing `governance/authorizations/*` file, `pyproject.toml`, `.pre-commit-config.yaml`, `.secrets.baseline`, `.gitignore`, `EXTERNAL_REVIEW_BRIEF.md`, or any existing `plan/*` file.
+- Relax any quality gate, hook, mypy strictness, ruff rule, or `detect-secrets` baseline.
+- Expand any allowlist (the §8 step 4a `allowed_p2_infra` allowlist is preserved exactly at the ten entries synced by GOV-01).
+- Create any git tag, GitHub release, or version bump.
+- Reintroduce or extend any stale `**pending merge**` language: the change goes in the **opposite** direction (removes three current-state pending-merge claims about merged work). The remaining `pending merge` substring occurrences in the canonical docs after PR #118 are intentional historical / self-check residuals (top-of-document `**Canonical reconciliation:**` paragraph from PR #114; the historical "are not reverted to stale `**pending merge**` language" self-reference in the edited paragraphs that preserves the PR #114 reconciliation promise; the §8 step 8 staleness-check tripwire grep block itself; references in `plan/phase5_entry_plan.md` that record the PR #114 reconciliation, define the §8 step 8 staleness check, name the stale-language anti-pattern in the §9 forbidden list, or carefully scope the planning PR's own prior pending state).
+
+**Authorization for PR #118.** PR #118 is a routine post-merge status reconciliation modeled directly on PR #114 (which reconciled the analogous stale "pending merge" language for the merged P5-01 / P5-02 / P5-03 / P5-04 / GOV-01 / OPS-06 packets) and on the earlier PR #60 / PR #61 sequence (which reconciled the analogous stale language for the merged Phase 4 entry planning packet). It does not introduce any new packet, any new authorization, any new code, any new test, or any new allowlist surface; it only rewrites stale current-state language about already-merged work to the historical past tense with the actual merge SHAs named. Per `AI_WORKFLOW.md` §7, this kind of canonical-doc post-merge reconciliation is a routine governance-documentation task that does not require a fresh durable authorization artifact — it is implicit in the original authorization for the work whose status is being reconciled (here, the Phase 5 entry planning authorization recorded in `governance/authorizations/2026-05-18_phase-5-entry-planning.md`, which merged via PR #116 at `3ec7395`).
+
+**Validation reported on PR #118 branch.**
+
+- `PYTHONPATH=src python3 -m pytest -q` → **370 passed** on the branch.
+- `git diff --name-status main` → changes confined to `MASTER_STATUS.md` (modified) and `README.md` (modified). Two files changed, 3 insertions / 3 deletions. No `src/**` or `tests/**` modification; no new file added; no file deleted.
+- Stale-phrase grep (`grep -nE "pending merge" MASTER_STATUS.md README.md RECOVERY.md plan/phase4_entry_plan.md plan/phase5_entry_plan.md`) → remaining hits are all intentional historical / self-check / anti-pattern residuals as enumerated in PR #118's description. **No remaining current-state "pending merge" claims on any merged work.**
+
+**Monitoring sequencing (Mode B, ADR-008 §D3 / §D5).** PR #118 is the third active-workday event on 2026-05-18 (following PR #114 / PR #115 and PR #116 / PR #117). Per ADR-008 §D5 and the established 2026-05-13 / 2026-05-14 / 2026-05-15 / 2026-05-17 / 2026-05-18-early / 2026-05-18-mid precedents (every prior active-workday PR has been preceded by a sibling Mode B packet PR that merged first), this 2026-05-18-late packet must be committed and merged to `main` in a **separate monitoring PR** before PR #118 merges. PR #118 does not bundle the monitoring packet, per `AI_WORKFLOW.md` §6 rule 1 and the explicit sequencing precedent. The monitoring branch (`monitoring/2026-05-18-pr-118-phase5-entry-post-merge-reconciliation`) is based on **current `main` (head `3ec7395`)**, **not** on PR #118's branch.
+
+---
+
+## Mode A Context (PR #118)
+
+PR #118 is a **bounded docs/governance-only post-merge status reconciliation packet** that adds no production behaviour, no `src/**` change, no `tests/**` change, no new authorization, and opens no successor task. Per `AI_WORKFLOW.md` §4's routine-exclusion sentence and the precedent set by PR #114 / PR #115 (the analogous post-merge canonical-status reconciliation packet earlier on 2026-05-18) and PR #60 / PR #61 (the analogous Phase 4 entry planning post-merge reconciliation), Mode A adversarial review is **not independently required** for this routine post-merge reconciliation. The maintainer retains discretion to require Mode A as PR-review text on PR #118; if delivered, it is recorded as PR-review text (not committed as a file) per `AI_WORKFLOW.md` §6 rule 5.
+
+**Important: This monitoring PR does not itself authorize any new Phase 5 work, open any successor packet, open any new authorization artifact, change the authorization or status of PR #118 beyond serving as monitoring evidence, or change any phase-boundary control.** It records that PR #118 is a docs/governance-only post-merge status reconciliation adding **no production behaviour**, with the simulation surface, the safety foundation, the in-memory fakes, the operations records, the canonical allowlists, the Phase 5 entry planning authorization and plan (merged via PR #116), and all merged status reflections preserved unchanged.
+
+---
+
+## Risks Considered (PR #118)
+
+1. **Risk: the reconciliation edits drift beyond the three stale current-state Phase 5 entry planning paragraphs.** Mitigation: PR #118's diff is 3 insertions / 3 deletions across exactly two files (`MASTER_STATUS.md` line in §1, and `README.md` line 39 plus line 54). The §8 step 4a / 4c / 8 bash gates, the canonical reconciliation paragraph from PR #114, and the historical `**Last updated**` / `**Prior update**` checkpoints are not touched.
+2. **Risk: the reconciliation accidentally extends the §8 step 4a `allowed_p2_infra` allowlist or otherwise modifies a quality gate.** Mitigation: `git diff main..10a4b13 --name-status` returns exactly two file modifications (`MASTER_STATUS.md`, `README.md`) with no `src/**` directory introduction; the §8 step 4a allowlist preserves the ten entries synced by GOV-01.
+3. **Risk: the new wording reintroduces some other stale claim or contradicts the canonical reconciliation merged via PR #114.** Mitigation: the new wording mirrors verbatim the PR #114 reconciliation pattern ("merged on `main` as of <date> via PR #NNN at `<sha>`"), with the actual merge SHAs from `git log` named (`3ec7395` for PR #116, `1b72903` for PR #117). The stale-phrase grep over `MASTER_STATUS.md`, `README.md`, `RECOVERY.md`, `plan/phase4_entry_plan.md`, and `plan/phase5_entry_plan.md` returns only intentional historical / self-check / anti-pattern residuals.
+4. **Risk: confusion about whether PR #118 introduces a runtime / test / broker / market-data / order / authorization surface.** Mitigation: PR #118 modifies only two canonical governance docs in place. The `src/**` and `tests/**` diffs are empty. No `governance/authorizations/*` file is added or modified. The 370-test pytest suite passes unchanged because no test logic is altered.
+5. **Risk: monitoring-packet drift if this Mode B sibling does not merge before PR #118.** Mitigation: ADR-008 §D5 / §D3 require merge of this packet first; the maintainer is responsible for sequencing the two merges accordingly.
+6. **Risk: the post-merge reconciliation is mistaken for authorization of any specific successor P5 implementation, simulation expansion, order semantics change, runtime activation, or ops execution work.** Mitigation: PR #118 rewrites only the current-state status labels for the already-merged Phase 5 entry planning packet. It introduces no new authorization, no new plan, no new task, no new directory, and no new code path. The "future / not authorized" status of P5-05 (and any later P5-0N task) recorded in `plan/phase5_entry_plan.md` and `governance/authorizations/2026-05-18_phase-5-entry-planning.md` is preserved unchanged.
+7. **Risk: the §8 step 8 canonical-doc staleness check introduced by PR #114 misfires after the reconciliation.** Mitigation: PR #118's wording mirrors the PR #114 pattern that the §8 step 8 check was designed to recognize as non-stale (historical past tense with merge SHAs); the staleness check's grep over the same set of docs returns only intentional residuals after PR #118.
+
+---
+
+## Conditions to be Confirmed Before PR #118 Merges
+
+1. **The narrow diff on PR #118** as listed in the PR description and in the table above — landed in PR #118. `git diff main..10a4b13 --name-only` returns exactly two files (`MASTER_STATUS.md`, `README.md`), with `src/**` and `tests/**` diffs empty.
+2. **Mode A critique (if required by the maintainer)** recorded against PR #118 itself in PR-review text — per ADR-008 §D7 and `AI_WORKFLOW.md` §4 / §6 rule 5, the critique (if delivered) is recorded as PR-review text on PR #118, **not committed as a file** in the tree. Per `AI_WORKFLOW.md` §4's routine-exclusion sentence and the PR #114 / PR #115 and PR #60 / PR #61 post-merge-reconciliation precedents, Mode A is not independently required for this routine reconciliation.
+3. **Mode B monitoring packet (this packet)** authored under ADR-008 Mode B, filed in a separate monitoring PR per ADR-008 §D5, and merged to `main` **before** PR #118 merges.
+4. **PR #118 validation** as reported in the PR description: `PYTHONPATH=src python3 -m pytest -q` returned 370 passed; `git diff --name-status main` showed exactly two files modified (3 insertions / 3 deletions); stale-phrase grep over the canonical and planning docs returned only intentional historical / self-check / anti-pattern residuals.
+
+---
+
+## Diff Scope Verification (this monitoring PR)
+
+This monitoring PR adds exactly **one** new file: `monitoring/daily/2026-05-18_pr-118-phase5-entry-post-merge-reconciliation.md`. No other file is modified, added, or deleted. The branch (`monitoring/2026-05-18-pr-118-phase5-entry-post-merge-reconciliation`) is based on **current `main` head `3ec7395`**, not on PR #118's branch. The §8 step 4a `allowed_p2_infra` allowlist on `main` pre-PR-#118 is preserved exactly at the ten entries synced by GOV-01: `src`, `src/gmc_rebuild/config`, `src/gmc_rebuild/time`, `src/gmc_rebuild/logging`, `src/gmc_rebuild/risk`, `src/gmc_rebuild/heartbeat`, `src/gmc_rebuild/kill_switch`, `src/gmc_rebuild/reconciliation`, `src/gmc_rebuild/runtime`, `src/gmc_rebuild/simulation`. This monitoring PR introduces no new `src/**` directory, so §8 step 4b's same-PR allowlist-update rule does not trigger.
+
+---
+
+## Non-Goals (this monitoring PR and PR #118)
+
+Neither this monitoring PR nor PR #118 does any of the following:
+
+- Open any new packet authorization. No file under `governance/authorizations/` is added or modified by either PR. Any P5-05 implementation, any simulation expansion (additional `SimulationLane` / `SimulatedOrderSide` / `SimulatedOrderType` member, ninth `SimulatedOrderIntent` field, additional `SimulationBoundary` method or record class), any order semantics change, any runtime activation, or any ops execution work (X10 Layer 5 promotion, backup-monitoring automation, DR drill execution, etc.) continues to require its own separate written authorization from Kevin per `AI_WORKFLOW.md` §7.
+- Add or authorize any third `SimulationLane` member, any third `SimulatedOrderSide` member, or any third `SimulatedOrderType` member.
+- Add or authorize any ninth field on `SimulatedOrderIntent`.
+- Add or authorize any additional method on `SimulationBoundary` beyond the merged `propose` (P5-01) and `propose_order` (P5-02).
+- Authorize any runtime activation of any merged Phase 3 fixture (`InMemoryHeartbeat`, `InMemoryKillSwitch`, `InMemoryReconciliation`).
+- Authorize live or paper execution. PR #118 is docs/governance-only and modifies no test, no source, no broker surface, no market-data surface, and no order/execution surface.
+- Modify the merged P4-06 `RuntimeShell` / `SafetyVerdict`, P4-07 `OperatorSafetyView` / `format_safety_verdict`, P4-08 safety-policy-hardening tests, P3-03 / P3-04 / P3-05 in-memory fakes, P2-01..P2-05 packages, OPS-01..OPS-04B / OPS-06 operations records, P5-01 inert local simulation boundary skeleton, P5-02 simulated order intent model, P5-03 simulated-order-intent invariants tripwire tests, P5-04 composed safety-foundation × simulation integration tripwires, GOV-01 governance reconciliation, the PR #114 canonical-status reconciliation, or the PR #116 Phase 5 entry planning packet (`governance/authorizations/2026-05-18_phase-5-entry-planning.md` and `plan/phase5_entry_plan.md`). All are preserved unchanged.
+- Modify any file under `src/**`. PR #118's `src/**` diff is empty; this monitoring PR's `src/**` diff is empty.
+- Modify any test file. PR #118's `tests/**` diff is empty; this monitoring PR adds no test file at all.
+- Modify the `MASTER_STATUS.md` §8 step 4a `allowed_p2_infra` bash gate or any other allowlist surface.
+- Modify the `MASTER_STATUS.md` §8 step 4c forbidden-token bash gate or the §8 step 8 canonical-doc staleness check introduced by PR #114. The §8 step 8 staleness-check tripwire grep block is preserved verbatim.
+- Promote X10 Layer 5, automate backup-monitoring (the OPS-06 plan remains rules and thresholds only; the periodic execution remains an operator-side action), execute any DR drill, or open OPS-05 / OPS-07.
+- Touch any backup, recovery, OPS-06, Time Machine, Backblaze, X10, FileVault, drive, sleep, power, USB, or macOS system setting.
+- Modify any ADR, `AI_WORKFLOW.md`, any existing `governance/authorizations/*` file, `pyproject.toml`, `.pre-commit-config.yaml`, `.secrets.baseline`, `.gitignore`, any `plan/*` file, or any other `monitoring/**` file beyond this new packet itself.
+- Authorize any broker integration (real or paper), live / delayed / paper market data, real or paper order placement, execution adapter, routing instruction, venue / account / broker credential field, secrets / env credential loading, network / API call, scheduler / daemon, persistence / database / filesystem write, strategy / scanner / model / portfolio / backtest / live trading / production execution implementation, `time.sleep`, concrete protocol implementation, or any other forbidden surface.
+- Relax any quality gate, hook, mypy strictness, ruff rule, or `detect-secrets` baseline.
+- Create any git tag, GitHub release, or version bump.
+- Reintroduce or extend stale `**pending merge**` language for any already-merged P5-01 / P5-02 / P5-03 / P5-04 / GOV-01 / OPS-06 / Phase 5 entry planning packet. PR #118's edits move in the opposite direction — they **remove** three remaining current-state stale-language claims about merged work.
+- Substitute for any Mode A adversarial review of PR #118 the maintainer elects to require — Mode A and Mode B are independent dual artifacts per ADR-008 §D7.
+
+---
+
+## Required Merge Order
+
+Per ADR-008 §D3 / §D5: **this monitoring PR must merge to `main` before PR #118 merges.** The maintainer is responsible for sequencing the two merges accordingly; this packet does not itself authorize any merge.
+
+---
+
+## Closing
+
+This packet records the Mode B governance-monitor evidence for PR #118 (the docs/governance-only post-merge status reconciliation packet that rewrites three stale current-state Phase 5 entry planning paragraphs in `MASTER_STATUS.md` and `README.md` from "this planning PR is pending merge" to "merged on `main` as of 2026-05-18 via PR #116 at `3ec7395`, with sibling Mode B monitoring PR #117 merged first at `1b72903`", and converts the accompanying sibling-Mode-B sentence from prospective to historical past tense). PR #118 opens no new authorization, opens no successor P5 implementation task, does not extend the §8 step 4a allowlist, does not authorize any simulation expansion or order semantics change or runtime activation or ops execution work, and preserves the canonical reconciliation merged via PR #114 and the Phase 5 entry planning packet merged via PR #116 in full. Per ADR-008 §D5, this packet must merge to `main` **before** PR #118 merges.
