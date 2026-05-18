@@ -49,6 +49,16 @@ Triggers:
 - **Mode A.** Routine documentation edits, template tweaks, dependency bumps that match committed versions, and typo fixes do **not** trigger Mode A. Mode A is reserved for the §4 list.
 - **Mode B.** Routine governance documentation edits **may still trigger Mode B** if the conditions in ADR-008 §D3 are met (state change on `main` or an open/merged PR on an active workday). Mode A and Mode B are independent: Mode B can fire without Mode A, Mode A can fire without Mode B, and both can fire on the same PR. When both fire, see §4's "Overlap" subsection below.
 
+### 1.5 Execution environment for `gmc-rebuild` repo edits
+
+For `gmc-rebuild` repository edits, **Kevin's local Claude Code / Claude Max subscription is the default execution environment for the §1.1 Codex builder role**. Whichever AI tool is acting as Codex on a given task is by default operated locally by Kevin (or by Claude Code running in Kevin's local Claude Max session) rather than by a Perplexity-managed codebase subagent that consumes Perplexity credits to perform edits inside the repository. This rule applies to all repo-editing work — implementation packets, governance / docs packets, monitoring packets committed by Codex, post-merge reconciliation packets, and any other change that lands as a commit on a feature branch under §6 rule 4 ("One branch per task").
+
+§1.2 Perplexity Computer continues to act as Supervisor / Auditor / Verifier / Status Keeper and as merge-sequencing assistant. Perplexity Computer continues to own `MASTER_STATUS.md` per §6 rule 2 ("One status keeper") and continues to run the §3 required-proof verification step for every Codex change before it is offered to Kevin. Direct `gh` / `git` read-only metadata checks against the public `gmc-rebuild` repository by Perplexity Computer — for example `gh pr list`, `gh pr view`, `gh pr checks`, `gh pr diff`, `git log`, `git show`, `git diff <baseline>..HEAD` — remain allowed for verification, audit, and merge sequencing because they are read-only against the public remote and do **not** constitute "repo edits" under this rule.
+
+Perplexity-managed codebase subagents (credit-consuming agents that perform edits, file authoring, or commits inside the repository via Perplexity's environment) must **not** be used to perform repo edits on `gmc-rebuild` unless Kevin explicitly authorizes that credit spend in writing for the specific packet, captured as the authorization-of-record under `governance/authorizations/` per §7. The authorization of record for this execution-environment rule itself is `governance/authorizations/2026-05-18_gov-02.md`.
+
+This rule is a clarification of **which AI tool may act as Codex** by default for `gmc-rebuild` repo edits. It does **not** introduce a second builder, it does **not** authorize parallel writers, and it does **not** relax §6 rule 1 ("One builder at a time"), §6 rule 4 ("One branch per task"), §1.2 Perplexity Computer verification, §1.3 Kevin approval, §1.4 Backup AI constraints, or §7 authorization-of-record. Whichever AI tool authors the change, the commit still goes through a single feature branch and is still verified by Perplexity Computer before Kevin is asked to merge.
+
 ---
 
 ## 2. Standard Workflow
