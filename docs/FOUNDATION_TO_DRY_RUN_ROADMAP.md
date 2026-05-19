@@ -37,7 +37,7 @@ The foundation is complete enough to begin the dry-run engine in earnest when al
 
 Code and tests:
 
-- `src/gmc_rebuild/` contains the P2-01..P2-05 submodules (`config/`, `time/`, `logging/`, `risk/`, plus the package skeleton) and the P3-03..P3-05 in-memory protocol fakes (`heartbeat/`, `kill_switch/`, `reconciliation/`), with no runtime activation, no `__main__`, no daemon, no scheduler, no broker SDK, no network or filesystem call, and no env-var read.
+- `src/gmc_rebuild/` contains the P2-01..P2-05 submodules (`config/`, `time/`, `logging/`, `risk/`, plus the package skeleton), the P3-03..P3-05 in-memory protocol fakes (`heartbeat/`, `kill_switch/`, `reconciliation/`), the P4-06 inert local runtime shell boundary (`runtime/`), and the P5-01 inert local simulation boundary skeleton (`simulation/`), with no runtime activation, no `__main__`, no daemon, no scheduler, no broker SDK, no network or filesystem call, and no env-var read.
 - The composed-fixture test surface exercises the three Protocol fakes together and the invariants and edge-case tripwires pass deterministically on a clean checkout.
 - The inert local simulation boundary and the simulated-order-intent model and their tripwire tests pass deterministically on a clean checkout.
 - `pre-commit run --all-files` is green: `ruff`, `ruff format`, `mypy`, trailing-whitespace, end-of-file, YAML/JSON, AST, large-file, merge-conflict, mixed-line-ending, `detect-secrets`, and `pytest`.
