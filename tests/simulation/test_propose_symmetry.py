@@ -212,7 +212,9 @@ def test_clear_path_symmetry_propose_and_propose_order_return_by_identity() -> N
 
 
 def test_verdict_type_symmetry_non_safety_verdict_raises_from_both_methods() -> None:
-    """Both methods raise SimulationBoundaryError with the wrong-type name when verdict is not a SafetyVerdict."""
+    """Both methods raise SimulationBoundaryError with the wrong-type name
+    when verdict is not a SafetyVerdict.
+    """
     boundary = SimulationBoundary(lane=SimulationLane.LOCAL_ONLY)
     placeholder = _placeholder_intent()
     market = _market_order()
@@ -235,7 +237,9 @@ def test_verdict_type_symmetry_non_safety_verdict_raises_from_both_methods() -> 
 
 
 def test_intent_type_symmetry_wrong_intent_type_raises_from_each_method() -> None:
-    """propose raises on non-SimulatedIntent; propose_order raises on non-SimulatedOrderIntent — symmetric structure."""
+    """propose raises on non-SimulatedIntent; propose_order raises on
+    non-SimulatedOrderIntent — symmetric structure.
+    """
     _heartbeat, _kill_switch, _reconciliation, shell = _build_clear_pipeline()
     verdict = shell.evaluate()
     boundary = SimulationBoundary(lane=SimulationLane.LOCAL_ONLY)
@@ -373,7 +377,9 @@ def _stage_reconciliation_warning() -> tuple[RuntimeShell, SafetyVerdict, str]:
 
 
 def test_blocker_tuple_propagation_symmetry_across_each_blocker_code() -> None:
-    """For every BLOCKER_* code, both boundary methods raise with the same code and identical blockers tuple in the message."""
+    """For every BLOCKER_* code, both boundary methods raise with the same code
+    and identical blockers tuple in the message.
+    """
     stagers = (
         _stage_heartbeat_stale,
         _stage_kill_switch_tripped,
@@ -392,17 +398,16 @@ def test_blocker_tuple_propagation_symmetry_across_each_blocker_code() -> None:
         placeholder = _placeholder_intent()
         market = _market_order()
         propose_err = _expect_boundary_error(
-            lambda: boundary.propose(intent=placeholder, verdict=verdict)
+            lambda b=boundary, p=placeholder, v=verdict: b.propose(intent=p, verdict=v)
         )
         propose_order_err = _expect_boundary_error(
-            lambda: boundary.propose_order(order_intent=market, verdict=verdict)
+            lambda b=boundary, m=market, v=verdict: b.propose_order(order_intent=m, verdict=v)
         )
         propose_msg = str(propose_err)
         propose_order_msg = str(propose_order_err)
         # Symmetric: identical blocker code present in both messages.
         assert expected_code in propose_msg, (
-            f"stager {stager.__name__}: propose msg {propose_msg!r} missing "
-            f"{expected_code!r}"
+            f"stager {stager.__name__}: propose msg {propose_msg!r} missing {expected_code!r}"
         )
         assert expected_code in propose_order_msg, (
             f"stager {stager.__name__}: propose_order msg {propose_order_msg!r} "
@@ -428,7 +433,9 @@ def test_blocker_tuple_propagation_symmetry_across_each_blocker_code() -> None:
 
 
 def test_multi_blocker_symmetry_every_code_surfaces_in_both_error_messages() -> None:
-    """Heartbeat STALE + kill switch TRIPPED + reconciliation FAILED fan into both boundary error messages identically."""
+    """Heartbeat STALE + kill switch TRIPPED + reconciliation FAILED fan into
+    both boundary error messages identically.
+    """
     heartbeat, kill_switch, reconciliation, shell = _build_clear_pipeline()
     heartbeat.advance(9 * 3600.0)
     kill_switch.trip(reason="multi-blocker propose-symmetry", triggered_by="operator")
@@ -461,9 +468,7 @@ def test_multi_blocker_symmetry_every_code_surfaces_in_both_error_messages() -> 
     propose_msg = str(propose_err)
     propose_order_msg = str(propose_order_err)
     for code in expected_codes:
-        assert code in propose_msg, (
-            f"propose msg {propose_msg!r} missing blocker {code!r}"
-        )
+        assert code in propose_msg, f"propose msg {propose_msg!r} missing blocker {code!r}"
         assert code in propose_order_msg, (
             f"propose_order msg {propose_order_msg!r} missing blocker {code!r}"
         )
@@ -509,7 +514,9 @@ def test_clear_path_non_mutation_symmetry_repeated_calls_do_not_mutate() -> None
 
 
 def test_blocked_path_non_mutation_symmetry_rejected_calls_do_not_mutate() -> None:
-    """Neither boundary method mutates inputs or fakes when called repeatedly on a blocked verdict."""
+    """Neither boundary method mutates inputs or fakes when called repeatedly
+    on a blocked verdict.
+    """
     heartbeat, kill_switch, _reconciliation, shell = _build_clear_pipeline()
     kill_switch.trip(reason="blocked-path symmetry", triggered_by="operator")
     verdict = shell.evaluate()
@@ -524,12 +531,8 @@ def test_blocked_path_non_mutation_symmetry_rejected_calls_do_not_mutate() -> No
     market_snapshot = _snapshot_order(market)
     boundary_lane_before = boundary.lane
     for _ in range(3):
-        _expect_boundary_error(
-            lambda: boundary.propose(intent=placeholder, verdict=verdict)
-        )
-        _expect_boundary_error(
-            lambda: boundary.propose_order(order_intent=market, verdict=verdict)
-        )
+        _expect_boundary_error(lambda: boundary.propose(intent=placeholder, verdict=verdict))
+        _expect_boundary_error(lambda: boundary.propose_order(order_intent=market, verdict=verdict))
     assert heartbeat.status("operator") == operator_status_before
     assert kill_switch.current() == kill_switch_state_before
     assert _snapshot_verdict(verdict) == verdict_snapshot
@@ -544,7 +547,9 @@ def test_blocked_path_non_mutation_symmetry_rejected_calls_do_not_mutate() -> No
 
 
 def test_re_evaluation_symmetry_recovery_restores_symmetric_accept() -> None:
-    """After staging CLEAN reconciliation following a FAILED outcome, both methods accept again by identity."""
+    """After staging CLEAN reconciliation following a FAILED outcome, both
+    methods accept again by identity.
+    """
     _heartbeat, _kill_switch, reconciliation, shell = _build_clear_pipeline()
     reconciliation.set_next(
         status=ReconciliationStatus.FAILED,
@@ -557,12 +562,8 @@ def test_re_evaluation_symmetry_recovery_restores_symmetric_accept() -> None:
     boundary = SimulationBoundary(lane=SimulationLane.LOCAL_ONLY)
     placeholder = _placeholder_intent()
     market = _market_order()
-    _expect_boundary_error(
-        lambda: boundary.propose(intent=placeholder, verdict=bad_verdict)
-    )
-    _expect_boundary_error(
-        lambda: boundary.propose_order(order_intent=market, verdict=bad_verdict)
-    )
+    _expect_boundary_error(lambda: boundary.propose(intent=placeholder, verdict=bad_verdict))
+    _expect_boundary_error(lambda: boundary.propose_order(order_intent=market, verdict=bad_verdict))
     # Stage a CLEAN outcome that supersedes the FAILED one.
     reconciliation.set_next(
         status=ReconciliationStatus.CLEAN,
@@ -573,18 +574,19 @@ def test_re_evaluation_symmetry_recovery_restores_symmetric_accept() -> None:
     recovered_verdict = shell.evaluate()
     assert recovered_verdict.clear is True
     assert boundary.propose(intent=placeholder, verdict=recovered_verdict) is placeholder
-    assert (
-        boundary.propose_order(order_intent=market, verdict=recovered_verdict) is market
-    )
+    assert boundary.propose_order(order_intent=market, verdict=recovered_verdict) is market
 
 
 # ---------------------------------------------------------------------------
-# Invariant 10 — Distinct-but-equal verdict symmetry: identity-return depends on input, not on verdict identity
+# Invariant 10 — Distinct-but-equal verdict symmetry: identity-return depends
+# on input, not on verdict identity
 # ---------------------------------------------------------------------------
 
 
 def test_distinct_but_equal_verdict_symmetry_identity_return_tracks_input_not_verdict() -> None:
-    """Two structurally-equal clear SafetyVerdict instances both produce identity-return on both methods."""
+    """Two structurally-equal clear SafetyVerdict instances both produce
+    identity-return on both methods.
+    """
     _heartbeat, _kill_switch, _reconciliation, shell = _build_clear_pipeline()
     verdict_a = shell.evaluate()
     assert verdict_a.clear is True
@@ -649,9 +651,8 @@ def _collect_imported_modules() -> set[str]:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 imported.add(alias.name)
-        elif isinstance(node, ast.ImportFrom):
-            if node.module is not None and node.level == 0:
-                imported.add(node.module)
+        elif isinstance(node, ast.ImportFrom) and node.module is not None and node.level == 0:
+            imported.add(node.module)
     return imported
 
 
@@ -660,9 +661,7 @@ def test_propose_symmetry_module_has_no_forbidden_runtime_imports() -> None:
     imported = _collect_imported_modules()
     roots = {name.split(".", 1)[0] for name in imported}
     overlap = roots & _FORBIDDEN_IMPORT_ROOTS
-    assert overlap == set(), (
-        f"forbidden import roots present in test module: {sorted(overlap)!r}"
-    )
+    assert overlap == set(), f"forbidden import roots present in test module: {sorted(overlap)!r}"
 
 
 def test_propose_symmetry_module_only_imports_from_authorized_prefixes() -> None:
@@ -675,6 +674,4 @@ def test_propose_symmetry_module_only_imports_from_authorized_prefixes() -> None
             for prefix in _AUTHORIZED_IMPORT_PREFIXES
         ):
             unauthorized.append(name)
-    assert unauthorized == [], (
-        f"unauthorized imports in test module: {unauthorized!r}"
-    )
+    assert unauthorized == [], f"unauthorized imports in test module: {unauthorized!r}"

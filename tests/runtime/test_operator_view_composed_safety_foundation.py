@@ -168,7 +168,9 @@ def _placeholder_intent(*, intent_id: str = "intent-p5-05-X") -> SimulatedIntent
 
 
 def test_clear_verdict_operator_view_is_clear_and_boundary_accepts() -> None:
-    """A real-pipeline-clear SafetyVerdict yields a CLEAR view and identity-return propose/propose_order."""
+    """A real-pipeline-clear SafetyVerdict yields a CLEAR view and
+    identity-return propose/propose_order.
+    """
     _heartbeat, _kill_switch, _reconciliation, shell = _build_clear_pipeline()
     verdict = shell.evaluate()
     assert verdict.clear is True
@@ -193,7 +195,9 @@ def test_clear_verdict_operator_view_is_clear_and_boundary_accepts() -> None:
 
 
 def test_heartbeat_stale_blocks_view_and_propose_and_propose_order() -> None:
-    """Real-pipeline heartbeat STALE shows BLOCKED in the view and surfaces the blocker in both boundary errors."""
+    """Real-pipeline heartbeat STALE shows BLOCKED in the view and surfaces
+    the blocker in both boundary errors.
+    """
     heartbeat, _kill_switch, _reconciliation, shell = _build_clear_pipeline()
     heartbeat.advance(9 * 3600.0)
     verdict = shell.evaluate()
@@ -220,12 +224,15 @@ def test_heartbeat_stale_blocks_view_and_propose_and_propose_order() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Invariant 3 — Kill switch TRIPPED: view says BLOCKED with kill-switch description; boundary rejects
+# Invariant 3 — Kill switch TRIPPED: view says BLOCKED with kill-switch
+# description; boundary rejects
 # ---------------------------------------------------------------------------
 
 
 def test_kill_switch_tripped_blocks_view_and_propose_and_propose_order() -> None:
-    """Real-pipeline kill-switch TRIPPED shows BLOCKED in the view and surfaces the blocker in both boundary errors."""
+    """Real-pipeline kill-switch TRIPPED shows BLOCKED in the view and
+    surfaces the blocker in both boundary errors.
+    """
     _heartbeat, kill_switch, _reconciliation, shell = _build_clear_pipeline()
     kill_switch.trip(
         reason="operator-view composed tripwire trip",
@@ -254,12 +261,15 @@ def test_kill_switch_tripped_blocks_view_and_propose_and_propose_order() -> None
 
 
 # ---------------------------------------------------------------------------
-# Invariant 4 — Reconciliation FAILED: view says BLOCKED with reconciliation description; boundary rejects
+# Invariant 4 — Reconciliation FAILED: view says BLOCKED with reconciliation
+# description; boundary rejects
 # ---------------------------------------------------------------------------
 
 
 def test_reconciliation_failed_blocks_view_and_propose_and_propose_order() -> None:
-    """Real-pipeline reconciliation FAILED shows BLOCKED in the view and surfaces the blocker in both boundary errors."""
+    """Real-pipeline reconciliation FAILED shows BLOCKED in the view and
+    surfaces the blocker in both boundary errors.
+    """
     _heartbeat, _kill_switch, reconciliation, shell = _build_clear_pipeline()
     reconciliation.set_next(
         status=ReconciliationStatus.FAILED,
@@ -288,12 +298,15 @@ def test_reconciliation_failed_blocks_view_and_propose_and_propose_order() -> No
 
 
 # ---------------------------------------------------------------------------
-# Invariant 5 — Reconciliation UNAVAILABLE: view says BLOCKED with unavailable description; boundary rejects
+# Invariant 5 — Reconciliation UNAVAILABLE: view says BLOCKED with unavailable
+# description; boundary rejects
 # ---------------------------------------------------------------------------
 
 
 def test_reconciliation_unavailable_blocks_view_and_propose_and_propose_order() -> None:
-    """Real-pipeline reconciliation UNAVAILABLE shows BLOCKED in the view and surfaces the blocker in both boundary errors."""
+    """Real-pipeline reconciliation UNAVAILABLE shows BLOCKED in the view and
+    surfaces the blocker in both boundary errors.
+    """
     heartbeat = InMemoryHeartbeat(observed_at=_FIXED_CLOCK)
     heartbeat.beat("operator", _FIXED_CLOCK - timedelta(minutes=1))
     kill_switch = InMemoryKillSwitch(observed_at=_FIXED_CLOCK)
@@ -326,12 +339,15 @@ def test_reconciliation_unavailable_blocks_view_and_propose_and_propose_order() 
 
 
 # ---------------------------------------------------------------------------
-# Invariant 6 — Reconciliation WARNING: view says BLOCKED with advisory description; boundary rejects
+# Invariant 6 — Reconciliation WARNING: view says BLOCKED with advisory
+# description; boundary rejects
 # ---------------------------------------------------------------------------
 
 
 def test_reconciliation_warning_blocks_view_and_propose_and_propose_order() -> None:
-    """ADR-003 WARNING reconciliation shows BLOCKED in the view and surfaces the advisory blocker in both boundary errors."""
+    """ADR-003 WARNING reconciliation shows BLOCKED in the view and surfaces
+    the advisory blocker in both boundary errors.
+    """
     _heartbeat, _kill_switch, reconciliation, shell = _build_clear_pipeline()
     reconciliation.set_next(
         status=ReconciliationStatus.WARNING,
@@ -360,12 +376,15 @@ def test_reconciliation_warning_blocks_view_and_propose_and_propose_order() -> N
 
 
 # ---------------------------------------------------------------------------
-# Invariant 7 — Multi-blocker: view renders every blocker; both boundary errors carry every blocker code
+# Invariant 7 — Multi-blocker: view renders every blocker; both boundary
+# errors carry every blocker code
 # ---------------------------------------------------------------------------
 
 
 def test_multi_blocker_view_text_matches_propose_and_propose_order_error_codes() -> None:
-    """Heartbeat STALE + kill switch TRIPPED + reconciliation FAILED fan into view text AND both error messages."""
+    """Heartbeat STALE + kill switch TRIPPED + reconciliation FAILED fan into
+    view text AND both error messages.
+    """
     heartbeat, kill_switch, reconciliation, shell = _build_clear_pipeline()
     heartbeat.advance(9 * 3600.0)
     kill_switch.trip(reason="multi-blocker view tripwire", triggered_by="operator")
@@ -407,9 +426,7 @@ def test_multi_blocker_view_text_matches_propose_and_propose_order_error_codes()
     propose_msg = str(propose_err)
     propose_order_msg = str(propose_order_err)
     for code in expected_codes:
-        assert code in propose_msg, (
-            f"propose error {propose_msg!r} missing blocker {code!r}"
-        )
+        assert code in propose_msg, f"propose error {propose_msg!r} missing blocker {code!r}"
         assert code in propose_order_msg, (
             f"propose_order error {propose_order_msg!r} missing blocker {code!r}"
         )
@@ -421,7 +438,8 @@ def test_multi_blocker_view_text_matches_propose_and_propose_order_error_codes()
 
 
 def test_view_status_clear_iff_boundary_accepts_across_all_blockers() -> None:
-    """The operator view's status is CLEAR iff both boundary methods would return the supplied intent by identity.
+    """The operator view's status is CLEAR iff both boundary methods would
+    return the supplied intent by identity.
 
     Exercises every named ``BLOCKER_*`` outcome plus the clear case and
     asserts a strict biconditional: ``view.status == VERDICT_CLEAR`` if
@@ -437,18 +455,11 @@ def test_view_status_clear_iff_boundary_accepts_across_all_blockers() -> None:
         placeholder = _placeholder_intent()
         order = _market_order()
         try:
-            propose_returned = boundary.propose(
-                intent=placeholder, verdict=verdict
-            )
-            propose_order_returned = boundary.propose_order(
-                order_intent=order, verdict=verdict
-            )
+            propose_returned = boundary.propose(intent=placeholder, verdict=verdict)
+            propose_order_returned = boundary.propose_order(order_intent=order, verdict=verdict)
         except SimulationBoundaryError:
             return False
-        return (
-            propose_returned is placeholder
-            and propose_order_returned is order
-        )
+        return propose_returned is placeholder and propose_order_returned is order
 
     # Clear case.
     _heartbeat, _kill_switch, _reconciliation, shell = _build_clear_pipeline()
@@ -637,9 +648,8 @@ def _collect_imported_modules() -> set[str]:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 imported.add(alias.name)
-        elif isinstance(node, ast.ImportFrom):
-            if node.module is not None and node.level == 0:
-                imported.add(node.module)
+        elif isinstance(node, ast.ImportFrom) and node.module is not None and node.level == 0:
+            imported.add(node.module)
     return imported
 
 
@@ -648,9 +658,7 @@ def test_operator_view_composed_module_has_no_forbidden_runtime_imports() -> Non
     imported = _collect_imported_modules()
     roots = {name.split(".", 1)[0] for name in imported}
     overlap = roots & _FORBIDDEN_IMPORT_ROOTS
-    assert overlap == set(), (
-        f"forbidden import roots present in test module: {sorted(overlap)!r}"
-    )
+    assert overlap == set(), f"forbidden import roots present in test module: {sorted(overlap)!r}"
 
 
 def test_operator_view_composed_module_only_imports_from_authorized_prefixes() -> None:
@@ -663,6 +671,4 @@ def test_operator_view_composed_module_only_imports_from_authorized_prefixes() -
             for prefix in _AUTHORIZED_IMPORT_PREFIXES
         ):
             unauthorized.append(name)
-    assert unauthorized == [], (
-        f"unauthorized imports in test module: {unauthorized!r}"
-    )
+    assert unauthorized == [], f"unauthorized imports in test module: {unauthorized!r}"
