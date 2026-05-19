@@ -84,6 +84,20 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       secrets, no scheduler, no persistence, no ``time.sleep``, no
       ``__main__``). See
       ``governance/authorizations/2026-05-19_p6-01.md``.
+    - ``eligibility/`` — PR P6-02 (eligibility-check pure functions;
+      second Phase 6 dry-run implementation packet; declares the
+      closed two-member ``EligibilityOutcome`` enumeration, the closed
+      five-member ``EligibilityReason`` enumeration, the frozen,
+      slotted ``EligibilityConfig`` five-field caller-supplied config
+      slice, the frozen, slotted ``EligibilityDecision`` two-field
+      result, and a pure ``check_eligibility`` function that compares
+      a P6-01 ``SignalIntent`` against the supplied
+      ``EligibilityConfig`` and returns an ``EligibilityDecision``;
+      no strategy logic, no broker integration, no market-data
+      ingestion, no order placement, no external config loading, no
+      network, no secrets, no scheduler, no persistence, no
+      ``time.sleep``, no ``__main__``). See
+      ``governance/authorizations/2026-05-19_p6-02.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -102,4 +116,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "runtime",
         "simulation",
         "signal_intake",
+        "eligibility",
     }, f"unexpected package contents: {entries}"
