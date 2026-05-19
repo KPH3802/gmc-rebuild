@@ -75,6 +75,15 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       market data, real orders, network, secrets, scheduler,
       persistence, or ``time.sleep``). See
       ``governance/authorizations/2026-05-17_p5-01.md``.
+    - ``signal_intake/`` — PR P6-01 (typed signal-intake boundary;
+      first Phase 6 dry-run implementation packet; declares the closed
+      ``SignalSide`` enumeration, the frozen, slotted ``SignalIntent``
+      five-field dataclass, and a pure ``accept_signal_intent`` typed
+      acceptance function; no strategy logic, no broker integration,
+      no market-data ingestion, no order placement, no network, no
+      secrets, no scheduler, no persistence, no ``time.sleep``, no
+      ``__main__``). See
+      ``governance/authorizations/2026-05-19_p6-01.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -92,4 +101,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "reconciliation",
         "runtime",
         "simulation",
+        "signal_intake",
     }, f"unexpected package contents: {entries}"
