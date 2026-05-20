@@ -98,6 +98,25 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       network, no secrets, no scheduler, no persistence, no
       ``time.sleep``, no ``__main__``). See
       ``governance/authorizations/2026-05-19_p6-02.md``.
+    - ``decision/`` — PR P6-03 (position/risk decision composer;
+      third Phase 6 dry-run implementation packet; declares the
+      closed two-member ``PositionDecisionOutcome`` enumeration
+      (``WOULD_TRADE``, ``WOULD_SKIP``), the closed five-member
+      ``PositionDecisionReason`` enumeration
+      (``ELIGIBILITY_INELIGIBLE``, ``SAFETY_HEARTBEAT_STALE``,
+      ``SAFETY_KILL_SWITCH_NOT_ARMED``,
+      ``SAFETY_RECONCILIATION_NOT_CLEAN``,
+      ``SAFETY_VERDICT_NOT_CLEAR``), the frozen, slotted
+      ``PositionDecision`` five-field result enforcing the
+      ``WOULD_TRADE iff reasons == ()`` biconditional, and a pure
+      ``compose_position_decision`` function that consumes a P6-01
+      ``SignalIntent``, a P6-02 ``EligibilityDecision``, and a P4-06
+      ``SafetyVerdict`` and returns a ``PositionDecision``; no
+      strategy logic, no broker integration, no market-data
+      ingestion, no order placement, no external config loading, no
+      network, no secrets, no scheduler, no persistence, no
+      ``time.sleep``, no ``__main__``). See
+      ``governance/authorizations/2026-05-20_p6-03.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -117,4 +136,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "simulation",
         "signal_intake",
         "eligibility",
+        "decision",
     }, f"unexpected package contents: {entries}"
