@@ -57,7 +57,6 @@ from gmc_rebuild.decision import (
 from gmc_rebuild.eligibility import (
     EligibilityConfig,
     EligibilityDecision,
-    EligibilityOutcome,
     EligibilityReason,
     check_eligibility,
 )
@@ -79,7 +78,6 @@ from gmc_rebuild.runtime import (
     SafetyVerdict,
 )
 from gmc_rebuild.signal_intake import SignalIntent, SignalSide
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -464,9 +462,7 @@ def test_repeat_calls_return_equal_decisions_would_trade_path() -> None:
     intent = _intent()
     eligibility = _eligible_decision()
     verdict = _clear_verdict()
-    decisions = [
-        compose_position_decision(intent, eligibility, verdict) for _ in range(5)
-    ]
+    decisions = [compose_position_decision(intent, eligibility, verdict) for _ in range(5)]
     for d in decisions[1:]:
         assert d == decisions[0]
 
@@ -478,9 +474,7 @@ def test_repeat_calls_return_equal_decisions_would_skip_path() -> None:
         blockers=(BLOCKER_HEARTBEAT_STALE,),
         heartbeat_statuses=MappingProxyType({"operator": HeartbeatStatus.STALE}),
     )
-    decisions = [
-        compose_position_decision(intent, eligibility, verdict) for _ in range(5)
-    ]
+    decisions = [compose_position_decision(intent, eligibility, verdict) for _ in range(5)]
     for d in decisions[1:]:
         assert d == decisions[0]
 

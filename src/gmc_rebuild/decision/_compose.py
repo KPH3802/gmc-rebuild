@@ -181,8 +181,7 @@ class PositionDecision:
         for reason in self.reasons:
             if not isinstance(reason, PositionDecisionReason):
                 raise TypeError(
-                    f"reasons members must be PositionDecisionReason, "
-                    f"got {type(reason).__name__}"
+                    f"reasons members must be PositionDecisionReason, got {type(reason).__name__}"
                 )
         if not isinstance(self.intent_id, str):
             raise TypeError(f"intent_id must be a str, got {type(self.intent_id).__name__}")
@@ -190,22 +189,15 @@ class PositionDecision:
             raise ValueError("intent_id must be a non-empty string")
         if not isinstance(self.eligibility, EligibilityDecision):
             raise TypeError(
-                f"eligibility must be an EligibilityDecision, "
-                f"got {type(self.eligibility).__name__}"
+                f"eligibility must be an EligibilityDecision, got {type(self.eligibility).__name__}"
             )
         if not isinstance(self.verdict, SafetyVerdict):
-            raise TypeError(
-                f"verdict must be a SafetyVerdict, got {type(self.verdict).__name__}"
-            )
+            raise TypeError(f"verdict must be a SafetyVerdict, got {type(self.verdict).__name__}")
         # Biconditional: WOULD_TRADE iff reasons is empty.
         if self.outcome is PositionDecisionOutcome.WOULD_TRADE and self.reasons:
-            raise ValueError(
-                "PositionDecision with outcome=WOULD_TRADE must have empty reasons"
-            )
+            raise ValueError("PositionDecision with outcome=WOULD_TRADE must have empty reasons")
         if self.outcome is PositionDecisionOutcome.WOULD_SKIP and not self.reasons:
-            raise ValueError(
-                "PositionDecision with outcome=WOULD_SKIP must have non-empty reasons"
-            )
+            raise ValueError("PositionDecision with outcome=WOULD_SKIP must have non-empty reasons")
 
 
 def compose_position_decision(
