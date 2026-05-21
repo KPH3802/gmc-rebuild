@@ -22,6 +22,11 @@ Authorizations:
   order intent model added on top of the P5-01 skeleton
   (``SimulatedOrderSide``, ``SimulatedOrderType``,
   ``SimulatedOrderIntent``, ``SimulationBoundary.propose_order``).
+- ``governance/authorizations/2026-05-21_p6-04.md`` — the P6-04
+  Direction A simulated order intent extension added in place
+  (``SimulatedOrderTimeInForce`` closed enum carried as a ninth
+  ``SimulatedOrderIntent`` field defaulting to ``DAY``, and the
+  deterministic ``derive_simulated_order_intent_id`` identity helper).
 
 Design constraints — these are governance constraints, not stylistic
 preferences:
@@ -65,20 +70,36 @@ preferences:
   ``STOP_LIMIT``, ``MARKET_ON_CLOSE``, ``LIMIT_ON_OPEN``,
   ``TRAILING_STOP``, etc. are explicitly **not** declared; each
   requires its own separate written authorization from Kevin.
+- **Closed time-in-force enumeration (P6-04 Direction A).** Only
+  :attr:`SimulatedOrderTimeInForce.DAY`,
+  :attr:`SimulatedOrderTimeInForce.GOOD_TILL_CANCEL`,
+  :attr:`SimulatedOrderTimeInForce.IMMEDIATE_OR_CANCEL`, and
+  :attr:`SimulatedOrderTimeInForce.FILL_OR_KILL` are authorized.
+  ``GOOD_TILL_DATE``, ``AT_THE_OPEN``, ``AT_THE_CLOSE``, etc. are
+  explicitly **not** declared; each requires its own separate written
+  authorization from Kevin. The time-in-force tag is a pure
+  order-duration label, not an execution instruction.
+- **Deterministic order-intent identity (P6-04 Direction A).**
+  :func:`derive_simulated_order_intent_id` derives a deterministic
+  content-fingerprint identifier from a closed subset of the
+  order-intent content with no randomness, no clock read, no counter,
+  and no hidden state; its output is a valid ``intent_id`` value.
 - **Placeholder intent and order intent only.**
   :class:`SimulatedIntent` (P5-01) carries a lane, an opaque
   identifier, and an ADR-004 ``Z``-suffixed UTC creation timestamp.
-  :class:`SimulatedOrderIntent` (P5-02) adds symbol (opaque string,
-  no symbol-universe lookup), side, quantity (positive ``int``;
-  ``bool`` rejected; fractional / ``float`` quantities not
-  authorized), order type, and an optional limit price (``None``
-  for ``MARKET``; positive finite ``float`` for ``LIMIT``).
-  **Neither** record carries a venue, broker, account, routing
-  instruction, time-in-force qualifier, post-only / IOC / FOK
-  modifier, route-allow / route-deny list, broker credential, API
-  key, or persistence handle. Adding any of those fields requires
-  its own separate written authorization from Kevin per the §16.5
-  Risk Register entry on order-intent semantics in ``RECOVERY.md``.
+  :class:`SimulatedOrderIntent` (P5-02, extended in place by P6-04)
+  adds symbol (opaque string, no symbol-universe lookup), side,
+  quantity (positive ``int``; ``bool`` rejected; fractional /
+  ``float`` quantities not authorized), order type, an optional limit
+  price (``None`` for ``MARKET``; positive finite ``float`` for
+  ``LIMIT``), and a P6-04 ``time_in_force`` order-duration tag
+  (defaulting to ``DAY``). **Neither** record carries a venue,
+  broker, account, routing instruction, post-only / IOC / FOK
+  execution modifier, route-allow / route-deny list, broker
+  credential, API key, or persistence handle. Adding any further
+  field requires its own separate written authorization from Kevin
+  per the §16.5 Risk Register entry on order-intent semantics in
+  ``RECOVERY.md``.
 - **ADR-004 UTC discipline.** Timestamps surfaced on
   :class:`SimulatedIntent` and :class:`SimulatedOrderIntent` are
   ADR-004 ``Z``-suffixed UTC strings sourced via
@@ -91,18 +112,22 @@ from gmc_rebuild.simulation._boundary import (
     SimulatedIntent,
     SimulatedOrderIntent,
     SimulatedOrderSide,
+    SimulatedOrderTimeInForce,
     SimulatedOrderType,
     SimulationBoundary,
     SimulationBoundaryError,
     SimulationLane,
+    derive_simulated_order_intent_id,
 )
 
 __all__ = [
     "SimulatedIntent",
     "SimulatedOrderIntent",
     "SimulatedOrderSide",
+    "SimulatedOrderTimeInForce",
     "SimulatedOrderType",
     "SimulationBoundary",
     "SimulationBoundaryError",
     "SimulationLane",
+    "derive_simulated_order_intent_id",
 ]

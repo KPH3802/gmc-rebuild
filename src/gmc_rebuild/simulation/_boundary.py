@@ -14,6 +14,14 @@ authorization references. This module deliberately performs only:
   record adding the order-shaped fields the operator may attach to a
   simulated progression (symbol, side, quantity, order type, optional
   limit price) (P5-02);
+- declaration of a closed string-enum for simulated order
+  time-in-force (:class:`SimulatedOrderTimeInForce`) carried as a ninth
+  :class:`SimulatedOrderIntent` field (defaulting to ``DAY``), and a
+  deterministic, pure :func:`derive_simulated_order_intent_id` helper
+  that derives a content-fingerprint identifier from a closed subset of
+  the order-intent content with no randomness, no clock read, and no
+  hidden state (P6-04 Direction A,
+  ``governance/authorizations/2026-05-21_p6-04.md``);
 - declaration of a :class:`SimulationBoundary` that exposes two
   read-only gate methods, :meth:`SimulationBoundary.propose` for
   :class:`SimulatedIntent` (P5-01) and
@@ -41,6 +49,7 @@ raises on any other condition.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -172,6 +181,157 @@ class SimulatedOrderType(StrEnum):
     LIMIT = "limit"
 
 
+class SimulatedOrderTimeInForce(StrEnum):
+    """Closed enumeration of authorized simulated-order time-in-force tags (P6-04).
+
+    Only :attr:`DAY`, :attr:`GOOD_TILL_CANCEL`,
+    :attr:`IMMEDIATE_OR_CANCEL`, and :attr:`FILL_OR_KILL` are authorized
+    by the P6-04 Direction A packet
+    (``governance/authorizations/2026-05-21_p6-04.md``). The
+    time-in-force identifies the order-duration discipline the operator
+    would intend if this were a real progression; in this packet it is a
+    pure data tag and triggers no broker action, no order placement, no
+    routing, and no execution. Future time-in-force tags (for example
+    ``GOOD_TILL_DATE``, ``AT_THE_OPEN``, ``AT_THE_CLOSE``,
+    ``GOOD_TILL_CROSSING``, etc.) are explicitly **not** authorized by
+    this enum and would each require their own separate written
+    authorization from Kevin per ``AI_WORKFLOW.md`` §7.
+    """
+
+    DAY = "day"
+    GOOD_TILL_CANCEL = "good_till_cancel"
+    IMMEDIATE_OR_CANCEL = "immediate_or_cancel"
+    FILL_OR_KILL = "fill_or_kill"
+
+
+def derive_simulated_order_intent_id(
+    *,
+    lane: SimulationLane,
+    symbol: str,
+    side: SimulatedOrderSide,
+    quantity: int,
+    order_type: SimulatedOrderType,
+    limit_price: float | None,
+    time_in_force: SimulatedOrderTimeInForce,
+    created_at: str,
+) -> str:
+    """Derive a deterministic identifier for a simulated order intent (P6-04).
+
+    Pure, deterministic content fingerprint. Given identical inputs the
+    function returns the byte-for-byte identical identifier ``str`` on
+    every call, with **no randomness, no clock read, no counter, and no
+    hidden state**. The ``created_at`` value is supplied by the caller
+    (already an ADR-004 ``Z``-suffixed UTC string); the function does not
+    read any wall clock. The returned identifier is non-empty and
+    contains no whitespace, so it is a valid
+    :attr:`SimulatedOrderIntent.intent_id` value the caller may pass to
+    :class:`SimulatedOrderIntent` by ordinary construction.
+
+    The identifier is a ``"simoi-"`` prefix followed by the hex SHA-256
+    digest of a canonical, delimiter-joined serialization of the closed
+    content subset (``lane``, ``symbol``, ``side``, ``quantity``,
+    ``order_type``, ``limit_price``, ``time_in_force``, ``created_at``).
+    The delimiter is the ASCII unit separator (``\\x1f``), which the
+    whitespace-free ``symbol`` and the ``Z``-suffixed ``created_at`` can
+    never contain, so the serialization is collision-free across field
+    boundaries.
+
+    This helper places no broker call, reads no market data, opens no
+    file, reaches no network, and holds no state. It is a closed
+    transformation from input values to an output ``str``.
+
+    :raises SimulationBoundaryError: if any argument has the wrong type
+        or fails the same per-field validation that
+        :class:`SimulatedOrderIntent` enforces (so a derived identifier
+        always corresponds to a constructible intent).
+    """
+    if not isinstance(lane, SimulationLane):
+        raise SimulationBoundaryError(
+            f"derive_simulated_order_intent_id lane must be a SimulationLane, "
+            f"got {type(lane).__name__}"
+        )
+    if not isinstance(symbol, str) or not symbol:
+        raise SimulationBoundaryError(
+            "derive_simulated_order_intent_id symbol must be a non-empty str"
+        )
+    if any(ch.isspace() for ch in symbol):
+        raise SimulationBoundaryError(
+            "derive_simulated_order_intent_id symbol must not contain whitespace"
+        )
+    if not isinstance(side, SimulatedOrderSide):
+        raise SimulationBoundaryError(
+            f"derive_simulated_order_intent_id side must be a SimulatedOrderSide, "
+            f"got {type(side).__name__}"
+        )
+    if isinstance(quantity, bool) or not isinstance(quantity, int):
+        raise SimulationBoundaryError(
+            "derive_simulated_order_intent_id quantity must be an int (not bool, not float)"
+        )
+    if quantity <= 0:
+        raise SimulationBoundaryError("derive_simulated_order_intent_id quantity must be positive")
+    if not isinstance(order_type, SimulatedOrderType):
+        raise SimulationBoundaryError(
+            f"derive_simulated_order_intent_id order_type must be a SimulatedOrderType, "
+            f"got {type(order_type).__name__}"
+        )
+    if order_type is SimulatedOrderType.MARKET:
+        if limit_price is not None:
+            raise SimulationBoundaryError(
+                "derive_simulated_order_intent_id limit_price must be None when order_type "
+                "is MARKET"
+            )
+    else:
+        if isinstance(limit_price, bool) or not isinstance(limit_price, float):
+            raise SimulationBoundaryError(
+                "derive_simulated_order_intent_id limit_price must be a float when order_type "
+                "is LIMIT"
+            )
+        if not (limit_price == limit_price):  # reject nan
+            raise SimulationBoundaryError(
+                "derive_simulated_order_intent_id limit_price must be a finite number when "
+                "order_type is LIMIT"
+            )
+        if limit_price in (float("inf"), float("-inf")):
+            raise SimulationBoundaryError(
+                "derive_simulated_order_intent_id limit_price must be a finite number when "
+                "order_type is LIMIT"
+            )
+        if limit_price <= 0:
+            raise SimulationBoundaryError(
+                "derive_simulated_order_intent_id limit_price must be positive when order_type "
+                "is LIMIT"
+            )
+    if not isinstance(time_in_force, SimulatedOrderTimeInForce):
+        raise SimulationBoundaryError(
+            f"derive_simulated_order_intent_id time_in_force must be a "
+            f"SimulatedOrderTimeInForce, got {type(time_in_force).__name__}"
+        )
+    if not isinstance(created_at, str) or not created_at:
+        raise SimulationBoundaryError(
+            "derive_simulated_order_intent_id created_at must be a non-empty str"
+        )
+    if not created_at.endswith("Z"):
+        raise SimulationBoundaryError(
+            "derive_simulated_order_intent_id created_at must be an ADR-004 Z-suffixed UTC string"
+        )
+
+    separator = "\x1f"
+    canonical = separator.join(
+        (
+            f"lane={lane.value}",
+            f"symbol={symbol}",
+            f"side={side.value}",
+            f"quantity={quantity}",
+            f"order_type={order_type.value}",
+            f"limit_price={limit_price!r}",
+            f"time_in_force={time_in_force.value}",
+            f"created_at={created_at}",
+        )
+    )
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return f"simoi-{digest}"
+
+
 @dataclass(frozen=True, slots=True)
 class SimulatedOrderIntent:
     """Immutable simulated-order-intent record (P5-02).
@@ -216,13 +376,23 @@ class SimulatedOrderIntent:
       values are explicitly rejected. Negative, zero, or non-finite
       (``nan``, ``inf``) prices are explicitly rejected when
       ``order_type`` is ``LIMIT``.
+    - ``time_in_force``: :class:`SimulatedOrderTimeInForce` — the
+      order-duration discipline the operator would intend (P6-04
+      Direction A). Defaults to :attr:`SimulatedOrderTimeInForce.DAY`
+      so existing eight-argument construction continues to work
+      unchanged; in this packet it is a pure data tag that triggers no
+      broker action.
 
     The record carries **no** venue, broker, account, routing
-    instruction, time-in-force qualifier, post-only / IOC / FOK
-    modifier, route-allow / route-deny list, broker credential, API
-    key, or persistence handle. Adding any of those fields requires
+    instruction, post-only / IOC / FOK execution modifier (the
+    ``time_in_force`` field is a pure duration tag, not an execution
+    instruction), route-allow / route-deny list, broker credential,
+    API key, or persistence handle. Adding any further field requires
     its own separate written authorization from Kevin per the §16.5
     Risk Register entry on order-intent semantics in ``RECOVERY.md``.
+    The closed nine-field shape (eight original P5-02 fields plus the
+    P6-04 ``time_in_force`` field) is authorized by
+    ``governance/authorizations/2026-05-21_p6-04.md``.
     """
 
     lane: SimulationLane
@@ -233,6 +403,7 @@ class SimulatedOrderIntent:
     quantity: int
     order_type: SimulatedOrderType
     limit_price: float | None
+    time_in_force: SimulatedOrderTimeInForce = SimulatedOrderTimeInForce.DAY
 
     def __post_init__(self) -> None:
         if not isinstance(self.lane, SimulationLane):
@@ -296,6 +467,11 @@ class SimulatedOrderIntent:
                 raise SimulationBoundaryError(
                     "SimulatedOrderIntent.limit_price must be positive when order_type is LIMIT"
                 )
+        if not isinstance(self.time_in_force, SimulatedOrderTimeInForce):
+            raise SimulationBoundaryError(
+                f"SimulatedOrderIntent.time_in_force must be a SimulatedOrderTimeInForce, "
+                f"got {type(self.time_in_force).__name__}"
+            )
 
     @classmethod
     def build(
@@ -309,6 +485,7 @@ class SimulatedOrderIntent:
         quantity: int,
         order_type: SimulatedOrderType,
         limit_price: float | None = None,
+        time_in_force: SimulatedOrderTimeInForce = SimulatedOrderTimeInForce.DAY,
     ) -> SimulatedOrderIntent:
         """Construct a :class:`SimulatedOrderIntent` from a UTC ``datetime``.
 
@@ -329,6 +506,7 @@ class SimulatedOrderIntent:
             quantity=quantity,
             order_type=order_type,
             limit_price=limit_price,
+            time_in_force=time_in_force,
         )
 
 
@@ -477,8 +655,10 @@ __all__ = [
     "SimulatedIntent",
     "SimulatedOrderIntent",
     "SimulatedOrderSide",
+    "SimulatedOrderTimeInForce",
     "SimulatedOrderType",
     "SimulationBoundary",
     "SimulationBoundaryError",
     "SimulationLane",
+    "derive_simulated_order_intent_id",
 ]

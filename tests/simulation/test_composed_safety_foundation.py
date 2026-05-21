@@ -963,12 +963,16 @@ def test_composed_safety_foundation_module_does_not_modify_simulation_or_runtime
 
 def test_composed_safety_foundation_dataclass_fields_introspection_unchanged() -> None:
     """The `dataclasses.fields()` introspection of `SimulatedIntent` and `SimulatedOrderIntent`
-    returns the expected field tuples, exactly as P5-01 / P5-02 / P5-03 left them.
+    returns the expected field tuples: `SimulatedIntent` exactly as
+    P5-01 left it, and `SimulatedOrderIntent` as P5-02 left it plus the
+    P6-04 Direction A `time_in_force` ninth field.
 
     This is a final belt-and-suspenders tripwire that fails if a future
-    change adds a ninth field to `SimulatedOrderIntent` or a fourth
+    change adds a tenth field to `SimulatedOrderIntent` or a fourth
     field to `SimulatedIntent` before this composed-safety test would
-    even be able to construct them.
+    even be able to construct them. The ninth `time_in_force` field was
+    added in place by the P6-04 Direction A authorization
+    (``governance/authorizations/2026-05-21_p6-04.md``).
     """
     intent_fields = tuple(f.name for f in dataclasses.fields(SimulatedIntent))
     order_fields = tuple(f.name for f in dataclasses.fields(SimulatedOrderIntent))
@@ -982,4 +986,5 @@ def test_composed_safety_foundation_dataclass_fields_introspection_unchanged() -
         "quantity",
         "order_type",
         "limit_price",
+        "time_in_force",
     )

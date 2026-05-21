@@ -15,10 +15,11 @@ Verifies that the order-shaped data fields added to
   quantity, non-positive quantity, missing limit for ``LIMIT``,
   non-``None`` limit for ``MARKET``, non-positive / non-finite limit,
   empty / whitespace ``symbol`` and ``intent_id``);
-- carry **no** venue / broker / account / routing / time-in-force /
-  post-only / IOC / FOK / credential / persistence-handle field
-  (structural assertion: the dataclass fields are exactly the eight
-  authorized ones);
+- carry **no** venue / broker / account / routing / post-only / IOC /
+  FOK execution-modifier / credential / persistence-handle field
+  (structural assertion: the dataclass fields are exactly the nine
+  authorized ones — the eight P5-02 fields plus the P6-04
+  ``time_in_force`` order-duration tag);
 - compose the safety-gate of :class:`SimulationBoundary`
   unchanged: :meth:`SimulationBoundary.propose_order` returns the
   intent by identity on a clear verdict, raises with the verdict's
@@ -181,13 +182,17 @@ def test_simulated_order_type_is_strenum() -> None:
 
 
 def test_simulated_order_intent_dataclass_fields_are_exactly_the_authorized_set() -> None:
-    """The dataclass must declare exactly the eight authorized fields.
+    """The dataclass must declare exactly the nine authorized fields.
 
     This is a structural tripwire: any addition of a venue, broker,
-    account, routing instruction, time-in-force qualifier, post-only
-    / IOC / FOK modifier, route-allow / route-deny list, broker
-    credential, API key, persistence handle, or any other field
-    without separate written authorization will fail this test.
+    account, routing instruction, post-only / IOC / FOK execution
+    modifier, route-allow / route-deny list, broker credential, API
+    key, persistence handle, or any other field without separate
+    written authorization will fail this test. The ninth field
+    ``time_in_force`` was added in place by the P6-04 Direction A
+    authorization (``governance/authorizations/2026-05-21_p6-04.md``);
+    the prior eight-field shape was correct for P5-02 and was evolved
+    in place by P6-04.
     """
     field_names = tuple(f.name for f in dataclasses.fields(SimulatedOrderIntent))
     assert field_names == (
@@ -199,6 +204,7 @@ def test_simulated_order_intent_dataclass_fields_are_exactly_the_authorized_set(
         "quantity",
         "order_type",
         "limit_price",
+        "time_in_force",
     ), f"unexpected SimulatedOrderIntent fields: {field_names}"
 
 
