@@ -104,15 +104,20 @@ def test_simulation_subpackage_imports() -> None:
     assert hasattr(module, "SimulatedOrderIntent")
     assert hasattr(module, "SimulatedOrderSide")
     assert hasattr(module, "SimulatedOrderType")
+    # P6-04 Direction A surface.
+    assert hasattr(module, "SimulatedOrderTimeInForce")
+    assert hasattr(module, "derive_simulated_order_intent_id")
     assert sorted(module.__all__) == sorted(
         [
             "SimulatedIntent",
             "SimulatedOrderIntent",
             "SimulatedOrderSide",
+            "SimulatedOrderTimeInForce",
             "SimulatedOrderType",
             "SimulationBoundary",
             "SimulationBoundaryError",
             "SimulationLane",
+            "derive_simulated_order_intent_id",
         ]
     )
 

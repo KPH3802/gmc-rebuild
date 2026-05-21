@@ -25,11 +25,15 @@ Invariants tripwired here:
   :meth:`SimulatedOrderIntent.build` with a UTC ``datetime`` equals a
   record constructed directly with the equivalent ADR-004 Z-suffixed
   string. Future timestamp-format drift would break this invariant.
-- **Frozen / __slots__ / exact eight-field shape** — assignment to any
+- **Frozen / __slots__ / exact nine-field shape** — assignment to any
   field raises :class:`dataclasses.FrozenInstanceError`; the
   ``__slots__`` tuple matches the ``dataclasses.fields()`` order
-  exactly; adding a ninth field would fail the shape assertion. (The
-  shape assertion is the same closed-tuple tripwire used by the P5-02
+  exactly; adding a tenth field would fail the shape assertion. The
+  ninth field ``time_in_force`` was added in place by the P6-04
+  Direction A authorization
+  (``governance/authorizations/2026-05-21_p6-04.md``), an intentional
+  separately-authorized evolution of the prior P5-02 eight-field shape.
+  (The shape assertion is the same closed-tuple tripwire used by the
   test ``test_simulated_order_intent_dataclass_fields_are_exactly_the_authorized_set``;
   this module re-asserts it under a different lens to make scope-creep
   visible from both directions.)
@@ -97,6 +101,7 @@ from gmc_rebuild.simulation import (
     SimulatedIntent,
     SimulatedOrderIntent,
     SimulatedOrderSide,
+    SimulatedOrderTimeInForce,
     SimulatedOrderType,
     SimulationBoundary,
     SimulationBoundaryError,
@@ -197,8 +202,9 @@ def test_invariant_equal_orders_are_eq_and_hash_eq_for_limit_shape() -> None:
 def test_invariant_differing_field_breaks_equality_and_hash() -> None:
     """Differing in any single field breaks both equality and hash equality.
 
-    The tripwire shape: for each of the eight fields, construct a
-    sibling record that differs only in that field, and assert
+    The tripwire shape: for each of the nine fields (the eight P5-02
+    fields plus the P6-04 ``time_in_force`` field), construct a sibling
+    record that differs only in that field, and assert
     ``a != b and hash(a) != hash(b)``. If a future change makes any
     field collapse to a "do not care" status (e.g., quietly clearing
     ``limit_price`` for ``MARKET`` orders, or coercing ``symbol`` to
@@ -280,6 +286,19 @@ def test_invariant_differing_field_breaks_equality_and_hash() -> None:
         order_type=base.order_type,
         limit_price=99.0,
     )
+    # base uses the default time_in_force (DAY); a sibling that differs
+    # only in the P6-04 time_in_force field must break equality and hash.
+    differs_by_time_in_force = SimulatedOrderIntent(
+        lane=base.lane,
+        intent_id=base.intent_id,
+        created_at=base.created_at,
+        symbol=base.symbol,
+        side=base.side,
+        quantity=base.quantity,
+        order_type=base.order_type,
+        limit_price=base.limit_price,
+        time_in_force=SimulatedOrderTimeInForce.GOOD_TILL_CANCEL,
+    )
 
     # `lane` cannot vary today because SimulationLane is closed at LOCAL_ONLY;
     # the closed-enum tripwire elsewhere covers the lane invariant, so this
@@ -294,6 +313,7 @@ def test_invariant_differing_field_breaks_equality_and_hash() -> None:
         differs_by_quantity,
         differs_by_order_type,
         differs_by_limit_price,
+        differs_by_time_in_force,
     ]
     for sibling in differs:
         assert sibling != base, f"sibling collided with base: {sibling}"
@@ -391,7 +411,7 @@ def test_invariant_build_default_limit_price_is_none() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Invariant 3 — Frozen / __slots__ / exact eight-field shape
+# Invariant 3 — Frozen / __slots__ / exact nine-field shape (P6-04)
 # ---------------------------------------------------------------------------
 
 
@@ -430,15 +450,20 @@ def test_invariant_simulated_order_intent_uses_slots() -> None:
     assert not hasattr(order, "__dict__"), f"slotted dataclass leaked __dict__: {order.__dict__!r}"
 
 
-def test_invariant_simulated_order_intent_has_exactly_eight_fields_in_order() -> None:
-    """``dataclasses.fields()`` returns the exact eight authorized fields in order.
+def test_invariant_simulated_order_intent_has_exactly_nine_fields_in_order() -> None:
+    """``dataclasses.fields()`` returns the exact nine authorized fields in order.
 
     This is the same closed-tuple tripwire enforced by
     ``test_simulated_order_intent_dataclass_fields_are_exactly_the_authorized_set``;
     repeating it here under the invariants lens makes the rule
-    discoverable from both test modules. A future ninth field — for
-    example a venue, account, broker_credential, time_in_force, or
-    persistence_handle — fails this assertion before it lands.
+    discoverable from both test modules. The ninth field
+    ``time_in_force`` was added in place by the P6-04 Direction A
+    authorization (``governance/authorizations/2026-05-21_p6-04.md``) —
+    an intentional, separately-authorized evolution of the prior P5-02
+    eight-field shape. Any further field — for example a venue,
+    account, broker_credential, route-allow list, or persistence_handle
+    — fails this assertion before it lands without its own separate
+    written authorization.
     """
     fields = tuple(field.name for field in dataclasses.fields(SimulatedOrderIntent))
     assert fields == (
@@ -450,6 +475,7 @@ def test_invariant_simulated_order_intent_has_exactly_eight_fields_in_order() ->
         "quantity",
         "order_type",
         "limit_price",
+        "time_in_force",
     ), f"SimulatedOrderIntent fields drift: {fields}"
 
 
@@ -818,9 +844,12 @@ def test_invariant_simulated_intent_and_simulated_order_intent_are_distinct_clas
         "quantity",
         "order_type",
         "limit_price",
+        "time_in_force",
     )
     # Sanity: the placeholder field tuple is a strict prefix of the order tuple,
-    # which makes the future "extend by adding a new field at position N"
-    # tripwire above (in test_invariant_simulated_order_intent_has_exactly_eight_fields_in_order)
-    # particularly meaningful.
+    # which makes the "extend by adding a new field at position N"
+    # tripwire above (in test_invariant_simulated_order_intent_has_exactly_nine_fields_in_order)
+    # particularly meaningful. The ninth field ``time_in_force`` was added in
+    # place by the P6-04 Direction A authorization
+    # (``governance/authorizations/2026-05-21_p6-04.md``).
     assert order_fields[: len(placeholder_fields)] == placeholder_fields
