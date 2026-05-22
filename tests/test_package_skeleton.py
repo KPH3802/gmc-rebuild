@@ -117,6 +117,22 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       network, no secrets, no scheduler, no persistence, no
       ``time.sleep``, no ``__main__``). See
       ``governance/authorizations/2026-05-20_p6-03.md``.
+    - ``portfolio_state/`` — PR P6-05 (deterministic in-memory
+      simulated portfolio state; fifth Phase 6 dry-run implementation
+      packet; declares the frozen, slotted ``SimulatedPosition`` and
+      ``SimulatedPortfolio`` value types and the pure
+      ``apply_simulated_order_intent`` function that applies an accepted
+      P6-03 ``PositionDecision`` with a P6-04 ``SimulatedOrderIntent``
+      to a position book under a fixed, deterministic, fixture-only
+      full-fill assumption, idempotent by the deterministic P6-04
+      simulated order intent ID; frozen / value-typed replaceable
+      snapshot model; no real position book, account, balances, P&L,
+      cash ledger, valuation, broker, market data, orders, network,
+      secrets, scheduler, persistence, ``time.sleep``, ``__main__``).
+      The directory name carries the forbidden ``portfolio`` token and
+      is allowlisted on the ``MASTER_STATUS.md`` §8 step 4a gate per the
+      P6-01 ``signal_intake`` precedent. See
+      ``governance/authorizations/2026-05-22_p6-05.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -137,4 +153,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "signal_intake",
         "eligibility",
         "decision",
+        "portfolio_state",
     }, f"unexpected package contents: {entries}"
