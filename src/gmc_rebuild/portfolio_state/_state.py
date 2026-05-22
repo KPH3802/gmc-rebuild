@@ -126,8 +126,7 @@ class SimulatedPortfolio:
     def __post_init__(self) -> None:
         if not isinstance(self.positions, tuple):
             raise TypeError(
-                f"SimulatedPortfolio.positions must be a tuple, "
-                f"got {type(self.positions).__name__}"
+                f"SimulatedPortfolio.positions must be a tuple, got {type(self.positions).__name__}"
             )
         seen_symbols: set[str] = set()
         for position in self.positions:
@@ -260,9 +259,7 @@ def apply_simulated_order_intent(
         :class:`~gmc_rebuild.simulation.SimulatedOrderIntent`.
     """
     if not isinstance(portfolio, SimulatedPortfolio):
-        raise TypeError(
-            f"portfolio must be a SimulatedPortfolio, got {type(portfolio).__name__}"
-        )
+        raise TypeError(f"portfolio must be a SimulatedPortfolio, got {type(portfolio).__name__}")
     if not isinstance(decision, PositionDecision):
         raise TypeError(f"decision must be a PositionDecision, got {type(decision).__name__}")
     if not isinstance(order_intent, SimulatedOrderIntent):

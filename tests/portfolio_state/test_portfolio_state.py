@@ -267,16 +267,12 @@ def test_portfolio_rejects_unsorted_positions() -> None:
 
 
 def test_portfolio_rejects_unsorted_applied_ids() -> None:
-    exc = _expect_error(
-        ValueError, SimulatedPortfolio, positions=(), applied_intent_ids=("b", "a")
-    )
+    exc = _expect_error(ValueError, SimulatedPortfolio, positions=(), applied_intent_ids=("b", "a"))
     assert "sorted ascending" in str(exc)
 
 
 def test_portfolio_rejects_duplicate_applied_ids() -> None:
-    exc = _expect_error(
-        ValueError, SimulatedPortfolio, positions=(), applied_intent_ids=("a", "a")
-    )
+    exc = _expect_error(ValueError, SimulatedPortfolio, positions=(), applied_intent_ids=("a", "a"))
     assert "unique" in str(exc)
 
 
@@ -708,9 +704,9 @@ def test_master_status_allowlists_portfolio_state_path() -> None:
     on the MASTER_STATUS.md §8 step 4a allowlist (P6-01 `signal_intake`
     precedent). This guards the reconciliation in-tree against the actual
     ``allowed_p2_infra`` gate line, not merely prose mentions."""
-    master_status = (
-        Path(__file__).resolve().parents[1].parent / "MASTER_STATUS.md"
-    ).read_text(encoding="utf-8")
+    master_status = (Path(__file__).resolve().parents[1].parent / "MASTER_STATUS.md").read_text(
+        encoding="utf-8"
+    )
     allowlist_lines = [
         line for line in master_status.splitlines() if line.startswith("allowed_p2_infra=")
     ]
