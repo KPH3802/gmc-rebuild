@@ -133,6 +133,20 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       is allowlisted on the ``MASTER_STATUS.md`` §8 step 4a gate per the
       P6-01 ``signal_intake`` precedent. See
       ``governance/authorizations/2026-05-22_p6-05.md``.
+    - ``reporting/`` — PR P6-06 (deterministic daily dry-run report;
+      sixth Phase 6 dry-run implementation packet; declares the frozen,
+      slotted ``DailyReport`` value object, the pure
+      ``build_daily_report`` builder, and the pure
+      ``render_daily_report_event`` renderer that summarizes a simulated
+      cycle (P6-03 decisions, the P6-05 ``SimulatedPortfolio`` snapshot,
+      the P2-05 / P3-05 ``ReconciliationStatus``, and caller-supplied
+      tripped-invariant codes) and emits it only via the merged P2-04
+      ``audit_event`` helper under the closed ``lifecycle`` category;
+      caller-supplied timestamp only, no internal clock read, no
+      ``AUDIT_CATEGORIES`` change, no external sink, no real position
+      book, broker, market data, orders, network, secrets, scheduler,
+      persistence, ``time.sleep``, or ``__main__``). See
+      ``governance/authorizations/2026-05-23_p6-06.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -154,4 +168,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "eligibility",
         "decision",
         "portfolio_state",
+        "reporting",
     }, f"unexpected package contents: {entries}"
