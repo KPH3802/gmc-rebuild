@@ -147,6 +147,24 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       book, broker, market data, orders, network, secrets, scheduler,
       persistence, ``time.sleep``, or ``__main__``). See
       ``governance/authorizations/2026-05-23_p6-06.md``.
+    - ``operator_view/`` — PR P6-07 (deterministic read-only operator
+      view of dry-run engine state; seventh Phase 6 dry-run
+      implementation packet; declares the frozen, slotted
+      ``DryRunOperatorView`` value object and the pure
+      ``build_dry_run_operator_view`` builder that project the cycle's
+      P6-03 ``PositionDecision`` results, the cycle's P6-04
+      ``SimulatedOrderIntent`` values, the end-of-cycle P6-05
+      ``SimulatedPortfolio`` snapshot, and the P6-06 ``DailyReport``
+      summary into an operator-facing value object plus a deterministic
+      multi-line string render; ``SafetyVerdict`` is excluded from
+      inputs and ``gmc_rebuild.runtime`` is not imported, so the merged
+      P4-07 ``OperatorSafetyView`` is not composed with; no clock read
+      (any date is echoed from ``DailyReport.report_date``); no
+      ``audit_event`` emission, no ``gmc_rebuild.logging`` import, no
+      external log sink, no real position book, broker, market data,
+      orders, network, secrets, scheduler, persistence, ``time.sleep``,
+      or ``__main__``). See
+      ``governance/authorizations/2026-06-15_p6-07.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -169,4 +187,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "decision",
         "portfolio_state",
         "reporting",
+        "operator_view",
     }, f"unexpected package contents: {entries}"
