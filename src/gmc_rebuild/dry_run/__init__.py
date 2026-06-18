@@ -26,19 +26,32 @@ preferences:
   inline literal (no ``now_utc()`` / ``time.*`` / ``datetime.now()``).
   Two calls to :func:`run_dry_run` return byte-for-byte identical
   reports.
-- **No I/O, no network, no broker, no real account, no market data,
-  no persistence, no scheduler, no env-var read, no secrets.** The only
-  output channel is the in-memory :class:`DailyReport` value object
-  plus its plain-text :func:`format_report` rendering. Printing to
-  stdout happens only in :mod:`gmc_rebuild.dry_run.__main__`.
+- **No network, no broker, no real account, no market data, no
+  persistence (write), no scheduler, no env-var read, no secrets.** A
+  separately-authorized insider-cluster intake path (see
+  ``governance/authorizations/2026-06-18_insider-cluster-intake.md``)
+  reads ONE row from a caller-supplied SQLite file in read-only URI
+  mode; that is the only filesystem touch anywhere in the package.
+  Printing to stdout happens only in :mod:`gmc_rebuild.dry_run.__main__`.
 - **Not re-exported from the package root.** ``gmc_rebuild`` is unchanged
   by this packet; the public surface is reachable only via
-  ``from gmc_rebuild.dry_run import run_dry_run, format_report`` or via
-  ``python -m gmc_rebuild.dry_run``.
+  ``from gmc_rebuild.dry_run import run_dry_run, format_report,
+  run_dry_run_insider_cluster, format_insider_cluster_summary`` or via
+  ``python -m gmc_rebuild.dry_run [--source {synthetic,insider_cluster}]``.
 """
 
 from __future__ import annotations
 
-from gmc_rebuild.dry_run._loop import format_report, run_dry_run
+from gmc_rebuild.dry_run._loop import (
+    format_insider_cluster_summary,
+    format_report,
+    run_dry_run,
+    run_dry_run_insider_cluster,
+)
 
-__all__ = ["format_report", "run_dry_run"]
+__all__ = [
+    "format_insider_cluster_summary",
+    "format_report",
+    "run_dry_run",
+    "run_dry_run_insider_cluster",
+]

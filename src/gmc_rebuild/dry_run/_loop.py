@@ -7,6 +7,7 @@ authorization reference.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 from types import MappingProxyType
 
 from gmc_rebuild.decision import (
@@ -15,6 +16,7 @@ from gmc_rebuild.decision import (
     compose_position_decision,
 )
 from gmc_rebuild.eligibility import EligibilityConfig, check_eligibility
+from gmc_rebuild.insider_cluster_intake import load_insider_cluster_signal
 from gmc_rebuild.portfolio_state import SimulatedPortfolio, apply_simulated_order_intent
 from gmc_rebuild.reporting import DailyReport, build_daily_report
 from gmc_rebuild.risk import HeartbeatStatus, KillSwitchState, ReconciliationStatus
@@ -199,7 +201,104 @@ def format_report(report: DailyReport) -> str:
     return "\n".join(lines)
 
 
-__all__ = ["FIXED_TIMESTAMP", "format_report", "run_dry_run"]
+# ---------------------------------------------------------------------------
+# Insider-cluster path (real-signal source)
+# ---------------------------------------------------------------------------
+
+
+def _eligibility_config_for(signal: SignalIntent) -> EligibilityConfig:
+    """Build a permissive but typed eligibility config for ONE caller-
+    chosen symbol.
+
+    The operator has already decided to act on this signal (by passing
+    its DB), so ``allowed_symbols`` is the singleton ``{signal.symbol}``.
+    This is intentionally *not* a maintained universe — the eligibility
+    gate's job in this dry-run path is to exercise the type discipline
+    end-to-end, not to validate the symbol against a research universe.
+    """
+    return EligibilityConfig(
+        allowed_symbols=frozenset({signal.symbol}),
+        allowed_sides=frozenset({SignalSide.BUY, SignalSide.SELL}),
+        min_quantity=1,
+        max_quantity=100_000,
+        min_rationale_length=5,
+    )
+
+
+def run_dry_run_insider_cluster(
+    db_path: Path,
+) -> tuple[DailyReport, SafetyVerdict, PositionDecision]:
+    """Run the dry-run loop on ONE real insider-cluster signal.
+
+    Reads ONE row from ``db_path`` via the insider-cluster intake
+    adapter (which opens the DB in SQLite read-only URI mode), threads
+    it through the same P6-01..P6-06 chain :func:`run_dry_run` uses,
+    and returns the resulting ``(report, verdict, decision)`` triple so
+    the caller can render the safety verdict and a one-line decision
+    summary alongside the report.
+
+    Pure / deterministic for identical inputs. No network, no broker,
+    no order placement.
+    """
+    signal = load_insider_cluster_signal(db_path)
+    config = _eligibility_config_for(signal)
+    verdict = _clear_safety_verdict()
+    boundary = SimulationBoundary(lane=SimulationLane.LOCAL_ONLY)
+
+    intent = accept_signal_intent(signal)
+    eligibility = check_eligibility(intent, config)
+    decision = compose_position_decision(intent, eligibility, verdict)
+
+    portfolio = SimulatedPortfolio.empty()
+    if decision.outcome is PositionDecisionOutcome.WOULD_TRADE:
+        order_intent = _order_intent_for(intent)
+        boundary.propose_order(order_intent=order_intent, verdict=verdict)
+        portfolio = apply_simulated_order_intent(
+            portfolio, decision=decision, order_intent=order_intent
+        )
+
+    report = build_daily_report(
+        report_date=_REPORT_DATE,
+        decisions=(decision,),
+        portfolio=portfolio,
+        reconciliation_status=ReconciliationStatus.CLEAN,
+    )
+    return report, verdict, decision
+
+
+def format_insider_cluster_summary(
+    report: DailyReport,
+    verdict: SafetyVerdict,
+    decision: PositionDecision,
+) -> str:
+    """Render the daily report, the safety verdict, and a one-line
+    decision summary as deterministic plain text."""
+    if not isinstance(report, DailyReport):
+        raise TypeError(f"report must be a DailyReport, got {type(report).__name__}")
+    if not isinstance(verdict, SafetyVerdict):
+        raise TypeError(f"verdict must be a SafetyVerdict, got {type(verdict).__name__}")
+    if not isinstance(decision, PositionDecision):
+        raise TypeError(f"decision must be a PositionDecision, got {type(decision).__name__}")
+
+    blockers_repr = list(verdict.blockers) if verdict.blockers else "none"
+    reasons_repr = [reason.value for reason in decision.reasons] if decision.reasons else "none"
+    return "\n".join(
+        [
+            format_report(report),
+            "",
+            f"safety_verdict: clear={verdict.clear}, blockers={blockers_repr}",
+            (f"decision: {decision.outcome.value} {decision.intent_id} reasons={reasons_repr}"),
+        ]
+    )
+
+
+__all__ = [
+    "FIXED_TIMESTAMP",
+    "format_insider_cluster_summary",
+    "format_report",
+    "run_dry_run",
+    "run_dry_run_insider_cluster",
+]
 
 
 # Re-export the fixed timestamp as a module-level constant so callers
