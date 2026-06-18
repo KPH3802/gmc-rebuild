@@ -7,28 +7,39 @@ Usage::
     python -m gmc_rebuild.dry_run --source insider_cluster     # real-signal path
     python -m gmc_rebuild.dry_run --source insider_cluster \\
         --db tests/insider_cluster_intake/fixtures/sample.db
+    python -m gmc_rebuild.dry_run --source insider_cluster \\
+        --emit-json /tmp/decisions.json                        # opt-in JSON sidecar
 
-The module performs **one** side effect: it writes the formatted output
-to stdout via :func:`print`. No network, no file writes, no env-var
+By default the module performs **one** side effect: it writes the
+formatted output to stdout via :func:`print`. No network, no env-var
 read, no broker, no scheduler. The insider-cluster source path opens
 the supplied SQLite DB in **read-only URI mode** and reads exactly one
 row.
 
+The ``--emit-json`` flag, when explicitly passed alongside
+``--source insider_cluster``, adds **one** further side effect: it
+writes the decision payload to the caller-supplied path. The flag is
+rejected on the synthetic source. No flag = no file write. The
+parent directory must already exist (no directory creation).
+
 Authorizations:
     - ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``
     - ``governance/authorizations/2026-06-18_insider-cluster-intake.md``
+    - ``governance/authorizations/2026-06-18_dry-run-emit-json.md``
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from gmc_rebuild.dry_run._loop import (
+    _run_insider_cluster_cycle,
+    build_decisions_json_payload,
     format_insider_cluster_summary,
     format_report,
     run_dry_run,
-    run_dry_run_insider_cluster,
 )
 
 #: Default ``--db`` path for the insider-cluster source. Points at the
@@ -72,14 +83,44 @@ def _build_arg_parser() -> argparse.ArgumentParser:
             "fixture under tests/."
         ),
     )
+    parser.add_argument(
+        "--emit-json",
+        type=Path,
+        default=None,
+        dest="emit_json",
+        help=(
+            "Optional. Write the decision payload as JSON to this path. "
+            "Supported only with --source=insider_cluster. No flag = no "
+            "file write. The parent directory must already exist; this "
+            "command will not create directories."
+        ),
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> None:
-    args = _build_arg_parser().parse_args(argv)
+    parser = _build_arg_parser()
+    args = parser.parse_args(argv)
+
+    # Reject --emit-json on synthetic — out of scope for this PR.
+    if args.emit_json is not None and args.source != "insider_cluster":
+        parser.error("--emit-json is supported only with --source=insider_cluster")
+
     if args.source == "insider_cluster":
-        report, verdict, decision = run_dry_run_insider_cluster(args.db)
-        print(format_insider_cluster_summary(report, verdict, decision))
+        cycle = _run_insider_cluster_cycle(args.db)
+        print(format_insider_cluster_summary(cycle.report, cycle.verdict, cycle.decision))
+        if args.emit_json is not None:
+            payload = build_decisions_json_payload(
+                report=cycle.report,
+                verdict=cycle.verdict,
+                decisions=(cycle.decision,),
+                signals=(cycle.signal,),
+            )
+            # Pretty-printed + sorted keys = stable text diffs across runs.
+            args.emit_json.write_text(
+                json.dumps(payload, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
     else:
         report = run_dry_run()
         print(format_report(report))

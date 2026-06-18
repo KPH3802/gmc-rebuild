@@ -27,22 +27,31 @@ preferences:
   Two calls to :func:`run_dry_run` return byte-for-byte identical
   reports.
 - **No network, no broker, no real account, no market data, no
-  persistence (write), no scheduler, no env-var read, no secrets.** A
-  separately-authorized insider-cluster intake path (see
+  scheduler, no env-var read, no secrets.** A separately-authorized
+  insider-cluster intake path (see
   ``governance/authorizations/2026-06-18_insider-cluster-intake.md``)
   reads ONE row from a caller-supplied SQLite file in read-only URI
-  mode; that is the only filesystem touch anywhere in the package.
-  Printing to stdout happens only in :mod:`gmc_rebuild.dry_run.__main__`.
+  mode. A separately-authorized ``--emit-json <path>`` opt-in (see
+  ``governance/authorizations/2026-06-18_dry-run-emit-json.md``) is the
+  **only** writable filesystem surface anywhere in the package; it
+  fires only when the operator explicitly passes the flag with an
+  insider-cluster source, writes JSON to that single caller-supplied
+  path, creates no directories, and never touches the engine source
+  tree, any trading database, or any governance file. Printing to
+  stdout happens only in :mod:`gmc_rebuild.dry_run.__main__`.
 - **Not re-exported from the package root.** ``gmc_rebuild`` is unchanged
   by this packet; the public surface is reachable only via
   ``from gmc_rebuild.dry_run import run_dry_run, format_report,
-  run_dry_run_insider_cluster, format_insider_cluster_summary`` or via
-  ``python -m gmc_rebuild.dry_run [--source {synthetic,insider_cluster}]``.
+  run_dry_run_insider_cluster, format_insider_cluster_summary,
+  build_decisions_json_payload`` or via
+  ``python -m gmc_rebuild.dry_run [--source {synthetic,insider_cluster}]
+  [--emit-json PATH]``.
 """
 
 from __future__ import annotations
 
 from gmc_rebuild.dry_run._loop import (
+    build_decisions_json_payload,
     format_insider_cluster_summary,
     format_report,
     run_dry_run,
@@ -50,6 +59,7 @@ from gmc_rebuild.dry_run._loop import (
 )
 
 __all__ = [
+    "build_decisions_json_payload",
     "format_insider_cluster_summary",
     "format_report",
     "run_dry_run",
