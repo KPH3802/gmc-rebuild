@@ -177,6 +177,18 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       orders, network, secrets, scheduler, persistence, or
       ``time.sleep``). See
       ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``.
+    - ``insider_cluster_intake/`` — PR INSIDER-CLUSTER-INTAKE (insider-
+      cluster signal intake adapter; reads ONE row from a caller-
+      supplied ``backtest_results`` SQLite database in read-only URI
+      mode and adapts it into a typed
+      ``gmc_rebuild.signal_intake.SignalIntent``; adds no engine logic,
+      modifies no engine module; read-only filesystem access via stdlib
+      ``sqlite3`` with ``?mode=ro`` URI — cannot write; deterministic
+      share-quantity derivation; no network, no broker, no real account,
+      no credentials, no env-var read, no secrets, no scheduler, no
+      daemon, no ``time.sleep``, no clock read, no ``__main__``; not
+      re-exported from ``src/gmc_rebuild/__init__.py``). See
+      ``governance/authorizations/2026-06-18_insider-cluster-intake.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -201,4 +213,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "reporting",
         "operator_view",
         "dry_run",
+        "insider_cluster_intake",
     }, f"unexpected package contents: {entries}"

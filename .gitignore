@@ -34,6 +34,8 @@ secrets.yaml
 *.db
 *.sqlite
 *.sqlite3
+# Test fixtures are explicitly committed (one row, deterministic, no real data).
+!tests/insider_cluster_intake/fixtures/sample.db
 
 # Trading/data outputs
 *.csv
