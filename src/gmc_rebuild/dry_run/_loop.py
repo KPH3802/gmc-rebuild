@@ -6,9 +6,12 @@ authorization reference.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from types import MappingProxyType
+from typing import Any
 
 from gmc_rebuild.decision import (
     PositionDecision,
@@ -225,20 +228,32 @@ def _eligibility_config_for(signal: SignalIntent) -> EligibilityConfig:
     )
 
 
-def run_dry_run_insider_cluster(
-    db_path: Path,
-) -> tuple[DailyReport, SafetyVerdict, PositionDecision]:
-    """Run the dry-run loop on ONE real insider-cluster signal.
+@dataclass(frozen=True, slots=True)
+class InsiderClusterCycle:
+    """Rich, frozen bundle of the artifacts produced by one
+    insider-cluster dry-run cycle.
 
-    Reads ONE row from ``db_path`` via the insider-cluster intake
-    adapter (which opens the DB in SQLite read-only URI mode), threads
-    it through the same P6-01..P6-06 chain :func:`run_dry_run` uses,
-    and returns the resulting ``(report, verdict, decision)`` triple so
-    the caller can render the safety verdict and a one-line decision
-    summary alongside the report.
+    The signal is included here (alongside the report / verdict /
+    decision) so JSON-export callers can render the human-readable
+    fields (``symbol``, ``side``, ``quantity``, ``rationale``) without
+    re-opening the source database. ``signal`` is the same value that
+    was threaded through ``accept_signal_intent`` → ... → the resulting
+    ``decision``.
+    """
 
-    Pure / deterministic for identical inputs. No network, no broker,
-    no order placement.
+    report: DailyReport
+    verdict: SafetyVerdict
+    decision: PositionDecision
+    signal: SignalIntent
+
+
+def _run_insider_cluster_cycle(db_path: Path) -> InsiderClusterCycle:
+    """Private rich-bundle variant of the insider-cluster dry-run.
+
+    Same pipeline as :func:`run_dry_run_insider_cluster`; the only
+    difference is the return type carries the originating
+    :class:`SignalIntent` alongside the report/verdict/decision triple
+    so JSON-export callers do not need to re-read the source DB.
     """
     signal = load_insider_cluster_signal(db_path)
     config = _eligibility_config_for(signal)
@@ -263,7 +278,24 @@ def run_dry_run_insider_cluster(
         portfolio=portfolio,
         reconciliation_status=ReconciliationStatus.CLEAN,
     )
-    return report, verdict, decision
+    return InsiderClusterCycle(report=report, verdict=verdict, decision=decision, signal=signal)
+
+
+def run_dry_run_insider_cluster(
+    db_path: Path,
+) -> tuple[DailyReport, SafetyVerdict, PositionDecision]:
+    """Run the dry-run loop on ONE real insider-cluster signal.
+
+    Returns the merged-precedent ``(report, verdict, decision)`` triple
+    that PR #189 introduced. The public contract is unchanged; callers
+    that also need the originating :class:`SignalIntent` should use the
+    private :func:`_run_insider_cluster_cycle` instead.
+
+    Pure / deterministic for identical inputs. No network, no broker,
+    no order placement.
+    """
+    cycle = _run_insider_cluster_cycle(db_path)
+    return cycle.report, cycle.verdict, cycle.decision
 
 
 def format_insider_cluster_summary(
@@ -292,8 +324,89 @@ def format_insider_cluster_summary(
     )
 
 
+def build_decisions_json_payload(
+    *,
+    report: DailyReport,
+    verdict: SafetyVerdict,
+    decisions: Sequence[PositionDecision],
+    signals: Sequence[SignalIntent],
+) -> dict[str, Any]:
+    """Build the deterministic JSON-serializable decision payload.
+
+    Pure function. Schema:
+
+    .. code-block:: json
+
+        {
+          "as_of": "<DailyReport.report_date>",
+          "decisions": [
+            {
+              "symbol": "<signal.symbol>",
+              "side": "<signal.side.value>",
+              "quantity": <signal.quantity>,
+              "outcome": "<decision.outcome.value>",
+              "rationale": "<signal.rationale>",
+              "verdict_clear": <bool>
+            },
+            ...
+          ],
+          "summary": {
+            "total": <DailyReport.decisions_total>,
+            "would_trade": <DailyReport.would_trade>,
+            "would_skip": <DailyReport.would_skip>
+          }
+        }
+
+    ``decisions`` and ``signals`` must be the same length and aligned —
+    ``signals[i]`` is the :class:`SignalIntent` that produced
+    ``decisions[i]``. ``verdict_clear`` is shared across all entries
+    because the dry-run loop currently uses a single safety verdict per
+    cycle.
+    """
+    if not isinstance(report, DailyReport):
+        raise TypeError(f"report must be a DailyReport, got {type(report).__name__}")
+    if not isinstance(verdict, SafetyVerdict):
+        raise TypeError(f"verdict must be a SafetyVerdict, got {type(verdict).__name__}")
+    if len(decisions) != len(signals):
+        raise ValueError(
+            "decisions and signals must be the same length "
+            f"(got decisions={len(decisions)}, signals={len(signals)})"
+        )
+
+    decision_records: list[dict[str, Any]] = []
+    for decision, signal in zip(decisions, signals, strict=True):
+        if not isinstance(decision, PositionDecision):
+            raise TypeError(
+                f"decisions members must be PositionDecision, got {type(decision).__name__}"
+            )
+        if not isinstance(signal, SignalIntent):
+            raise TypeError(f"signals members must be SignalIntent, got {type(signal).__name__}")
+        decision_records.append(
+            {
+                "symbol": signal.symbol,
+                "side": signal.side.value,
+                "quantity": signal.quantity,
+                "outcome": decision.outcome.value,
+                "rationale": signal.rationale,
+                "verdict_clear": verdict.clear,
+            }
+        )
+
+    return {
+        "as_of": report.report_date,
+        "decisions": decision_records,
+        "summary": {
+            "total": report.decisions_total,
+            "would_trade": report.would_trade,
+            "would_skip": report.would_skip,
+        },
+    }
+
+
 __all__ = [
     "FIXED_TIMESTAMP",
+    "InsiderClusterCycle",
+    "build_decisions_json_payload",
     "format_insider_cluster_summary",
     "format_report",
     "run_dry_run",
