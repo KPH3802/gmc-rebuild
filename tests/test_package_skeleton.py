@@ -165,6 +165,18 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       orders, network, secrets, scheduler, persistence, ``time.sleep``,
       or ``__main__``). See
       ``governance/authorizations/2026-06-15_p6-07.md``.
+    - ``dry_run/`` — PR P6-DRYRUN-ENTRYPOINT (runnable dry-run loop
+      entrypoint; composes the merged P6-01..P6-07 surfaces into one
+      watchable pipeline executed via ``python -m gmc_rebuild.dry_run``;
+      adds no new engine logic; imports only public symbols from
+      already-authorized merged modules; pure / deterministic /
+      value-typed at the library boundary; caller-supplied (fixed
+      inline) timestamps only, no internal clock read; the only side
+      effect is a single ``print`` in the ``__main__`` module; no
+      external log sink, no real position book, broker, market data,
+      orders, network, secrets, scheduler, persistence, or
+      ``time.sleep``). See
+      ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -188,4 +200,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "portfolio_state",
         "reporting",
         "operator_view",
+        "dry_run",
     }, f"unexpected package contents: {entries}"
