@@ -189,6 +189,28 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       daemon, no ``time.sleep``, no clock read, no ``__main__``; not
       re-exported from ``src/gmc_rebuild/__init__.py``). See
       ``governance/authorizations/2026-06-18_insider-cluster-intake.md``.
+    - ``dry_run_reconciliation/`` — PR P6-09 (deterministic in-memory
+      read-only dry-run position reconciliation; ninth Phase 6 dry-run
+      implementation packet; declares the closed two-member
+      ``DryRunReconciliationOutcome`` enumeration (``MATCH``,
+      ``MISMATCH``), the frozen, slotted ``ExpectedPositions`` input value
+      object with a ``from_simulated_portfolio`` convenience constructor,
+      the frozen, slotted ``ReconciliationQuantityMismatch`` per-symbol
+      record, the frozen, slotted six-field ``DryRunReconciliationResult``
+      enforcing the ``MATCH`` iff no-differences biconditional, and a pure
+      ``reconcile_dry_run_positions`` function that compares a P6-05
+      ``SimulatedPortfolio`` snapshot against an ``ExpectedPositions``
+      input and echoes the caller-supplied P2-05 ``ReconciliationStatus``
+      verbatim; no ``render()`` method, no ``ReconciliationProtocol``
+      implementation, no import or runtime use of
+      ``gmc_rebuild.reconciliation`` (the P3-05 fixture), no
+      ``gmc_rebuild.runtime`` import, no real position book, account,
+      broker, market data, orders, network, secrets, scheduler,
+      persistence, clock read, ``audit_event``, ``time.sleep``, or
+      ``__main__``; not re-exported from
+      ``src/gmc_rebuild/__init__.py``). The directory name carries no
+      forbidden token, so the step 4 / step 4c scans stay clean. See
+      ``governance/authorizations/2026-06-19_p6-09.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -214,4 +236,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "operator_view",
         "dry_run",
         "insider_cluster_intake",
+        "dry_run_reconciliation",
     }, f"unexpected package contents: {entries}"
