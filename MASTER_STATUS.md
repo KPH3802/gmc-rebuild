@@ -617,14 +617,43 @@ done
 #                                      src/gmc_rebuild/__init__.py. See the
 #                                      durable in-tree record at
 #                                      governance/authorizations/2026-06-18_insider-cluster-intake.md.
+#       - src/gmc_rebuild/dry_run_reconciliation/ → authorized by PR P6-09
+#                                      (deterministic in-memory read-only
+#                                      dry-run position reconciliation — a pure
+#                                      comparison of a P6-05 SimulatedPortfolio
+#                                      snapshot against a caller-supplied,
+#                                      value-typed ExpectedPositions input,
+#                                      producing a frozen DryRunReconciliationResult.
+#                                      Declares DryRunReconciliationOutcome,
+#                                      DryRunReconciliationResult,
+#                                      ExpectedPositions,
+#                                      ReconciliationQuantityMismatch, and the
+#                                      pure reconcile_dry_run_positions function.
+#                                      Echoes the caller-supplied P2-05
+#                                      ReconciliationStatus verbatim. No render()
+#                                      method, no ReconciliationProtocol
+#                                      implementation, no import or runtime use
+#                                      of gmc_rebuild.reconciliation (the P3-05
+#                                      fixture), no gmc_rebuild.runtime import,
+#                                      no clock read, no audit_event, no real
+#                                      position book, account, broker, market
+#                                      data, orders, network, secrets, scheduler,
+#                                      persistence, time.sleep, daemon, or
+#                                      __main__. The directory name tokenizes to
+#                                      `dry`, `run`, `reconciliation` — none in
+#                                      the §8 forbidden set — so the step 4 /
+#                                      step 4c scans stay clean. Not re-exported
+#                                      from src/gmc_rebuild/__init__.py. See the
+#                                      durable in-tree record at
+#                                      governance/authorizations/2026-06-19_p6-09.md.
 #     A Phase 2 / Phase 3 / Phase 4 / Phase 5 / Phase 6 infrastructure path
 #     present but not on this allowlist is STOP; reconcile before continuing.
 #     The
 #     always-forbidden categories in
 #     step 4 still apply unchanged in this mode.
-allowed_p2_infra="src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake"
+allowed_p2_infra="src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake src/gmc_rebuild/dry_run_reconciliation"
 unset p2_infra_found
-for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake; do
+for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake src/gmc_rebuild/dry_run_reconciliation; do
   if [ -e "$path" ]; then
     case " $allowed_p2_infra " in
       *" $path "*)
@@ -647,6 +676,7 @@ for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logg
           src/gmc_rebuild/operator_view)  pr_tag="PR P6-07" ;;
           src/gmc_rebuild/dry_run)        pr_tag="PR P6-DRYRUN-ENTRYPOINT" ;;
           src/gmc_rebuild/insider_cluster_intake) pr_tag="PR INSIDER-CLUSTER-INTAKE" ;;
+          src/gmc_rebuild/dry_run_reconciliation) pr_tag="PR P6-09" ;;
           *)                              pr_tag="(allowlisted)" ;;
         esac
         echo "OK: Phase 2/3/4/5/6 infrastructure present and authorized: $path ($pr_tag)"
@@ -658,7 +688,7 @@ for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logg
     esac
   fi
 done
-[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: Phase 2/3/4/5/6 infrastructure paths conform to P2-01/P2-02/P2-03/P2-04/P2-05/P3-03/P3-04/P3-05/P4-06/P5-01/P6-01/P6-02/P6-03/P6-05/P6-06/P6-07/P6-DRYRUN-ENTRYPOINT/INSIDER-CLUSTER-INTAKE allowlist"
+[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: Phase 2/3/4/5/6 infrastructure paths conform to P2-01/P2-02/P2-03/P2-04/P2-05/P3-03/P3-04/P3-05/P4-06/P5-01/P6-01/P6-02/P6-03/P6-05/P6-06/P6-07/P6-DRYRUN-ENTRYPOINT/INSIDER-CLUSTER-INTAKE/P6-09 allowlist"
 
 # 4b. The Phase 2 / Phase 3 implementation-mode allowlist in step 4a now
 #     contains the P2-01, P2-02, P2-03, P2-04, P2-05, P3-03, P3-04, and
