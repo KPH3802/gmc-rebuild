@@ -1,0 +1,18 @@
+{
+  "signals": [
+    {
+      "intent_id": "exp-1-aapl-long",
+      "symbol": "AAPL",
+      "side": "BUY",
+      "quantity": 10,
+      "rationale": "experimental: AAPL earnings beat hypothesis"
+    },
+    {
+      "intent_id": "exp-2-tsla-short",
+      "symbol": "TSLA",
+      "side": "SELL",
+      "quantity": 5,
+      "rationale": "experimental: TSLA delivery miss hypothesis"
+    }
+  ]
+}

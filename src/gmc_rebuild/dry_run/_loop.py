@@ -313,6 +313,148 @@ def run_dry_run_insider_cluster(
     return cycle.report, cycle.verdict, cycle.decision
 
 
+# ---------------------------------------------------------------------------
+# Signals-file path (operator-supplied batch of trading-idea signals)
+# ---------------------------------------------------------------------------
+
+
+def _eligibility_config_for_signals(
+    signals: tuple[SignalIntent, ...],
+) -> EligibilityConfig:
+    """Build a permissive but typed eligibility config that admits every
+    symbol present in the operator-supplied signals batch.
+
+    The signals file *is* the operator's experimental input — the
+    eligibility gate's job here is to exercise the type discipline
+    end-to-end, not to validate the symbols against an external research
+    universe. Both ``BUY`` and ``SELL`` are admitted; rationale and
+    quantity bounds match the insider-cluster path's permissive config.
+    The empty-signals case is admitted with an empty allowed-symbols set
+    (no symbol can clear an empty set, but the loop will produce zero
+    decisions in that case too, so eligibility is never checked).
+    """
+    return EligibilityConfig(
+        allowed_symbols=frozenset(s.symbol for s in signals),
+        allowed_sides=frozenset({SignalSide.BUY, SignalSide.SELL}),
+        min_quantity=1,
+        max_quantity=100_000,
+        min_rationale_length=5,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class SignalsFileCycle:
+    """Rich, frozen bundle of the artifacts produced by one
+    operator-supplied multi-signal dry-run cycle.
+
+    Parallel to :class:`InsiderClusterCycle` but tuple-shaped: a signals
+    file may carry N signals, so ``signals`` and ``decisions`` are
+    aligned tuples (``decisions[i]`` is produced from ``signals[i]``).
+    The ``portfolio`` is the same in-memory
+    :class:`~gmc_rebuild.portfolio_state.SimulatedPortfolio` snapshot the
+    cycle applied each WOULD_TRADE order intent into. The bundle carries
+    everything the operator-facing CLI surfaces need to render the
+    multi-signal output, JSON, and reconciliation views without
+    re-running the pipeline or re-reading the file.
+    """
+
+    report: DailyReport
+    verdict: SafetyVerdict
+    decisions: tuple[PositionDecision, ...]
+    signals: tuple[SignalIntent, ...]
+    portfolio: SimulatedPortfolio
+
+
+def _run_signals_file_cycle(signals: tuple[SignalIntent, ...]) -> SignalsFileCycle:
+    """Run the dry-run loop over an operator-supplied batch of signals.
+
+    Pure / deterministic for identical inputs. Threads each signal
+    through the same merged P6-01..P6-06 pipeline the synthetic and
+    insider-cluster paths use, in caller-supplied order, so a WOULD_TRADE
+    decision applies its simulated order intent to the running portfolio
+    before the next signal is evaluated. The empty-signals case yields a
+    cycle with empty ``signals`` / ``decisions`` tuples and the empty
+    :class:`SimulatedPortfolio`.
+
+    No file I/O, no network, no broker, no real account. The signals
+    must already have been loaded from disk by the caller (see
+    :func:`gmc_rebuild.dry_run._signals_file.load_signals`).
+    """
+    config = _eligibility_config_for_signals(signals)
+    verdict = _clear_safety_verdict()
+    boundary = SimulationBoundary(lane=SimulationLane.LOCAL_ONLY)
+
+    decisions: list[PositionDecision] = []
+    portfolio = SimulatedPortfolio.empty()
+    for signal in signals:
+        intent = accept_signal_intent(signal)
+        eligibility = check_eligibility(intent, config)
+        decision = compose_position_decision(intent, eligibility, verdict)
+        decisions.append(decision)
+        if decision.outcome is PositionDecisionOutcome.WOULD_TRADE:
+            order_intent = _order_intent_for(intent)
+            boundary.propose_order(order_intent=order_intent, verdict=verdict)
+            portfolio = apply_simulated_order_intent(
+                portfolio, decision=decision, order_intent=order_intent
+            )
+
+    report = build_daily_report(
+        report_date=_REPORT_DATE,
+        decisions=tuple(decisions),
+        portfolio=portfolio,
+        reconciliation_status=ReconciliationStatus.CLEAN,
+    )
+    return SignalsFileCycle(
+        report=report,
+        verdict=verdict,
+        decisions=tuple(decisions),
+        signals=signals,
+        portfolio=portfolio,
+    )
+
+
+def format_signals_file_summary(
+    report: DailyReport,
+    verdict: SafetyVerdict,
+    decisions: Sequence[PositionDecision],
+) -> str:
+    """Render a multi-decision summary for a signals-file dry-run cycle.
+
+    Pure / deterministic. Returns the existing :func:`format_report`
+    rendering followed by a blank line, the ``safety_verdict`` line, and
+    a multi-line ``decisions:`` block. Each decision line is rendered as
+    ``  - <OUTCOME> <intent_id> reasons=<reasons>``. The
+    ``(none)`` placeholder is used when ``decisions`` is empty.
+    """
+    if not isinstance(report, DailyReport):
+        raise TypeError(f"report must be a DailyReport, got {type(report).__name__}")
+    if not isinstance(verdict, SafetyVerdict):
+        raise TypeError(f"verdict must be a SafetyVerdict, got {type(verdict).__name__}")
+
+    blockers_repr = list(verdict.blockers) if verdict.blockers else "none"
+    lines: list[str] = [
+        format_report(report),
+        "",
+        f"safety_verdict: clear={verdict.clear}, blockers={blockers_repr}",
+        "decisions:",
+    ]
+    if decisions:
+        for decision in decisions:
+            if not isinstance(decision, PositionDecision):
+                raise TypeError(
+                    f"decisions members must be PositionDecision, got {type(decision).__name__}"
+                )
+            reasons_repr = (
+                [reason.value for reason in decision.reasons] if decision.reasons else "none"
+            )
+            lines.append(
+                f"  - {decision.outcome.value} {decision.intent_id} reasons={reasons_repr}"
+            )
+    else:
+        lines.append("  (none)")
+    return "\n".join(lines)
+
+
 def format_insider_cluster_summary(
     report: DailyReport,
     verdict: SafetyVerdict,
@@ -477,10 +619,12 @@ def format_dry_run_reconciliation_block(result: DryRunReconciliationResult) -> s
 __all__ = [
     "FIXED_TIMESTAMP",
     "InsiderClusterCycle",
+    "SignalsFileCycle",
     "build_decisions_json_payload",
     "format_dry_run_reconciliation_block",
     "format_insider_cluster_summary",
     "format_report",
+    "format_signals_file_summary",
     "run_dry_run",
     "run_dry_run_insider_cluster",
 ]
