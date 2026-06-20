@@ -648,14 +648,36 @@ done
 #                                      from src/gmc_rebuild/__init__.py. See the
 #                                      durable in-tree record at
 #                                      governance/authorizations/2026-06-19_p6-09.md.
+#       - src/gmc_rebuild/dry_run_reconciliation_view/ → authorized by PR P6-10
+#                                      (deterministic read-only JSON projection
+#                                      of a P6-09 DryRunReconciliationResult into
+#                                      a JSON-serializable dict, so the structured
+#                                      reconciliation outcome can be surfaced
+#                                      through the same operator-facing --emit-json
+#                                      lane PR #196 established for dry-run
+#                                      decisions. Declares the single pure
+#                                      build_dry_run_reconciliation_json_payload
+#                                      function; adds no new reconciliation logic;
+#                                      consumes the merged P6-09 public surface by
+#                                      value only. No clock read, no I/O, no file
+#                                      handle, no audit_event, no broker, account,
+#                                      market data, orders, network, secrets,
+#                                      scheduler, persistence, time.sleep, daemon,
+#                                      or __main__. The directory name tokenizes to
+#                                      `dry`, `run`, `reconciliation`, `view` —
+#                                      none in the §8 forbidden set — so the step 4
+#                                      / step 4c scans stay clean. Not re-exported
+#                                      from src/gmc_rebuild/__init__.py. See the
+#                                      durable in-tree record at
+#                                      governance/authorizations/2026-06-20_p6-10.md.
 #     A Phase 2 / Phase 3 / Phase 4 / Phase 5 / Phase 6 infrastructure path
 #     present but not on this allowlist is STOP; reconcile before continuing.
 #     The
 #     always-forbidden categories in
 #     step 4 still apply unchanged in this mode.
-allowed_p2_infra="src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake src/gmc_rebuild/dry_run_reconciliation"
+allowed_p2_infra="src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake src/gmc_rebuild/dry_run_reconciliation src/gmc_rebuild/dry_run_reconciliation_view"
 unset p2_infra_found
-for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake src/gmc_rebuild/dry_run_reconciliation; do
+for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logging src/gmc_rebuild/risk src/gmc_rebuild/heartbeat src/gmc_rebuild/kill_switch src/gmc_rebuild/reconciliation src/gmc_rebuild/runtime src/gmc_rebuild/simulation src/gmc_rebuild/signal_intake src/gmc_rebuild/eligibility src/gmc_rebuild/decision src/gmc_rebuild/portfolio_state src/gmc_rebuild/reporting src/gmc_rebuild/operator_view src/gmc_rebuild/dry_run src/gmc_rebuild/insider_cluster_intake src/gmc_rebuild/dry_run_reconciliation src/gmc_rebuild/dry_run_reconciliation_view; do
   if [ -e "$path" ]; then
     case " $allowed_p2_infra " in
       *" $path "*)
@@ -679,6 +701,7 @@ for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logg
           src/gmc_rebuild/dry_run)        pr_tag="PR P6-DRYRUN-ENTRYPOINT" ;;
           src/gmc_rebuild/insider_cluster_intake) pr_tag="PR INSIDER-CLUSTER-INTAKE" ;;
           src/gmc_rebuild/dry_run_reconciliation) pr_tag="PR P6-09" ;;
+          src/gmc_rebuild/dry_run_reconciliation_view) pr_tag="PR P6-10" ;;
           *)                              pr_tag="(allowlisted)" ;;
         esac
         echo "OK: Phase 2/3/4/5/6 infrastructure present and authorized: $path ($pr_tag)"
@@ -690,7 +713,7 @@ for path in src src/gmc_rebuild/config src/gmc_rebuild/time src/gmc_rebuild/logg
     esac
   fi
 done
-[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: Phase 2/3/4/5/6 infrastructure paths conform to P2-01/P2-02/P2-03/P2-04/P2-05/P3-03/P3-04/P3-05/P4-06/P5-01/P6-01/P6-02/P6-03/P6-05/P6-06/P6-07/P6-DRYRUN-ENTRYPOINT/INSIDER-CLUSTER-INTAKE/P6-09 allowlist"
+[ "${p2_infra_found:-0}" -eq 0 ] && echo "OK: Phase 2/3/4/5/6 infrastructure paths conform to P2-01/P2-02/P2-03/P2-04/P2-05/P3-03/P3-04/P3-05/P4-06/P5-01/P6-01/P6-02/P6-03/P6-05/P6-06/P6-07/P6-DRYRUN-ENTRYPOINT/INSIDER-CLUSTER-INTAKE/P6-09/P6-10 allowlist"
 
 # 4b. The Phase 2 / Phase 3 implementation-mode allowlist in step 4a now
 #     contains the P2-01, P2-02, P2-03, P2-04, P2-05, P3-03, P3-04, and
