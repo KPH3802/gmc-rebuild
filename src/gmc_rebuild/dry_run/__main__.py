@@ -13,6 +13,8 @@ Usage::
         --emit-json -                                          # JSON to stdout
     python -m gmc_rebuild.dry_run --source insider_cluster \\
         --emit-reconciliation-json -                           # recon JSON to stdout
+    python -m gmc_rebuild.dry_run --source insider_cluster \\
+        --show-reconciliation                                  # recon TEXT to stdout
 
 By default the module performs **one** side effect: it writes the
 formatted output to stdout via :func:`print`. No network, no env-var
@@ -41,11 +43,19 @@ result through the P6-10
 resulting ``dict`` (always ``outcome=MATCH`` by construction). The two
 flags are independent: either, both, or neither may be passed.
 
+The ``--show-reconciliation`` flag (P6-12) is the human-readable text
+counterpart to ``--emit-reconciliation-json``. It runs the same pure,
+deterministic, read-only self-comparison and appends a deterministic
+``dry_run_reconciliation:`` text block to stdout after the existing human
+summary. Insider-cluster only, rejected on synthetic. Independent of the
+two JSON flags; any subset of the three may be passed.
+
 Authorizations:
     - ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``
     - ``governance/authorizations/2026-06-18_insider-cluster-intake.md``
     - ``governance/authorizations/2026-06-18_dry-run-emit-json.md``
     - ``governance/authorizations/2026-06-20_p6-11.md``
+    - ``governance/authorizations/2026-06-20_p6-12.md``
 """
 
 from __future__ import annotations
@@ -58,6 +68,7 @@ from typing import Any
 from gmc_rebuild.dry_run._loop import (
     _run_insider_cluster_cycle,
     build_decisions_json_payload,
+    format_dry_run_reconciliation_block,
     format_insider_cluster_summary,
     format_report,
     run_dry_run,
@@ -141,6 +152,22 @@ def _build_arg_parser() -> argparse.ArgumentParser:
             "no reconciliation emission and no file write."
         ),
     )
+    parser.add_argument(
+        "--show-reconciliation",
+        action="store_true",
+        dest="show_reconciliation",
+        help=(
+            "Optional. Append a deterministic human-readable "
+            "'dry_run_reconciliation:' text block to stdout after the "
+            "existing summary. Supported only with --source=insider_cluster. "
+            "Runs the same pure, read-only self-comparison of the simulated "
+            "portfolio as --emit-reconciliation-json (always MATCH by "
+            "construction). Independent of --emit-json and "
+            "--emit-reconciliation-json; any subset of the three flags may be "
+            "passed. No flag = no text block appended; existing stdout is "
+            "byte-for-byte unchanged."
+        ),
+    )
     return parser
 
 
@@ -163,15 +190,33 @@ def main(argv: list[str] | None = None) -> None:
     parser = _build_arg_parser()
     args = parser.parse_args(argv)
 
-    # Both JSON flags are insider-cluster only — out of scope on synthetic.
+    # All reconciliation-aware flags are insider-cluster only — out of scope
+    # on synthetic.
     if args.emit_json is not None and args.source != "insider_cluster":
         parser.error("--emit-json is supported only with --source=insider_cluster")
     if args.emit_reconciliation_json is not None and args.source != "insider_cluster":
         parser.error("--emit-reconciliation-json is supported only with --source=insider_cluster")
+    if args.show_reconciliation and args.source != "insider_cluster":
+        parser.error("--show-reconciliation is supported only with --source=insider_cluster")
 
     if args.source == "insider_cluster":
         cycle = _run_insider_cluster_cycle(args.db)
         print(format_insider_cluster_summary(cycle.report, cycle.verdict, cycle.decision))
+        recon_result = None
+        if args.emit_reconciliation_json is not None or args.show_reconciliation:
+            # Pure read-only self-comparison of the simulated portfolio
+            # against itself; MATCH by construction. No real account, no
+            # broker, no external expected-positions source. Shared across
+            # both the JSON and the text surfaces so the two flags render
+            # the same underlying result.
+            recon_result = reconcile_dry_run_positions(
+                simulated=cycle.portfolio,
+                expected=ExpectedPositions.from_simulated_portfolio(cycle.portfolio),
+                reconciliation_status=cycle.report.reconciliation_status,
+            )
+        if args.show_reconciliation:
+            assert recon_result is not None
+            print(format_dry_run_reconciliation_block(recon_result))
         if args.emit_json is not None:
             _emit_payload(
                 args.emit_json,
@@ -183,17 +228,10 @@ def main(argv: list[str] | None = None) -> None:
                 ),
             )
         if args.emit_reconciliation_json is not None:
-            # Pure read-only self-comparison of the simulated portfolio
-            # against itself; MATCH by construction. No real account, no
-            # broker, no external expected-positions source.
-            result = reconcile_dry_run_positions(
-                simulated=cycle.portfolio,
-                expected=ExpectedPositions.from_simulated_portfolio(cycle.portfolio),
-                reconciliation_status=cycle.report.reconciliation_status,
-            )
+            assert recon_result is not None
             _emit_payload(
                 args.emit_reconciliation_json,
-                build_dry_run_reconciliation_json_payload(result),
+                build_dry_run_reconciliation_json_payload(recon_result),
             )
     else:
         report = run_dry_run()

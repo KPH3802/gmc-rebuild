@@ -18,6 +18,7 @@ from gmc_rebuild.decision import (
     PositionDecisionOutcome,
     compose_position_decision,
 )
+from gmc_rebuild.dry_run_reconciliation import DryRunReconciliationResult
 from gmc_rebuild.eligibility import EligibilityConfig, check_eligibility
 from gmc_rebuild.insider_cluster_intake import load_insider_cluster_signal
 from gmc_rebuild.portfolio_state import SimulatedPortfolio, apply_simulated_order_intent
@@ -417,10 +418,67 @@ def build_decisions_json_payload(
     }
 
 
+def format_dry_run_reconciliation_block(result: DryRunReconciliationResult) -> str:
+    """Render a P6-09 reconciliation result as a deterministic text block.
+
+    Pure / deterministic / no clock read / no I/O. Returns a multi-line
+    plain-text rendering with a leading blank line so it can be appended
+    directly to the human summary printed by
+    :func:`format_insider_cluster_summary`. Empty position lists render as
+    ``(none)``; non-empty lists render as ``  - <SYMBOL>: <quantity>`` or,
+    for quantity mismatches, ``  - <SYMBOL>: simulated=<a> expected=<b>``.
+    The canonical symbol-ascending order from the P6-09 result is
+    preserved verbatim; this builder re-sorts nothing.
+    """
+    if not isinstance(result, DryRunReconciliationResult):
+        raise TypeError(f"result must be a DryRunReconciliationResult, got {type(result).__name__}")
+
+    lines: list[str] = [
+        "",
+        "dry_run_reconciliation:",
+        f"  outcome: {result.outcome.value}",
+        f"  status: {result.reconciliation_status.value}",
+        (
+            "  summary: "
+            f"{len(result.matches)} matches, "
+            f"{len(result.quantity_mismatches)} quantity_mismatches, "
+            f"{len(result.only_in_simulated)} only_in_simulated, "
+            f"{len(result.only_in_expected)} only_in_expected"
+        ),
+    ]
+
+    def _append_pair_section(label: str, pairs: tuple[tuple[str, int], ...]) -> None:
+        lines.append(f"  {label}:")
+        if pairs:
+            for symbol, quantity in pairs:
+                lines.append(f"    - {symbol}: {quantity}")
+        else:
+            lines.append("    (none)")
+
+    _append_pair_section("matches", result.matches)
+
+    lines.append("  quantity_mismatches:")
+    if result.quantity_mismatches:
+        for mismatch in result.quantity_mismatches:
+            lines.append(
+                f"    - {mismatch.symbol}: "
+                f"simulated={mismatch.simulated_quantity} "
+                f"expected={mismatch.expected_quantity}"
+            )
+    else:
+        lines.append("    (none)")
+
+    _append_pair_section("only_in_simulated", result.only_in_simulated)
+    _append_pair_section("only_in_expected", result.only_in_expected)
+
+    return "\n".join(lines)
+
+
 __all__ = [
     "FIXED_TIMESTAMP",
     "InsiderClusterCycle",
     "build_decisions_json_payload",
+    "format_dry_run_reconciliation_block",
     "format_insider_cluster_summary",
     "format_report",
     "run_dry_run",
