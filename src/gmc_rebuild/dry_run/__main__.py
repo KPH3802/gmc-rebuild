@@ -58,6 +58,19 @@ the operator sees "what failed" instead of a Python traceback. Argparse
 usage errors (e.g. ``--emit-json`` on ``--source synthetic``) keep their
 existing exit code 2.
 
+The ``--expected-positions PATH`` flag opts the reconciliation surfaces
+out of their default self-comparison and into an independent comparison
+against a small caller-supplied local JSON file (see
+``src/gmc_rebuild/dry_run/_expected_positions.py`` for the schema). When
+present, both ``--emit-reconciliation-json`` and ``--show-reconciliation``
+render the result of comparing the in-memory simulated portfolio against
+the loaded :class:`ExpectedPositions` — so MATCH and MISMATCH outcomes
+are now both reachable from the operator path. Missing / malformed
+expected-positions files are caught at the CLI boundary and rendered as
+``error: ...`` diagnostics on stderr with exit code 1, same as the
+insider-cluster DB error path. Without the flag the existing
+self-comparison MATCH behavior is preserved byte-for-byte.
+
 Authorizations:
     - ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``
     - ``governance/authorizations/2026-06-18_insider-cluster-intake.md``
@@ -65,6 +78,7 @@ Authorizations:
     - ``governance/authorizations/2026-06-20_p6-11.md``
     - ``governance/authorizations/2026-06-20_p6-12.md``
     - ``governance/authorizations/2026-06-20_dryrun-operator-errors.md``
+    - ``governance/authorizations/2026-06-20_dryrun-expected-positions.md``
 """
 
 from __future__ import annotations
@@ -76,6 +90,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from gmc_rebuild.dry_run._expected_positions import (
+    ExpectedPositionsSchemaError,
+    load_expected_positions,
+)
 from gmc_rebuild.dry_run._loop import (
     InsiderClusterCycle,
     _run_insider_cluster_cycle,
@@ -180,7 +198,45 @@ def _build_arg_parser() -> argparse.ArgumentParser:
             "byte-for-byte unchanged."
         ),
     )
+    parser.add_argument(
+        "--expected-positions",
+        default=None,
+        type=Path,
+        dest="expected_positions",
+        metavar="PATH",
+        help=(
+            "Optional. Path to a small local JSON file describing the "
+            "independent expected positions to reconcile against. Schema: "
+            '{"positions": [{"symbol": "...", "quantity": <int>}, ...]}. '
+            "When passed alongside --emit-reconciliation-json and/or "
+            "--show-reconciliation, the reconciliation surfaces compare the "
+            "simulated portfolio against this independent input — so both "
+            "MATCH and MISMATCH outcomes are reachable. Supported only with "
+            "--source=insider_cluster. No flag = the existing "
+            "self-comparison MATCH behavior is preserved byte-for-byte. "
+            "No network, no broker, no real account."
+        ),
+    )
     return parser
+
+
+def _load_expected_positions_or_operator_error(path: Path) -> ExpectedPositions:
+    """Load an ``--expected-positions`` JSON file, surfacing operator-data failures.
+
+    Catches the two expected operator-data failures on the
+    ``--expected-positions`` path — missing file and malformed file — and
+    renders each as a single-line ``error: ...`` diagnostic on stderr
+    followed by :class:`SystemExit` with code 1. All other exceptions
+    propagate unchanged so genuine bugs still surface a traceback.
+    """
+    try:
+        return load_expected_positions(path)
+    except FileNotFoundError:
+        print(f"error: expected-positions file not found: {path}", file=sys.stderr)
+        raise SystemExit(1) from None
+    except ExpectedPositionsSchemaError as exc:
+        print(f"error: invalid expected-positions file {path}: {exc}", file=sys.stderr)
+        raise SystemExit(1) from None
 
 
 def _run_insider_cluster_cycle_or_operator_error(db_path: Path) -> InsiderClusterCycle:
@@ -239,20 +295,41 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("--emit-reconciliation-json is supported only with --source=insider_cluster")
     if args.show_reconciliation and args.source != "insider_cluster":
         parser.error("--show-reconciliation is supported only with --source=insider_cluster")
+    if args.expected_positions is not None and args.source != "insider_cluster":
+        parser.error("--expected-positions is supported only with --source=insider_cluster")
 
     if args.source == "insider_cluster":
+        # Validate --expected-positions eagerly so a missing or malformed
+        # file fails fast with a clean stderr diagnostic before any
+        # stdout summary is printed.
+        loaded_expected: ExpectedPositions | None = None
+        if args.expected_positions is not None:
+            loaded_expected = _load_expected_positions_or_operator_error(args.expected_positions)
+
         cycle = _run_insider_cluster_cycle_or_operator_error(args.db)
         print(format_insider_cluster_summary(cycle.report, cycle.verdict, cycle.decision))
         recon_result = None
         if args.emit_reconciliation_json is not None or args.show_reconciliation:
-            # Pure read-only self-comparison of the simulated portfolio
-            # against itself; MATCH by construction. No real account, no
-            # broker, no external expected-positions source. Shared across
-            # both the JSON and the text surfaces so the two flags render
-            # the same underlying result.
+            # Two reconciliation modes:
+            #
+            # 1. Default (no --expected-positions): pure read-only
+            #    self-comparison of the simulated portfolio against itself;
+            #    MATCH by construction. Existing behavior preserved.
+            # 2. --expected-positions PATH: independent comparison against
+            #    the caller-supplied local JSON file already loaded above.
+            #    Both MATCH and MISMATCH outcomes are reachable. No broker,
+            #    no real account, no network.
+            #
+            # The shared result drives both the JSON and the text surfaces
+            # so the two flags render the same underlying outcome.
+            expected = (
+                loaded_expected
+                if loaded_expected is not None
+                else ExpectedPositions.from_simulated_portfolio(cycle.portfolio)
+            )
             recon_result = reconcile_dry_run_positions(
                 simulated=cycle.portfolio,
-                expected=ExpectedPositions.from_simulated_portfolio(cycle.portfolio),
+                expected=expected,
                 reconciliation_status=cycle.report.reconciliation_status,
             )
         if args.show_reconciliation:
