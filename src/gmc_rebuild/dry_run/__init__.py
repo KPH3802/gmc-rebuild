@@ -37,8 +37,11 @@ preferences:
   fires only when the operator explicitly passes the flag with an
   insider-cluster source, writes JSON to that single caller-supplied
   path, creates no directories, and never touches the engine source
-  tree, any trading database, or any governance file. Printing to
-  stdout happens only in :mod:`gmc_rebuild.dry_run.__main__`.
+  tree, any trading database, or any governance file. Passing
+  ``--emit-json -`` instead streams the same JSON payload to stdout and
+  creates no file at all — an in-lane, non-scope-expanding sink that
+  adds no new filesystem surface. Printing to stdout happens only in
+  :mod:`gmc_rebuild.dry_run.__main__`.
 - **Not re-exported from the package root.** ``gmc_rebuild`` is unchanged
   by this packet; the public surface is reachable only via
   ``from gmc_rebuild.dry_run import run_dry_run, format_report,

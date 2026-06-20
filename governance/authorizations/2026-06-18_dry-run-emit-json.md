@@ -211,3 +211,37 @@ with `git diff --name-status main` showing exactly the five files in §Authorize
 - `src/gmc_rebuild/signal_intake/_intent.py`, `src/gmc_rebuild/decision/_compose.py`, `src/gmc_rebuild/reporting/_report.py`, `src/gmc_rebuild/runtime/_shell.py` (merged engine surfaces, head `a808ed7`) — the field shapes the JSON payload echoes.
 - `MASTER_STATUS.md` §6 (always-forbidden categories), §8 (step 4 / 4a / 4b / 4c gates) at `main` head `a808ed7`.
 - `AI_WORKFLOW.md` §1 / §6 / §7 (one approver; authorization-of-record discipline).
+
+---
+
+## Addendum — `--emit-json -` stdout sink (in-lane follow-up)
+
+Date: 2026-06-20
+Status: In-lane, non-scope-expanding extension of the `--emit-json` flag above. Recorded here rather than as a separate phase-expanding artifact because it opens no new phase and expands no scope under `AI_WORKFLOW.md` §7 (it adds no `src/**` directory, no engine-module change, no new public symbol, no new filesystem surface, and no new always-forbidden capability). Kevin remains the only approver for the merge.
+
+### What changed
+
+`--emit-json` now accepts the single character `-` as a sentinel meaning "write the JSON to stdout instead of to a file." Everything else about the flag is unchanged:
+
+- The payload is the **same** `build_decisions_json_payload` output, serialized **identically** (`json.dumps(..., indent=2, sort_keys=True) + "\n"`). The stdout text is byte-for-byte equal to what `--emit-json <path>` writes to disk for the same run (asserted by `test_emit_json_dash_stdout_matches_file_payload_byte_for_byte`).
+- `--emit-json -` is still **rejected on `--source synthetic`** by the same `parser.error(...)` → `SystemExit(2)` path.
+- The human summary is still printed first; the JSON follows it on stdout. The no-flag default stdout is unchanged (the back-compat tripwire still locks it byte-for-byte).
+
+### Why this is in-lane and not scope-expanding
+
+- **No new filesystem surface.** When the argument is `-`, **no file is created** — the JSON goes to stdout, which is the dry-run entry point's already-sanctioned side effect (the same `print` channel PR #188 authorized). The `Path.write_text` path is taken only for a real path argument, exactly as before. `test_emit_json_dash_writes_payload_to_stdout_and_creates_no_file` snapshots the run directory before/after and asserts no file appears.
+- **No engine module changed.** The change is confined to `src/gmc_rebuild/dry_run/__main__.py` argument handling plus docstring touch-ups in `__init__.py` and `__main__.py`. No engine module gains a symbol or a capability. `build_decisions_json_payload` is unchanged.
+- **No new `src/**` directory** ⇒ no `MASTER_STATUS.md` §8 step 4a allowlist change, no `plan/**` change, no new always-forbidden capability (no network, no broker, no clock read, no env-var, no secret, no `audit_event`, no root-package re-export).
+
+### Files touched by this addendum's PR
+
+| File | Change |
+|---|---|
+| `src/gmc_rebuild/dry_run/__main__.py` | modified — `--emit-json` arg drops `type=Path`, gains the `-`→stdout branch; usage/docstring updated. |
+| `src/gmc_rebuild/dry_run/__init__.py` | modified — package docstring notes the `-` stdout sink. |
+| `tests/dry_run/test_dry_run_emit_json.py` | modified — three new tripwires (stdout payload + no file, byte-for-byte equality with the file payload, synthetic rejection of `-`); module docstring updated. |
+| `governance/authorizations/2026-06-18_dry-run-emit-json.md` | modified — this addendum. |
+
+### Still explicitly not authorized
+
+Everything in the parent "Explicitly Not Authorized" list above remains forbidden. In particular: no default path or default stdout (no flag = no emission), no directory creation, no second file sink, no synthetic-source export, no engine-module change, no broker / real-account / market-data / order path, and no governance/state write beyond this addendum.
