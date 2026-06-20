@@ -211,6 +211,22 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
       ``src/gmc_rebuild/__init__.py``). The directory name carries no
       forbidden token, so the step 4 / step 4c scans stay clean. See
       ``governance/authorizations/2026-06-19_p6-09.md``.
+    - ``dry_run_reconciliation_view/`` — PR P6-10 (deterministic read-only
+      JSON projection of a merged P6-09 ``DryRunReconciliationResult`` into
+      a JSON-serializable ``dict`` so the structured reconciliation outcome
+      can be surfaced through the same operator-facing ``--emit-json`` lane
+      PR #196 established for dry-run decisions; tenth Phase 6 dry-run
+      implementation packet; declares the single pure
+      ``build_dry_run_reconciliation_json_payload`` function and adds no new
+      reconciliation logic, consuming the merged P6-09 public surface by
+      value only; no clock read, no I/O, no file handle, no ``audit_event``
+      emission, no ``gmc_rebuild.logging`` / ``gmc_rebuild.runtime`` /
+      ``gmc_rebuild.reconciliation`` import, no real position book, account,
+      broker, market data, orders, network, secrets, scheduler, persistence,
+      ``time.sleep``, or ``__main__``; not re-exported from
+      ``src/gmc_rebuild/__init__.py``). The directory name carries no
+      forbidden token, so the step 4 / step 4c scans stay clean. See
+      ``governance/authorizations/2026-06-20_p6-10.md``.
 
     Any additional entry indicates a phase-expanding change without an
     authorization artifact and must be rejected at review.
@@ -237,4 +253,5 @@ def test_package_contents_match_authorized_phase2_tasks() -> None:
         "dry_run",
         "insider_cluster_intake",
         "dry_run_reconciliation",
+        "dry_run_reconciliation_view",
     }, f"unexpected package contents: {entries}"
