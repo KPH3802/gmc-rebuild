@@ -17,6 +17,9 @@ Usage::
         --show-reconciliation                                  # recon TEXT to stdout
     python -m gmc_rebuild.dry_run --source signals_json \\
         --signals-file ideas.json --emit-json ideas_run.json   # MVP learning loop
+    python -m gmc_rebuild.dry_run --source signals_json \\
+        --signals-file ideas.json --run-id exp-a-001 \\
+        --append-run-history runs/history.jsonl                # structured run history
 
 By default the module performs **one** side effect: it writes the
 formatted output to stdout via :func:`print`. No network, no env-var
@@ -87,6 +90,16 @@ opt-in flags (``--emit-json``, ``--show-reconciliation``,
 the CLI boundary and rendered as ``error: ...`` diagnostics on stderr
 with exit code 1.
 
+The ``--append-run-history PATH`` flag (with the required ``--run-id ID``
+companion) appends one JSONL line per dry-run cycle to a small local
+file so repeated experiments accrete into a comparable record. The
+record carries the run_id, source, report date, input summary, decision
+counts + per-signal outcomes, net positions, and reconciliation outcome
+(if reconciliation was requested). Insider-cluster and signals_json
+sources only; the parent directory must already exist (no directory
+creation). The file is opened in append-text mode; existing lines are
+never rewritten.
+
 Authorizations:
     - ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``
     - ``governance/authorizations/2026-06-18_insider-cluster-intake.md``
@@ -96,6 +109,7 @@ Authorizations:
     - ``governance/authorizations/2026-06-20_dryrun-operator-errors.md``
     - ``governance/authorizations/2026-06-20_dryrun-expected-positions.md``
     - ``governance/authorizations/2026-06-20_dryrun-signals-json.md``
+    - ``governance/authorizations/2026-06-20_dryrun-run-history.md``
 """
 
 from __future__ import annotations
@@ -123,6 +137,11 @@ from gmc_rebuild.dry_run._loop import (
     format_report,
     format_signals_file_summary,
     run_dry_run,
+)
+from gmc_rebuild.dry_run._run_history import (
+    RunHistoryWriteError,
+    append_run_history_record,
+    build_run_history_record,
 )
 from gmc_rebuild.dry_run._signals_file import (
     SignalsFileSchemaError,
@@ -267,6 +286,34 @@ def _build_arg_parser() -> argparse.ArgumentParser:
             "No network, no broker, no real account."
         ),
     )
+    parser.add_argument(
+        "--append-run-history",
+        default=None,
+        type=Path,
+        dest="append_run_history",
+        metavar="PATH",
+        help=(
+            "Optional. Append one JSONL line describing this dry-run cycle "
+            "to a local history file at PATH so repeated experiments accrete "
+            "into a comparable record. Supported only with --source=insider_cluster "
+            "or --source=signals_json. Requires --run-id. The parent directory "
+            "must already exist (this command will not create directories). "
+            "The file is opened in append-text mode; existing lines are never "
+            "rewritten. No network, no broker, no real account."
+        ),
+    )
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        dest="run_id",
+        metavar="ID",
+        help=(
+            "Required when --append-run-history is passed. A non-empty "
+            "whitespace-free identifier the operator chooses for this run, "
+            "stored in the JSONL record so historical entries can be "
+            "selected and compared by id."
+        ),
+    )
     return parser
 
 
@@ -387,6 +434,21 @@ def main(argv: list[str] | None = None) -> None:
     if args.signals_file is not None and args.source != "signals_json":
         parser.error("--signals-file is supported only with --source=signals_json")
 
+    # --append-run-history requires --run-id and only makes sense on cycle-bundle
+    # sources. --run-id without --append-run-history is a usage error so a typo
+    # like "--run-id foo" alone doesn't silently no-op.
+    if args.append_run_history is not None and args.source not in _CYCLE_BUNDLE_SOURCES:
+        parser.error(
+            "--append-run-history is supported only with "
+            "--source=insider_cluster or --source=signals_json"
+        )
+    if args.append_run_history is not None and not args.run_id:
+        parser.error("--run-id is required with --append-run-history")
+    if args.run_id is not None and args.append_run_history is None:
+        parser.error("--run-id requires --append-run-history")
+    if args.run_id is not None and (not args.run_id or any(ch.isspace() for ch in args.run_id)):
+        parser.error("--run-id must be a non-empty whitespace-free string")
+
     if args.source in ("insider_cluster", "signals_json"):
         # Validate --expected-positions and --signals-file eagerly so a
         # missing / malformed file fails fast with a clean stderr
@@ -452,6 +514,25 @@ def main(argv: list[str] | None = None) -> None:
                 args.emit_reconciliation_json,
                 build_dry_run_reconciliation_json_payload(recon_result),
             )
+        if args.append_run_history is not None:
+            assert args.run_id is not None  # enforced by argparse-level check above
+            record = build_run_history_record(
+                run_id=args.run_id,
+                source=args.source,
+                report=cycle.report,
+                decisions=decisions_tuple,
+                signals=signals_tuple,
+                portfolio=cycle.portfolio,
+                signals_file=args.signals_file if args.source == "signals_json" else None,
+                db_path=args.db if args.source == "insider_cluster" else None,
+                expected_positions_file=args.expected_positions,
+                reconciliation=recon_result,
+            )
+            try:
+                append_run_history_record(args.append_run_history, record)
+            except RunHistoryWriteError as exc:
+                print(f"error: cannot append run history: {exc}", file=sys.stderr)
+                raise SystemExit(1) from None
     else:
         report = run_dry_run()
         print(format_report(report))
