@@ -1,6 +1,6 @@
 """Tests for the ``--emit-json`` opt-in flag on the dry-run entry point.
 
-Five tripwires:
+Tripwires:
 
 1. **Back-compat**: the no-flag stdout of ``python -m gmc_rebuild.dry_run
    --source insider_cluster`` is byte-for-byte identical to the locked
@@ -9,15 +9,22 @@ Five tripwires:
    ``a808ed7`` (PR #189).
 2. **--emit-json writes the documented shape** for the NKE fixture.
 3. **--emit-json absent ⇒ no filesystem write** anywhere in the run.
-4. **--emit-json is rejected on ``--source synthetic``** (scope of this
-   PR is the insider-cluster path only).
+4. **--emit-json is rejected on ``--source synthetic``** (the flag is
+   insider-cluster only).
 5. **Helper unit test**: ``build_decisions_json_payload`` produces the
    same shape directly, without going through the CLI.
+6. **--emit-json -**: passing a single ``-`` streams the same payload to
+   stdout, creates no file, leaves the human summary unchanged ahead of
+   it, is byte-for-byte equal to the file payload, and is likewise
+   rejected on the synthetic source.
 
 Mirrors the no-``pytest.raises`` convention used by the other
 ``tests/<layer>/`` tests.
 
-Authorization: ``governance/authorizations/2026-06-18_dry-run-emit-json.md``.
+Authorization: ``governance/authorizations/2026-06-18_dry-run-emit-json.md``
+(the ``-`` stdout sink is an in-lane, non-scope-expanding extension of
+that flag — same payload, no new filesystem surface; see the
+"stdout sink" addendum in that artifact).
 """
 
 from __future__ import annotations
@@ -233,3 +240,78 @@ def test_build_decisions_json_payload_rejects_length_mismatch() -> None:
         raised = exc
     assert isinstance(raised, ValueError)
     assert "same length" in str(raised) or "length" in str(raised).lower()
+
+
+# ---------------------------------------------------------------------------
+# 6. --emit-json - streams the same payload to stdout instead of a file
+# ---------------------------------------------------------------------------
+
+
+def _split_summary_and_json(stdout: str) -> tuple[str, dict[str, object]]:
+    """Split combined stdout into the human summary and the trailing JSON.
+
+    The CLI prints the human summary first, then the JSON object; the
+    JSON object always begins at the first ``{`` on its own line.
+    """
+    brace_idx = stdout.index("\n{") + 1
+    summary = stdout[:brace_idx]
+    payload = json.loads(stdout[brace_idx:])
+    assert isinstance(payload, dict)
+    return summary, payload
+
+
+def test_emit_json_dash_writes_payload_to_stdout_and_creates_no_file() -> None:
+    with tempfile.TemporaryDirectory() as raw_temp:
+        temp = Path(raw_temp)
+        db_copy = _copy_fixture(temp)
+        before = sorted(p.name for p in temp.iterdir())
+        stdout = _capture_main_stdout(
+            ["--source", "insider_cluster", "--db", str(db_copy), "--emit-json", "-"]
+        )
+        after = sorted(p.name for p in temp.iterdir())
+    # No file created anywhere in the run directory.
+    assert before == after == ["sample.db"]
+    # The human summary is still present and unchanged ahead of the JSON.
+    summary, payload = _split_summary_and_json(stdout)
+    assert summary == _EXPECTED_NO_FLAG_STDOUT
+    # The JSON streamed to stdout is exactly the documented payload.
+    assert payload == _EXPECTED_NKE_PAYLOAD
+
+
+def test_emit_json_dash_stdout_matches_file_payload_byte_for_byte() -> None:
+    """The JSON text streamed by ``--emit-json -`` is byte-for-byte the
+    same as the JSON written by ``--emit-json <path>`` for the same run."""
+    with tempfile.TemporaryDirectory() as raw_temp:
+        temp = Path(raw_temp)
+        db_copy = _copy_fixture(temp)
+        out_path = temp / "decisions.json"
+        stdout = _capture_main_stdout(
+            [
+                "--source",
+                "insider_cluster",
+                "--db",
+                str(db_copy),
+                "--emit-json",
+                str(out_path),
+            ]
+        )
+        file_json = out_path.read_text()
+
+        dash_stdout = _capture_main_stdout(
+            ["--source", "insider_cluster", "--db", str(db_copy), "--emit-json", "-"]
+        )
+    # The dash run's stdout is the human summary followed by the file JSON.
+    assert dash_stdout == stdout + file_json
+
+
+def test_emit_json_dash_rejected_on_synthetic_source() -> None:
+    stderr_buf = io.StringIO()
+    raised: BaseException | None = None
+    try:
+        with redirect_stderr(stderr_buf), redirect_stdout(io.StringIO()):
+            cli_main(["--source", "synthetic", "--emit-json", "-"])
+    except SystemExit as exc:
+        raised = exc
+    assert isinstance(raised, SystemExit)
+    assert raised.code != 0
+    assert "insider_cluster" in stderr_buf.getvalue()

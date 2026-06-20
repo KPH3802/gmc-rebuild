@@ -9,6 +9,8 @@ Usage::
         --db tests/insider_cluster_intake/fixtures/sample.db
     python -m gmc_rebuild.dry_run --source insider_cluster \\
         --emit-json /tmp/decisions.json                        # opt-in JSON sidecar
+    python -m gmc_rebuild.dry_run --source insider_cluster \\
+        --emit-json -                                          # JSON to stdout
 
 By default the module performs **one** side effect: it writes the
 formatted output to stdout via :func:`print`. No network, no env-var
@@ -18,9 +20,13 @@ row.
 
 The ``--emit-json`` flag, when explicitly passed alongside
 ``--source insider_cluster``, adds **one** further side effect: it
-writes the decision payload to the caller-supplied path. The flag is
-rejected on the synthetic source. No flag = no file write. The
-parent directory must already exist (no directory creation).
+emits the decision payload as JSON. When the argument is a path, the
+JSON is written to that single caller-supplied path (the parent
+directory must already exist; no directory creation). When the
+argument is the single character ``-``, the JSON is written to stdout
+instead — no file is created — so the report can be piped to another
+process without a temporary file. The flag is rejected on the
+synthetic source. No flag = no JSON emission and no file write.
 
 Authorizations:
     - ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``
@@ -85,14 +91,16 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--emit-json",
-        type=Path,
         default=None,
         dest="emit_json",
+        metavar="PATH",
         help=(
-            "Optional. Write the decision payload as JSON to this path. "
-            "Supported only with --source=insider_cluster. No flag = no "
-            "file write. The parent directory must already exist; this "
-            "command will not create directories."
+            "Optional. Emit the decision payload as JSON. Supported only "
+            "with --source=insider_cluster. Pass a filesystem path to "
+            "write the JSON there (the parent directory must already "
+            "exist; this command will not create directories), or pass a "
+            "single '-' to write the JSON to stdout. No flag = no JSON "
+            "emission and no file write."
         ),
     )
     return parser
@@ -117,10 +125,12 @@ def main(argv: list[str] | None = None) -> None:
                 signals=(cycle.signal,),
             )
             # Pretty-printed + sorted keys = stable text diffs across runs.
-            args.emit_json.write_text(
-                json.dumps(payload, indent=2, sort_keys=True) + "\n",
-                encoding="utf-8",
-            )
+            rendered = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+            if args.emit_json == "-":
+                # Stdout sink: print after the human summary, no file created.
+                print(rendered, end="")
+            else:
+                Path(args.emit_json).write_text(rendered, encoding="utf-8")
     else:
         report = run_dry_run()
         print(format_report(report))
