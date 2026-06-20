@@ -50,22 +50,34 @@ deterministic, read-only self-comparison and appends a deterministic
 summary. Insider-cluster only, rejected on synthetic. Independent of the
 two JSON flags; any subset of the three may be passed.
 
+Three operator-data failures on the ``--source insider_cluster`` path —
+missing ``--db`` file, unreadable / wrong-schema database, and an empty
+``backtest_results`` table — are caught at the CLI boundary and rendered
+as single-line ``error: ...`` diagnostics on stderr with exit code 1, so
+the operator sees "what failed" instead of a Python traceback. Argparse
+usage errors (e.g. ``--emit-json`` on ``--source synthetic``) keep their
+existing exit code 2.
+
 Authorizations:
     - ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``
     - ``governance/authorizations/2026-06-18_insider-cluster-intake.md``
     - ``governance/authorizations/2026-06-18_dry-run-emit-json.md``
     - ``governance/authorizations/2026-06-20_p6-11.md``
     - ``governance/authorizations/2026-06-20_p6-12.md``
+    - ``governance/authorizations/2026-06-20_dryrun-operator-errors.md``
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
+import sys
 from pathlib import Path
 from typing import Any
 
 from gmc_rebuild.dry_run._loop import (
+    InsiderClusterCycle,
     _run_insider_cluster_cycle,
     build_decisions_json_payload,
     format_dry_run_reconciliation_block,
@@ -171,6 +183,35 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _run_insider_cluster_cycle_or_operator_error(db_path: Path) -> InsiderClusterCycle:
+    """Run the insider-cluster cycle, surfacing operator-data failures.
+
+    Catches the three expected operator-data failures on the
+    insider-cluster path — missing ``--db`` file, unreadable / wrong-schema
+    database, and an empty ``backtest_results`` table — and renders each
+    as a single-line ``error: ...`` diagnostic on stderr followed by
+    :class:`SystemExit` with code 1. All other exceptions propagate
+    unchanged so genuine bugs still surface a traceback.
+    """
+    try:
+        return _run_insider_cluster_cycle(db_path)
+    except FileNotFoundError:
+        print(f"error: insider-cluster DB not found: {db_path}", file=sys.stderr)
+        raise SystemExit(1) from None
+    except LookupError:
+        print(
+            f"error: insider-cluster DB has no rows in backtest_results: {db_path}",
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from None
+    except sqlite3.DatabaseError:
+        print(
+            f"error: insider-cluster DB is not a valid backtest_results database: {db_path}",
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from None
+
+
 def _emit_payload(sink: str, payload: dict[str, Any]) -> None:
     """Render ``payload`` as deterministic JSON and route it to ``sink``.
 
@@ -200,7 +241,7 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("--show-reconciliation is supported only with --source=insider_cluster")
 
     if args.source == "insider_cluster":
-        cycle = _run_insider_cluster_cycle(args.db)
+        cycle = _run_insider_cluster_cycle_or_operator_error(args.db)
         print(format_insider_cluster_summary(cycle.report, cycle.verdict, cycle.decision))
         recon_result = None
         if args.emit_reconciliation_json is not None or args.show_reconciliation:
