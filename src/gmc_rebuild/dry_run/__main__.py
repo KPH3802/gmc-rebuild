@@ -15,6 +15,8 @@ Usage::
         --emit-reconciliation-json -                           # recon JSON to stdout
     python -m gmc_rebuild.dry_run --source insider_cluster \\
         --show-reconciliation                                  # recon TEXT to stdout
+    python -m gmc_rebuild.dry_run --source signals_json \\
+        --signals-file ideas.json --emit-json ideas_run.json   # MVP learning loop
 
 By default the module performs **one** side effect: it writes the
 formatted output to stdout via :func:`print`. No network, no env-var
@@ -71,6 +73,20 @@ expected-positions files are caught at the CLI boundary and rendered as
 insider-cluster DB error path. Without the flag the existing
 self-comparison MATCH behavior is preserved byte-for-byte.
 
+The ``--source signals_json --signals-file PATH`` source is the MVP
+**learning-loop input**: the operator describes a batch of trading-idea
+signals in a small local JSON file, and the dry-run loop threads every
+signal through the same merged P6-01..P6-06 pipeline that the synthetic
+and insider-cluster paths use. The resulting cycle exposes the multi-
+decision summary, the simulated portfolio, the decision JSON payload,
+and the reconciliation surfaces — so the operator can compare outcomes
+across experiments by changing the input file and re-running. All four
+opt-in flags (``--emit-json``, ``--show-reconciliation``,
+``--emit-reconciliation-json``, ``--expected-positions``) work over the
+``signals_json`` source. Missing / malformed signals files are caught at
+the CLI boundary and rendered as ``error: ...`` diagnostics on stderr
+with exit code 1.
+
 Authorizations:
     - ``governance/authorizations/2026-06-18_dry-run-entrypoint.md``
     - ``governance/authorizations/2026-06-18_insider-cluster-intake.md``
@@ -79,6 +95,7 @@ Authorizations:
     - ``governance/authorizations/2026-06-20_p6-12.md``
     - ``governance/authorizations/2026-06-20_dryrun-operator-errors.md``
     - ``governance/authorizations/2026-06-20_dryrun-expected-positions.md``
+    - ``governance/authorizations/2026-06-20_dryrun-signals-json.md``
 """
 
 from __future__ import annotations
@@ -90,18 +107,26 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from gmc_rebuild.decision import PositionDecision
 from gmc_rebuild.dry_run._expected_positions import (
     ExpectedPositionsSchemaError,
     load_expected_positions,
 )
 from gmc_rebuild.dry_run._loop import (
     InsiderClusterCycle,
+    SignalsFileCycle,
     _run_insider_cluster_cycle,
+    _run_signals_file_cycle,
     build_decisions_json_payload,
     format_dry_run_reconciliation_block,
     format_insider_cluster_summary,
     format_report,
+    format_signals_file_summary,
     run_dry_run,
+)
+from gmc_rebuild.dry_run._signals_file import (
+    SignalsFileSchemaError,
+    load_signals,
 )
 from gmc_rebuild.dry_run_reconciliation import (
     ExpectedPositions,
@@ -110,6 +135,7 @@ from gmc_rebuild.dry_run_reconciliation import (
 from gmc_rebuild.dry_run_reconciliation_view import (
     build_dry_run_reconciliation_json_payload,
 )
+from gmc_rebuild.signal_intake import SignalIntent
 
 #: Default ``--db`` path for the insider-cluster source. Points at the
 #: committed one-row fixture under ``tests/`` so the command is runnable
@@ -137,9 +163,17 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--source",
-        choices=("synthetic", "insider_cluster"),
+        choices=("synthetic", "insider_cluster", "signals_json"),
         default="synthetic",
-        help="signal source for the dry-run loop (default: synthetic)",
+        help=(
+            "signal source for the dry-run loop (default: synthetic). "
+            "'synthetic' runs the original hardcoded sample signals. "
+            "'insider_cluster' reads one row from a SQLite backtest_results "
+            "database. 'signals_json' reads a batch of operator-supplied "
+            "trading-idea signals from a small local JSON file (see "
+            "--signals-file) — the learning-loop input that lets the "
+            "operator describe and compare experiments."
+        ),
     )
     parser.add_argument(
         "--db",
@@ -150,6 +184,22 @@ def _build_arg_parser() -> argparse.ArgumentParser:
             "Used only when --source=insider_cluster. Opened in read-only "
             "URI mode; never written. Defaults to the committed one-row "
             "fixture under tests/."
+        ),
+    )
+    parser.add_argument(
+        "--signals-file",
+        type=Path,
+        default=None,
+        dest="signals_file",
+        metavar="PATH",
+        help=(
+            "Path to a small local JSON file describing a batch of "
+            "operator-supplied trading-idea signals. Required when "
+            "--source=signals_json; rejected on other sources. Schema: "
+            '{"signals": [{"intent_id": "...", "symbol": "...", "side": '
+            '"BUY"|"SELL", "quantity": <int>, "rationale": "..."}, ...]}. '
+            "Read once in text mode; no network, no env-var read, no "
+            "broker, no real account."
         ),
     )
     parser.add_argument(
@@ -220,6 +270,25 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _load_signals_or_operator_error(path: Path) -> tuple[SignalIntent, ...]:
+    """Load a signals JSON file, surfacing operator-data failures.
+
+    Catches the two expected operator-data failures on the
+    ``--signals-file`` path — missing file and malformed file — and
+    renders each as a single-line ``error: ...`` diagnostic on stderr
+    followed by :class:`SystemExit` with code 1. All other exceptions
+    propagate unchanged so genuine bugs still surface a traceback.
+    """
+    try:
+        return load_signals(path)
+    except FileNotFoundError:
+        print(f"error: signals file not found: {path}", file=sys.stderr)
+        raise SystemExit(1) from None
+    except SignalsFileSchemaError as exc:
+        print(f"error: invalid signals file {path}: {exc}", file=sys.stderr)
+        raise SystemExit(1) from None
+
+
 def _load_expected_positions_or_operator_error(path: Path) -> ExpectedPositions:
     """Load an ``--expected-positions`` JSON file, surfacing operator-data failures.
 
@@ -287,27 +356,59 @@ def main(argv: list[str] | None = None) -> None:
     parser = _build_arg_parser()
     args = parser.parse_args(argv)
 
-    # All reconciliation-aware flags are insider-cluster only — out of scope
-    # on synthetic.
-    if args.emit_json is not None and args.source != "insider_cluster":
-        parser.error("--emit-json is supported only with --source=insider_cluster")
-    if args.emit_reconciliation_json is not None and args.source != "insider_cluster":
-        parser.error("--emit-reconciliation-json is supported only with --source=insider_cluster")
-    if args.show_reconciliation and args.source != "insider_cluster":
-        parser.error("--show-reconciliation is supported only with --source=insider_cluster")
-    if args.expected_positions is not None and args.source != "insider_cluster":
-        parser.error("--expected-positions is supported only with --source=insider_cluster")
+    # The synthetic source returns a plain DailyReport (no cycle bundle,
+    # no portfolio exposed), so the JSON / recon / expected-positions
+    # flags are out of scope there. The insider_cluster and signals_json
+    # sources both produce a cycle bundle and admit all four flags.
+    _CYCLE_BUNDLE_SOURCES = ("insider_cluster", "signals_json")
+    if args.emit_json is not None and args.source not in _CYCLE_BUNDLE_SOURCES:
+        parser.error(
+            "--emit-json is supported only with --source=insider_cluster or --source=signals_json"
+        )
+    if args.emit_reconciliation_json is not None and args.source not in _CYCLE_BUNDLE_SOURCES:
+        parser.error(
+            "--emit-reconciliation-json is supported only with "
+            "--source=insider_cluster or --source=signals_json"
+        )
+    if args.show_reconciliation and args.source not in _CYCLE_BUNDLE_SOURCES:
+        parser.error(
+            "--show-reconciliation is supported only with "
+            "--source=insider_cluster or --source=signals_json"
+        )
+    if args.expected_positions is not None and args.source not in _CYCLE_BUNDLE_SOURCES:
+        parser.error(
+            "--expected-positions is supported only with "
+            "--source=insider_cluster or --source=signals_json"
+        )
 
-    if args.source == "insider_cluster":
-        # Validate --expected-positions eagerly so a missing or malformed
-        # file fails fast with a clean stderr diagnostic before any
-        # stdout summary is printed.
+    # --signals-file is required with signals_json and only meaningful there.
+    if args.source == "signals_json" and args.signals_file is None:
+        parser.error("--signals-file is required with --source=signals_json")
+    if args.signals_file is not None and args.source != "signals_json":
+        parser.error("--signals-file is supported only with --source=signals_json")
+
+    if args.source in ("insider_cluster", "signals_json"):
+        # Validate --expected-positions and --signals-file eagerly so a
+        # missing / malformed file fails fast with a clean stderr
+        # diagnostic before any stdout summary is printed.
         loaded_expected: ExpectedPositions | None = None
         if args.expected_positions is not None:
             loaded_expected = _load_expected_positions_or_operator_error(args.expected_positions)
 
-        cycle = _run_insider_cluster_cycle_or_operator_error(args.db)
-        print(format_insider_cluster_summary(cycle.report, cycle.verdict, cycle.decision))
+        cycle: InsiderClusterCycle | SignalsFileCycle
+        decisions_tuple: tuple[PositionDecision, ...]
+        signals_tuple: tuple[SignalIntent, ...]
+        if args.source == "insider_cluster":
+            cycle = _run_insider_cluster_cycle_or_operator_error(args.db)
+            print(format_insider_cluster_summary(cycle.report, cycle.verdict, cycle.decision))
+            decisions_tuple = (cycle.decision,)
+            signals_tuple = (cycle.signal,)
+        else:
+            signals_tuple = _load_signals_or_operator_error(args.signals_file)
+            cycle = _run_signals_file_cycle(signals_tuple)
+            print(format_signals_file_summary(cycle.report, cycle.verdict, cycle.decisions))
+            decisions_tuple = cycle.decisions
+
         recon_result = None
         if args.emit_reconciliation_json is not None or args.show_reconciliation:
             # Two reconciliation modes:
@@ -341,8 +442,8 @@ def main(argv: list[str] | None = None) -> None:
                 build_decisions_json_payload(
                     report=cycle.report,
                     verdict=cycle.verdict,
-                    decisions=(cycle.decision,),
-                    signals=(cycle.signal,),
+                    decisions=decisions_tuple,
+                    signals=signals_tuple,
                 ),
             )
         if args.emit_reconciliation_json is not None:

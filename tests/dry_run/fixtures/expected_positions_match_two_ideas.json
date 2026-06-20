@@ -1,0 +1,6 @@
+{
+  "positions": [
+    {"symbol": "AAPL", "quantity": 10},
+    {"symbol": "TSLA", "quantity": -5}
+  ]
+}

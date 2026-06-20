@@ -1,0 +1,25 @@
+{
+  "signals": [
+    {
+      "intent_id": "exp-A-aapl-long",
+      "symbol": "AAPL",
+      "side": "BUY",
+      "quantity": 7,
+      "rationale": "experiment A: scaled-down AAPL long"
+    },
+    {
+      "intent_id": "exp-B-msft-long",
+      "symbol": "MSFT",
+      "side": "BUY",
+      "quantity": 3,
+      "rationale": "experiment B: add MSFT to the basket"
+    },
+    {
+      "intent_id": "exp-C-tsla-short",
+      "symbol": "TSLA",
+      "side": "SELL",
+      "quantity": 5,
+      "rationale": "experiment C: preserve TSLA short"
+    }
+  ]
+}
