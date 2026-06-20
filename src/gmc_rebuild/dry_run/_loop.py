@@ -239,12 +239,20 @@ class InsiderClusterCycle:
     re-opening the source database. ``signal`` is the same value that
     was threaded through ``accept_signal_intent`` → ... → the resulting
     ``decision``.
+
+    The ``portfolio`` is the same in-memory
+    :class:`~gmc_rebuild.portfolio_state.SimulatedPortfolio` snapshot the
+    cycle applied the (possible) order intent into and from which the
+    report's ``net_positions`` were derived. It is carried here so
+    reconciliation-export callers can run a read-only self-comparison via
+    the P6-09 surface without re-running the pipeline or re-reading the DB.
     """
 
     report: DailyReport
     verdict: SafetyVerdict
     decision: PositionDecision
     signal: SignalIntent
+    portfolio: SimulatedPortfolio
 
 
 def _run_insider_cluster_cycle(db_path: Path) -> InsiderClusterCycle:
@@ -278,7 +286,13 @@ def _run_insider_cluster_cycle(db_path: Path) -> InsiderClusterCycle:
         portfolio=portfolio,
         reconciliation_status=ReconciliationStatus.CLEAN,
     )
-    return InsiderClusterCycle(report=report, verdict=verdict, decision=decision, signal=signal)
+    return InsiderClusterCycle(
+        report=report,
+        verdict=verdict,
+        decision=decision,
+        signal=signal,
+        portfolio=portfolio,
+    )
 
 
 def run_dry_run_insider_cluster(
