@@ -115,3 +115,38 @@ These came out of the launchd healthcheck monitor build on 2026-06-26. They are 
 - Items marked MEDIUM/LOW PRIORITY should be resolved opportunistically.
 - When an item is resolved, remove it from this doc and reference the resolving commit/PR in the affected target doc.
 - New gaps discovered in any session should land here, not in chat-only notes.
+
+
+---
+
+## Sourcing Policy (added 2026-06-27)
+
+**Decision:** Going forward, source all copyrighted methodology books and papers through legitimate channels only. No more pirated PDFs.
+
+**Why this is logged:** During the 2026-06-27 methodology synthesis sprint, the Carver chapter PDFs in `gmc_engine/research/papers_inbox/` were discovered (via PDF metadata embedded by Preview on macOS 2026-04-16) to have originated from `quant-wiki.com` — a pirate site hosting copyrighted finance textbooks without authorization. This affected:
+
+- `Chap7_Carver.pdf`, `Chap8_Carver.pdf`, `Chap10_Carver.pdf`, `Chap11_Carver.pdf`, `Chap12_Carver.pdf`, `Chap13_Grinold_&_Kahn_The_Information_Horizon.pdf`, and the full Carver book PDF (`https:asset.quant-wiki.com:...`)
+- These were the sources used to synthesize `risk_guardrails.md` (`1137d41`), `information_ratio.md` (`b3164b4`), and portions of `walk_forward.md` (`037cfe6`) and `pbo_gate.md` (`f32d0e9`).
+- Perplexity Computer (and Claude Code) did not flag the source provenance at the time of synthesis. The PDFs read cleanly via pypdf and looked like standard chapter PDFs.
+
+**Going-forward policy:**
+
+1. **For all new methodology sources:** purchase through legitimate channels (Amazon Kindle, publisher direct, academic library access, or interlibrary loan). Open-access preprints (SSRN, NBER, author personal sites) are fine when they exist.
+2. **For Carver's *Systematic Trading* specifically:** Carver publishes the same volatility-targeting methodology free on his blog and in his open-source `pysystemtrade` repo. Citing his own free writing is legitimate. Key Carver-authored open sources:
+   - [qoppac.blogspot.com/2020/03/how-much-risk-should-we-take.html](https://qoppac.blogspot.com/2020/03/how-much-risk-should-we-take.html) — derivation of 25% vol target via Kelly + half-Kelly
+   - [qoppac.blogspot.com/2020/10/should-i-run-my-trading-system-at-fixed.html](https://qoppac.blogspot.com/2020/10/should-i-run-my-trading-system-at-fixed.html) — 25% is a long-run average, not a daily fixed target
+   - [github.com/robcarver17/pysystemtrade/blob/master/systems/provided/rob_system/config.yaml](https://github.com/robcarver17/pysystemtrade/blob/master/systems/provided/rob_system/config.yaml) — Carver's production config showing `percentage_vol_target: 25.0`
+   - [github.com/robcarver17/pysystemtrade/blob/master/docs/introduction.md](https://github.com/robcarver17/pysystemtrade/blob/master/docs/introduction.md) — Carver's documentation referencing book Ch 9 and Ch 10
+3. **For Pedersen *Efficiently Inefficient* Ch 3:** purchase Kindle (~$30-40) or library access. No legitimate free-online substitute exists for the specific chapter content.
+4. **For G&K *Active Portfolio Management* 2nd ed.:** purchase Kindle (~$50) or library access. Most-used finance text in this project; ownership is justified.
+
+**Open question for PM review:** What to do about the four methodology docs already on `gmc_engine/origin/main` that were synthesized partly from quant-wiki sources?
+
+Options:
+- (a) Leave as-is; the citations are accurate transcriptions of Carver's and G&K's actual words and equations, and the resulting framework is intellectually sound. Treat as "internal draft" until re-sourced.
+- (b) Re-synthesize after purchasing the books legitimately. High effort; verifies provenance end-to-end.
+- (c) Hybrid: leave the docs in place but add a sourcing note at the top of each, then incrementally replace citations with legitimate-source citations as those sources are acquired.
+
+PM call required before any of these docs influence a live-trading decision. Not a blocker for Monday paper-monitor operation.
+
+**Recommended path (Perplexity Computer):** Option (c). The methodology content is correct (verified by Claude Code's transcription discipline). Re-synthesizing from scratch costs days and produces the same content. Adding a provenance note + incremental replacement preserves the work while making the sourcing trail honest.
