@@ -150,3 +150,34 @@ Options:
 PM call required before any of these docs influence a live-trading decision. Not a blocker for Monday paper-monitor operation.
 
 **Recommended path (Perplexity Computer):** Option (c). The methodology content is correct (verified by Claude Code's transcription discipline). Re-synthesizing from scratch costs days and produces the same content. Adding a provenance note + incremental replacement preserves the work while making the sourcing trail honest.
+
+
+---
+
+## Acquisition Status Updates (2026-06-27 iPad session)
+
+### Resolved (acquired, pending move to Mac Studio)
+
+**Both PBO companion papers from Gap 3 acquired during 2026-06-27 iPad session.** Both verified as legitimate sources by Perplexity Computer (author metadata, DOIs, source URLs all check out). Stored in Perplexity Computer conversation workspace. Must be physically moved to `~/gmc_engine/research/papers_inbox/` on Mac Studio next session.
+
+1. **Bailey, Borwein, López de Prado, Zhu (2014), "Pseudo-Mathematics and Financial Charlatanism"** — Notices of the American Mathematical Society, May 2014, 14 pages. Contains MinBTL formula derivation. AMS legitimate source.
+   - Original filename: `rnoti-p458.pdf` (matches AMS Notices URL pattern)
+   - Suggested filename in `papers_inbox/`: `Bailey_Borwein_LopezDePrado_Zhu_2014_Pseudo-Mathematics_AMS.pdf`
+
+2. **Bailey & López de Prado (2014), "The Deflated Sharpe Ratio"** — Journal of Portfolio Management, July 2014, 22 pages. Contains DSR derivation. SSRN abstract ID 2460551 (López de Prado is the author and self-distributes via SSRN).
+   - PDF author metadata: "Lopez de Prado, Marcos"
+   - Suggested filename in `papers_inbox/`: `Bailey_LopezDePrado_2014_Deflated_Sharpe_Ratio_SSRN.pdf`
+
+**Effect:** Gap 3 (PBO companion papers) closes once both files land in `papers_inbox/` on the Mac Studio. A follow-up Claude Code synthesis pass can then complete `pbo_gate.md` §4 (MinBTL formula) and §8 (Deflated Sharpe Ratio).
+
+### Still open
+
+- **Gap 1 (Carver Ch 9):** unresolved. Recommended path remains Carver's own free blog + `pysystemtrade` repo (URLs in Sourcing Policy section above). Skip the book purchase unless deeper context becomes needed.
+- **Gap 2 (Pedersen Ch 3):** unresolved. Decision deferred per Sourcing Policy — purchase Kindle or library access; no legitimate free substitute exists for Ch 3 content.
+- **Gap 4 (G&K Ch 12):** unresolved. Decision deferred per Sourcing Policy.
+
+### Provenance check needed (added 2026-06-27)
+
+**`AdvancesinFinancialMachineLearning.pdf` in `gmc_engine/research/papers_inbox/`:** Source not yet verified. Was already in `papers_inbox/` at the start of the 2026-06-27 sprint and was used by Claude Code to synthesize `walk_forward.md` (commit `037cfe6` on `gmc_engine/origin/main`). Same potential issue as the Carver chapters — needs provenance verification.
+
+**Action item for PM:** Determine whether your copy of AFML came from a legitimate source. If not, falls under the same Sourcing Policy decision tree: leave doc in place with provenance note (option c), or re-source from Wiley / library / Kindle and re-cite.
