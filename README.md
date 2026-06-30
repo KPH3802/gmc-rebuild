@@ -1,3 +1,13 @@
+> # ⚠️ ARCHIVED — historical only
+>
+> **This repository is the legacy planning shell.** Active engine, gates, methodology, and operations work moved to **[`KPH3802/gmc_engine`](https://github.com/KPH3802/gmc_engine)** on 2026-06-20.
+>
+> Files here — including `MASTER_STATUS.md`, `OPEN_GAPS.md`, and the Phase 1–6 planning docs — are historical artifacts. **They are not authoritative for any current question** about strategy state, engine state, methodology, risk guardrails, or rollout phase.
+>
+> **For current state, see `gmc_engine/STATUS.md`.**
+>
+> Do not commit new work here. Do not reference these docs as the source of truth.
+
 # gmc-rebuild
 
 `gmc-rebuild` is the governance-first rebuild of Grist Mill Capital's systematic trading infrastructure. The repository currently contains Phase 1 controls: planning, architecture decisions, templates, project configuration, and verification tooling.
